@@ -1,5 +1,5 @@
 import { IUser, User } from "../models/user.model";
-import { IUserRepository } from "../interfaces/IUserRepository";
+import { IUserRepository } from "../interfaces/repository/IUserRepository";
 //this file is responsible for talking to mongodb
 // only db operations go here
 

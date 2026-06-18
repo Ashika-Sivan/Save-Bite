@@ -1,7 +1,7 @@
-import { iAuthService } from "../interfaces/IAuthService";
-import { IUserRepository } from "../interfaces/IUserRepository";
+import { iAuthService } from "../interfaces/service/IAuthService";
+import { IUserRepository } from "../interfaces/repository/IUserRepository";
 import { IUser } from "../models/user.model";
-import { UserRepository } from "../repositories/user.repository";
+
 
 export class AuthService implements iAuthService{
     constructor(

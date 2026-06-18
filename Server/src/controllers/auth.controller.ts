@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { iAuthService } from "../interfaces/IAuthService";
+import { iAuthService } from "../interfaces/service/IAuthService";
 
 export class AuthController{
     constructor(

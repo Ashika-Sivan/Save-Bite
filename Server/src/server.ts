@@ -3,6 +3,7 @@ import { createServer, Server } from "http";
 import dotenv from "dotenv"
 dotenv.config()//to communication 
 import connectDB from "./config/db";
+import { redisClient } from "./config/redis";
 
 
 
@@ -20,6 +21,7 @@ class ServerApp {
 
    public async start(){    
             await this.db.connect()
+            await redisClient.connect()
             
         this.server.listen(5000,()=>{
             console.log(`http://localhost:${5000}`);
@@ -27,6 +29,8 @@ class ServerApp {
         })
             
     }
+
+    
 }
 
-new ServerApp().start();
+new ServerApp().start()
