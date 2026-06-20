@@ -1,5 +1,9 @@
 import express, { Application } from "express"
 import authRoutes from './routes/auth.route'
+import otpRoutes from './routes/otp.routes'
+import cors from "cors"
+
+
 
 
 export default class App {
@@ -10,10 +14,21 @@ export default class App {
         this.middleware()
         this.routes()
     }
-    private middleware(){
+    private middleware():void{
+        this.app.use(
+            cors({
+                origin:"http://localhost:5173",
+                credentials:true
+                
+            })
+            
+        )
         this.app.use(express.json())
+
     }
-    private routes(){
+    private routes():void{
         this.app.use('/api/auth',authRoutes)
+        this.app.use('/api/auth',otpRoutes)
     }
+   
 }

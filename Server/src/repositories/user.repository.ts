@@ -10,6 +10,13 @@ export class UserRepository implements IUserRepository{
     }
     async create(userData:Partial<IUser>):Promise<IUser>{
         return await User.create(userData)
-
+    }
+    async updateAuthenticatioStatus(email: string, status: boolean): Promise<IUser | null> {
+        return await User.findOneAndUpdate(
+            {email},
+            {isAuthenticated:status},
+            {new:true}
+        )
+        
     }
 }

@@ -1,7 +1,7 @@
-import App from "./app"
-import { createServer, Server } from "http";
 import dotenv from "dotenv"
 dotenv.config()//to communication 
+import App from "./app"
+import { createServer, Server } from "http";
 import connectDB from "./config/db";
 import { redisClient } from "./config/redis";
 

@@ -1,17 +1,22 @@
 import OtpRepository from "../repositories/otp.repository";
 import { generateOtp } from "../utils/generateOtp";
+import EmailServce from "./email.service";
 
 class OtpService{
     private otpRepository:OtpRepository
+    private emailService:EmailServce
 
-    constructor(otpRepository:OtpRepository){
+    constructor(otpRepository:OtpRepository,emailService:EmailServce){
         this.otpRepository=otpRepository
+        this.emailService=emailService
     }
 
     async createOtp(email:string){
         const otp=generateOtp()
         await this.otpRepository.storeOtp(email,otp)
-        return otp
+        await this.emailService.sendOtpEmail(email,otp)
+
+        return true
     }
 
     async verifyOtp(email:string,otp:string){

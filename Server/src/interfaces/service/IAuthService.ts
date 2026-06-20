@@ -5,4 +5,6 @@ import { IUser } from "../../models/user.model";
 //what authentication service can do
 export interface iAuthService{
     register(name:string,email:string,password:string,phone?:string):Promise<IUser>
+     resendOtp(email: string): Promise<boolean>;
+     verifyOtp(email:string,otp:string):Promise<IUser|null>
 }
