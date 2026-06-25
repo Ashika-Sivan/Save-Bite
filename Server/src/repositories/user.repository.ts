@@ -11,7 +11,7 @@ export class UserRepository implements IUserRepository{
     async create(userData:Partial<IUser>):Promise<IUser>{
         return await User.create(userData)
     }
-    async updateAuthenticatioStatus(email: string, status: boolean): Promise<IUser | null> {
+    async updateAuthenticationStatus(email: string, status: boolean): Promise<IUser | null> {
         return await User.findOneAndUpdate(
             {email},
             {isAuthenticated:status},
@@ -19,4 +19,13 @@ export class UserRepository implements IUserRepository{
         )
         
     }
+    async findById(userId:string):Promise<IUser|null>{
+        return await User.findById(userId).select("-password")
+    }
+  
+    
+
 }
+
+
+// IUserRepository:-i mean what are the things that needed in the user repository

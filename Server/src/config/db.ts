@@ -4,6 +4,7 @@ export default class connectDB{
         try {
             await mongoose.connect(process.env.MONGODB_URI as string)
             console.log('Mongodb connected')
+            console.log("Connected DB:", mongoose.connection.name);
             
         } catch (error) {
             console.log(error)

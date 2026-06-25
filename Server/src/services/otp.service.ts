@@ -1,8 +1,9 @@
+import { IOtpService } from "../interfaces/service/IOtpService";
 import OtpRepository from "../repositories/otp.repository";
 import { generateOtp } from "../utils/generateOtp";
 import EmailServce from "./email.service";
 
-class OtpService{
+class OtpService implements IOtpService{
     private otpRepository:OtpRepository
     private emailService:EmailServce
 
@@ -11,8 +12,9 @@ class OtpService{
         this.emailService=emailService
     }
 
-    async createOtp(email:string){
+    async createOtp(email:string):Promise<boolean>{
         const otp=generateOtp()
+        console.log(`OTP: ${otp}`)
         await this.otpRepository.storeOtp(email,otp)
         await this.emailService.sendOtpEmail(email,otp)
 

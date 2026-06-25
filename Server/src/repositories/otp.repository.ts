@@ -16,7 +16,7 @@ class OtpRepository{
     }
     async storeOtp(email:string,otp:string){//set
         await this.redisClient.set(`otp:${email}`,otp,{//storing the data in a key value pair
-            EX:300//5 minutes.after 5 min redis automatically remove otp
+            EX:60//5 minutes.after 5 min redis automatically remove otp
         })
     }
     async getOtp(email:string){

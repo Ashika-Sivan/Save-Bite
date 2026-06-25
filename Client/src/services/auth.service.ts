@@ -30,3 +30,23 @@ export const resendOtp=async(email:string)=>{
     })
     return response.data
 }
+
+export const login=async(loginData:{email:string,password:string})=>{
+    const response=await api.post("/auth/login",loginData,{
+    })
+    return response.data
+}
+
+export const logout=async()=>{
+    const response=await api.post("/auth/logout")
+    return response.data
+}
+export const refreshAccessToken=async()=>{
+    const response=await api.post("/auth/refresh")
+    return response.data//request for refresh token
+}
+export const getMe = async () => {
+  const response = await api.get("/auth/me");
+  return response.data;
+};
+

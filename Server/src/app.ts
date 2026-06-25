@@ -2,6 +2,7 @@ import express, { Application } from "express"
 import authRoutes from './routes/auth.route'
 import otpRoutes from './routes/otp.routes'
 import cors from "cors"
+import cookieParser from "cookie-parser"
 
 
 
@@ -24,6 +25,7 @@ export default class App {
             
         )
         this.app.use(express.json())
+        this.app.use(cookieParser());
 
     }
     private routes():void{
