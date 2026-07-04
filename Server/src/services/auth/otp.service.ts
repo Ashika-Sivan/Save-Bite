@@ -1,6 +1,6 @@
-import { IOtpService } from "../interfaces/service/IOtpService";
-import OtpRepository from "../repositories/otp.repository";
-import { generateOtp } from "../utils/generateOtp";
+import { IOtpService } from "../../interfaces/service/IOtpService";
+import OtpRepository from "../../repositories/user/otp.repository";
+import { generateOtp } from "../../utils/generateOtp";
 import EmailServce from "./email.service";
 
 class OtpService implements IOtpService{

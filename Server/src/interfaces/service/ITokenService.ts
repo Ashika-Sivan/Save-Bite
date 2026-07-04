@@ -1,6 +1,7 @@
 export interface TokenPayload{
     userId:string,
-    email:string
+    email:string,
+    role:"user"|"vendor"|"admin"
 }
 // here the payload means the informatio that are stored in the jwt
 export interface ITokenService{

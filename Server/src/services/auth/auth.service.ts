@@ -1,9 +1,9 @@
-import { iAuthService } from "../interfaces/service/IAuthService";
-import { IUserRepository } from "../interfaces/repository/IUserRepository";
-import { IUser } from "../models/user.model";
+import { iAuthService } from "../../interfaces/service/IAuthService";
+import { IUserRepository } from "../../interfaces/repository/IUserRepository";
+import { IUser } from "../../models/user/user.model";
 import bcrypt from 'bcrypt'
-import { ITokenService } from "../interfaces/service/ITokenService";
-import { IOtpService } from "../interfaces/service/IOtpService";
+import { ITokenService } from "../../interfaces/service/ITokenService";
+import { IOtpService } from "../../interfaces/service/IOtpService";
 
 
 export class AuthService implements iAuthService{
@@ -90,6 +90,7 @@ export class AuthService implements iAuthService{
         const payload={
             userId:user._id.toString(),
             email:user.email,
+            role:user.role,
         }
         const accessToken=this.tokenService.generateAccessToken(payload)
 
@@ -105,7 +106,9 @@ export class AuthService implements iAuthService{
         const payload=await this.tokenService.verifyRefreshToken(refreshToken)
         const accessToken=this.tokenService.generateAccessToken({
             userId:payload.userId,
-            email:payload.email//filter out the userid and email from the payload and check the token.created new
+            email:payload.email,//filter out the userid and email from the payload and check the token.created new,
+            role:payload.role
+            
         })
         return {
             accessToken

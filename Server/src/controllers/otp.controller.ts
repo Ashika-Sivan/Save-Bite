@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import OtpService from "../services/otp.service";
+import OtpService from "../services/auth/otp.service";
 
 class OtpController{
     private otpService:OtpService

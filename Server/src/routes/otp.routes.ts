@@ -1,8 +1,8 @@
 import { Router } from "express";
 import OtpController from "../controllers/otp.controller";
 import { redisClient } from "../config/redis";
-import OtpService from "../services/otp.service";
-import OtpRepository from "../repositories/otp.repository";
+import OtpService from "../services/auth/otp.service";
+import OtpRepository from "../repositories/user/otp.repository";
 import EmailServce from "../services/email.service";
 
 const router=Router()

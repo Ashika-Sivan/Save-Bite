@@ -10,7 +10,7 @@ interface ProtectedRouteProps{
 export default function ProtectedRoute({children}:ProtectedRouteProps) {
     const user=useAppSelector((state)=>state.auth.user)//read user from the redux
     if(!user){
-        <Navigate to="/login" replace/>
+        return <Navigate to="/login" replace/>
     }
   return children
     

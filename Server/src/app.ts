@@ -3,6 +3,7 @@ import authRoutes from './routes/auth.route'
 import otpRoutes from './routes/otp.routes'
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import vendorRoute from "./routes/vendor.route";
 
 
 
@@ -25,6 +26,7 @@ export default class App {
             
         )
         this.app.use(express.json())
+        this.app.use("/api/vendor",vendorRoute)
         this.app.use(cookieParser());
 
     }

@@ -8,7 +8,8 @@ export interface IUser extends Document{
     isBusinessOwner:boolean,
     isAuthenticated:boolean,
     isActive:boolean,
-    isAdmin:boolean
+    isAdmin:boolean,
+    role: "user" | "vendor" | "admin";
 
 }
 
@@ -48,7 +49,12 @@ const userSchema=new Schema<IUser>(
         isAdmin:{
             type:Boolean,
             default:false
-        }
+        },
+        // role:{
+        //     type:String,
+        //     enum:["user",'vendor','admin'],
+        //     default:'user',
+        // }
     },
     {timestamps:true}
 

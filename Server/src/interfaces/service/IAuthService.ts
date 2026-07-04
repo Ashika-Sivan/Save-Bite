@@ -1,6 +1,6 @@
 // which define the authentication service shoudl provide
 
-import { IUser } from "../../models/user.model";
+import { IUser } from "../../models/user/user.model";
 
 //what authentication service can do
 export interface iAuthService{

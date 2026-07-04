@@ -22,7 +22,7 @@ const authSlice = createSlice({//evrything related to authentication comes here
   name: "auth",
   initialState,
   reducers: {//change the redux state
-    //called a successfull login and store the usr and acccesstoken information 
+    //caled a sucessfull login and store the usr and acccesstoken information 
     setCredentials: (state, action) => {
       state.user = action.payload.user;//save user detail 
       state.accessToken = action.payload.accessToken;//save access details

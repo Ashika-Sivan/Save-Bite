@@ -145,7 +145,7 @@ export class AuthController{
             res.status(200).json({
                 success:true,
                 message:"user fetched successfully",
-                user
+                user,
             })
         } catch (error) {
              res.status(400).json({

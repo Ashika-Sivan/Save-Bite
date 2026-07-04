@@ -3,7 +3,7 @@ import { logout } from "../services/auth.service";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "../redux/store";
-
+// import VendorRegister from "./vendor/VendorRegister";
 
 const categories = [
   "All",
@@ -160,8 +160,8 @@ export default function Home() {
               <button className="bg-orange-500 px-5 py-3 rounded-full text-sm font-semibold">
                 Browse restaurants
               </button>
-              <button className="bg-white/15 px-5 py-3 rounded-full text-sm font-semibold">
-                How it works
+              <button className="bg-white/15 px-5 py-3 rounded-full text-sm font-semibold" onClick={()=>{console.log("Button clicked");navigate('/vendor/VendorRegister')}}>
+                become a vendor
               </button>
             </div>
           </div>
@@ -279,3 +279,4 @@ export default function Home() {
     </div>
   );
 }
+

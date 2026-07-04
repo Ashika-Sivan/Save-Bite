@@ -2,9 +2,9 @@ import jwt from "jsonwebtoken";
 import {
   ITokenService,
   TokenPayload,
-} from "../interfaces/service/ITokenService";
+} from "../../interfaces/service/ITokenService";
 
-import { jwtConfig } from "../config/jwt";
+import { jwtConfig } from "../../config/jwt";
 
 export class TokenService implements ITokenService{
   generateAccessToken(payload:TokenPayload):string{//here we are actually creating the accesstoken

@@ -33,41 +33,86 @@ api.interceptors.request.use(
 )
 
 
-//RESPONSE INTERCEPTOR
-api.interceptors.response.use(
-    (response)=>{
-        return response
-    },
+// //RESPONSE INTERCEPTOR
+// api.interceptors.response.use(
+//     (response)=>{
+//         return response
+//     },
 
-    async(error)=>{
-        const originalRequest=error.config//store failed request
+//     async(error)=>{
+//         const originalRequest=error.config//store failed request
 
-        if(error.response?.status===401 && 
-            !originalRequest._retry//check we have not retried already
-        ){
-            originalRequest._retry=true//mark req retried
-            try {
-                const response=await api.post("/auth/refresh")
-                const newAccessToken=response.data.accessToken//get new one
-                store.dispatch(setAccessToken(newAccessToken))   //save new token in redux
-                // originalRequest.headers.authorisation=`Bearer ${newAccessToken}`
-                // return api(originalRequest)   //retry the failed request      
-                originalRequest.headers={
-                    ...originalRequest.headers,
-                    Authorization:`Bearer ${newAccessToken}`
-                }
-                   return api(originalRequest);
-            } catch (refreshError) {
-                store.dispatch(clearCredentials())//clear credential if refresh fail
-                return Promise.reject(refreshError)
+//         if(error.response?.status===401 && 
+//             !originalRequest._retry//check we have not retried already
+//         ){
+//             originalRequest._retry=true//mark req retried
+//             try {
+//                 const response=await api.post("/auth/refresh")
+//                 const newAccessToken=response.data.accessToken//get new one
+//                 store.dispatch(setAccessToken(newAccessToken))   //save new token in redux
+//                 // originalRequest.headers.authorisation=`Bearer ${newAccessToken}`
+//                 // return api(originalRequest)   //retry the failed request      
+//                 originalRequest.headers={
+//                     ...originalRequest.headers,
+//                     Authorization:`Bearer ${newAccessToken}`
+//                 }
+//                    return api(originalRequest);
+//             } catch (refreshError) {
+//                 store.dispatch(clearCredentials())//clear credential if refresh fail
+//                 return Promise.reject(refreshError)
                 
-            }
-        }
-        return Promise.reject(error)
+//             }
+//         }
+//         return Promise.reject(error)
+//     }
+
+
+// )
+
+
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If refresh API itself failed, don't retry again
+    if (originalRequest?.url === "/auth/refresh") {
+      store.dispatch(clearCredentials());
+      return Promise.reject(error);
     }
 
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
 
-)
+      try {
+        const response = await api.post("/auth/refresh");
+
+        const newAccessToken = response.data.accessToken;
+
+        store.dispatch(setAccessToken(newAccessToken));
+
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${newAccessToken}`,
+        };
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        store.dispatch(clearCredentials());
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 
 export default api
 
