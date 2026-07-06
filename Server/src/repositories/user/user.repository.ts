@@ -1,11 +1,11 @@
-import { IUser, User } from "../models/user.model";
-import { IUserRepository } from "../interfaces/repository/IUserRepository";
+import { IUser, User } from "../../models/user/user.model";
+import { IUserRepository } from "../../interfaces/repository/IUserRepository";
 //this file is responsible for talking to mongodb
 // only db operations go here
 
 export class UserRepository implements IUserRepository{
     async findByEmail(email:string):Promise<IUser|null>{
-        return await User.findOne({email})
+        return await User.findOne({email}).select("+password")
         
     }
     async create(userData:Partial<IUser>):Promise<IUser>{
@@ -21,6 +21,9 @@ export class UserRepository implements IUserRepository{
     }
     async findById(userId:string):Promise<IUser|null>{
         return await User.findById(userId).select("-password")
+    }
+    async updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>{
+        return await User.findByIdAndUpdate(userId,updateData,{new:true})
     }
   
     

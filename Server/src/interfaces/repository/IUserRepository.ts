@@ -12,5 +12,6 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     create(userData:Partial<IUser>):Promise<IUser>//create a new user.return :created user document.promise means this operation takes times
     updateAuthenticationStatus(email:string,status:boolean):Promise<IUser|null>
     findById(userId:string):Promise<IUser|null>
+    updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>
 
 }

@@ -4,6 +4,10 @@ import { IUser } from "../../models/user/user.model";
 import bcrypt from 'bcrypt'
 import { ITokenService } from "../../interfaces/service/ITokenService";
 import { IOtpService } from "../../interfaces/service/IOtpService";
+import crypto from "crypto"
+import { redisClient } from "../../config/redis";
+import { sendResetPasswordEmail } from "../../utils/email.util";
+
 
 
 export class AuthService implements iAuthService{
@@ -118,4 +122,55 @@ export class AuthService implements iAuthService{
     async getMe(userId:string):Promise<IUser|null>{
         return await this.userRepository.findById(userId)
     }
+
+     async forgotPassword(email: string): Promise<{ message: string }> {
+        const user = await this.userRepository.findByEmail(email);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        await redisClient.getClient().set(
+            `password_reset:${resetToken}`,
+            user._id.toString(),
+            {
+            EX: 15 * 60,
+            }
+        );
+
+        await sendResetPasswordEmail(user.email, resetToken);
+
+        return {
+            message: "Password reset link sent to your email",
+        };
+    }
+
+    async resetPassword(
+        token: string,
+        newPassword: string
+    ): Promise<{ message: string }> {
+        const userId = await redisClient
+            .getClient()
+            .get(`password_reset:${token}`);
+
+            if (!userId) {
+                throw new Error("Invalid or expired reset token");
+            }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await this.userRepository.updateById(userId, {
+            password: hashedPassword,
+        });
+
+        await redisClient.getClient().del(`password_reset:${token}`);
+
+        return {
+            message: "Password reset successfully",
+        };
+    }
+
+    
 }

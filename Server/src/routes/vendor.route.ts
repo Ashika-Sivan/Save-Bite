@@ -1,22 +1,13 @@
-import { Router } from "express"
-import { VendorRepository } from "../repositories/vendor/vendor.repository"
-import { VendorService } from "../services/vendor/vendor.service"
-import { VendorController } from "../controllers/vendor.controller"
-import { AuthMiddleware } from "../middlewares/auth.middleware"
-import { TokenService } from "../services/auth/token.service"
+import { Router } from "express";
+import { authMiddleware, vendorController } from "../config/dependencies";
 
-const router=Router()
+const router = Router();
 
-const vendorRepository=new VendorRepository()
-const vendorService=new VendorService(vendorRepository)
-const vendorController=new VendorController(vendorService)
-const tokenService=new TokenService();
-const authMiddleware=new AuthMiddleware(tokenService)
+router.post(
+  "/register",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("user"),
+  vendorController.registerVendor.bind(vendorController)//allowed user can become the vendor
+);
 
-
-router.post('/register',
-    authMiddleware.authenticate,vendorController.registerVendor.bind(vendorController)
-)
-
-
-export default router
+export default router;

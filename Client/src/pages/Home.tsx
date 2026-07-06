@@ -70,15 +70,16 @@ const foods = [
 ];
 
 export default function Home() {
-  const userI=useSelector((state:RootState)=>state.auth.user)
+  const user=useSelector((state:RootState)=>state.auth.user)
   const accessToken=useSelector((state:RootState)=>state.auth.accessToken)
 
-  console.log(userI)
+  console.log(user)
   console.log(accessToken)
     const [open,setOpen]=useState(false)
 
-    const storedUser=localStorage.getItem("user")
-    const user=storedUser?JSON.parse(storedUser):null;
+    // const storedUser=localStorage.getItem("user")
+    // const user=storedUser?JSON.parse(storedUser):null;
+
     const navigate=useNavigate()
     const handleLogout = async () => {
   try {
@@ -111,12 +112,21 @@ export default function Home() {
   <span>Cart</span>
 
   {!user ? (
-    <button
-      onClick={() => navigate("/login")}
-      className="bg-green-700 text-white px-4 py-2 rounded-full font-semibold"
-    >
-      Login
-    </button>
+    <div className="flex items-center gap-3">
+      <button
+        onClick={() => navigate("/login")}
+        className="font-medium text-green-700 hover:underline"
+      >
+        Login
+      </button>
+
+      <button
+        onClick={() => navigate("/signup")}
+        className="bg-green-700 text-white px-4 py-2 rounded-full font-semibold"
+      >
+        Sign Up
+      </button>
+    </div>
   ) : (
     <div className="relative">
       <button

@@ -14,5 +14,8 @@ export interface iAuthService{
     }>
     refreshToken(refreshToken:string):Promise<{accessToken:string}>//request for getting new accesstoken.the input is old refrsh token and the output is new access token
     getMe(userId:string):Promise<IUser|null>
+    forgotPassword(email:string):Promise<{message:string}>
+    resetPassword(token:string,newPassword:string):Promise<{message:string}>
+
     
 }

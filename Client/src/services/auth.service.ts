@@ -50,3 +50,18 @@ export const getMe = async () => {
   return response.data;
 };
 
+export const registerVendor=async(data:unknown)=>{
+    const response=await api.post("/vendor/register",data);
+    return response.data
+}
+ export const forgotPassword=async(email:string)=>{
+    const response=await api.post("/auth/forgot-password",{email})
+    return response.data
+ }
+ export const resetPassword=async(data:{
+    token:string;
+    newPassword:string
+ })=>{
+    const response=await api.post("/auth/reset-password",data);
+    return response.data
+ }

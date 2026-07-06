@@ -6,6 +6,8 @@ import Home from "../pages/Home";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute.tsx";
 import VendorRegister from "../pages/vendor/VendorRegister.tsx";
+import ForgotPassword from "../pages/auth/ForgotPassword.tsx";
+import ResetPassword from "../pages/auth/ResetPassword.tsx";
 
 export default function AppRoutes() {
   return (
@@ -29,6 +31,23 @@ export default function AppRoutes() {
             </PublicRoute>
           }
         />
+         <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
 
           <Route
             path="/login"
@@ -38,12 +57,15 @@ export default function AppRoutes() {
               </PublicRoute>
             }
           />
-          <Route path="/vendor/VendorRegister" element={<VendorRegister />} />
+
+
+        <Route path="/vendor/VendorRegister" element={<VendorRegister />} />
         <Route path="/home" element={
-          <ProtectedRoute>
-          <Home/>
-          </ProtectedRoute>
+            <ProtectedRoute>
+            <Home/>
+            </ProtectedRoute>
           }/>
+
       </Routes>
     </BrowserRouter>
   );

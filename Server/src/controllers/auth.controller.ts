@@ -177,4 +177,34 @@ export class AuthController{
             })
         }
     }
+
+    async forgotPassword(req:Request,res:Response):Promise<void>{
+        try {
+            const {email}=req.body;
+            const result=await this.authService.forgotPassword(email);
+            res.status(200).json(result)
+            
+        } catch (error) {
+            res.status(400).json({message:error instanceof Error?error.message:"something went wrong"})
+            
+        }
+    }
+    async resetPassword(req:Request,res:Response):Promise<void>{
+        try {
+            const {token,newPassword}=req.body
+             console.log(token)
+            const result=await this.authService.resetPassword(
+                token,
+                newPassword
+            )
+           
+            res.status(200).json(result)
+            
+        } catch (error) {
+            res.status(400).json({
+                message:error instanceof Error?error.message:"something went wrong"
+            })
+            
+        }
+    }
 }

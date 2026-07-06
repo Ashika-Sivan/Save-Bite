@@ -50,11 +50,11 @@ const userSchema=new Schema<IUser>(
             type:Boolean,
             default:false
         },
-        // role:{
-        //     type:String,
-        //     enum:["user",'vendor','admin'],
-        //     default:'user',
-        // }
+        role:{
+            type:String,
+            enum:["user",'vendor','admin'],
+            default:'user',
+        }
     },
     {timestamps:true}
 

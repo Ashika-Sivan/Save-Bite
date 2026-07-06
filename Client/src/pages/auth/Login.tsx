@@ -1,81 +1,123 @@
-import { useState } from "react"
-import { login } from "../../services/auth.service";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { login } from "../../services/auth.service";
 import { setCredentials } from "../../redux/authSlice";
 
-
 export default function Login() {
-   const navigate=useNavigate()
-   const dispatch=useDispatch()
-        const [form,setForm]=useState({
-            email:"",
-            password:""
-        })
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
-        ...form,
-        [e.target.name]: e.target.value
+      ...form,
+      [e.target.name]: e.target.value,
     });
-};
+  };
 
-    const handleSubmit=async(e:React.FormEvent)=>{
-        e.preventDefault()
-        // console.log('login data:',form)
-        try {
-            const data=await login(form)
-           dispatch(
-            setCredentials({
-              user:data.user,
-              accessToken:data.accessToken
-            })
-           )
-           navigate("/home")
-            
-        } catch (error) {
-            console.log("login failed:",error)
-            
-        }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+    try {
+      setError("");
+
+      const data = await login(form);
+
+      dispatch(
+        setCredentials({
+          user: data.user,
+          accessToken: data.accessToken,
+        })
+      );
+
+      navigate("/home");
+    } catch (error:any) {
+       console.log("login failed full error:", error);
+       console.log("backend message:", error.response?.data);
+    setError(error.response?.data?.message || "Login failed");
     }
-   
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white p-8 rounded-2xl shadow"
-      >
-        <h1 className="text-2xl font-bold text-center text-green-700 mb-6">
-          Login to SaveBite
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-green-50 px-4">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border bg-white p-8 shadow">
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-semibold text-green-700">
+            Welcome back
+          </h1>
+          <p className="text-sm text-gray-500">
+            Log in to continue to SaveBite.
+          </p>
+        </div>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          className="w-full mb-4 px-4 py-3 border rounded-lg outline-none"
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full mb-6 px-4 py-3 border rounded-lg outline-none"
-        />
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-sm font-medium">
+              Email
+            </label>
 
-        <button
-          type="submit"
-          className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
-        >
-          Login
-        </button>
-      </form>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              required
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-green-600 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <input
+              id="password"
+              type="password"
+              name="password"
+              required
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+          >
+            Log in
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-gray-500">
+          Don't have an account?{" "}
+          <Link to="/signup" className="font-medium text-green-600 hover:underline">
+            Sign up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

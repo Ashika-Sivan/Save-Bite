@@ -6,6 +6,7 @@ import {
   Upload,
   ArrowLeft,
   ArrowRight,
+  MapPin,
 } from "lucide-react";
 
 const steps = [
@@ -13,6 +14,7 @@ const steps = [
   { id: 2, title: "Verification", icon: BadgeCheck },
   { id: 3, title: "Documents", icon: FileText },
 ];
+import { registerVendor } from "../../services/auth.service";
 
 export default function VendorRegister() {
   const [step, setStep] = useState(1);
@@ -21,6 +23,7 @@ export default function VendorRegister() {
     vendorName: "",
     businessImage: null as File | null,
     place: "",
+    address: "",
     latitude: "",
     longitude: "",
     businessType: "",
@@ -39,7 +42,9 @@ export default function VendorRegister() {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     setForm({
       ...form,
@@ -56,10 +61,61 @@ export default function VendorRegister() {
     });
   };
 
-  const handleSubmit = () => {
-    console.log("Vendor form data:", form);
-    alert("Vendor application submitted successfully");
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setForm({
+          ...form,
+          latitude: position.coords.latitude.toString(),
+          longitude: position.coords.longitude.toString(),
+        });
+
+        alert("Location selected successfully");
+      },
+      () => {
+        alert("Please allow location permission");
+      }
+    );
   };
+const handleSubmit=async()=>{
+  try {
+    const payload={
+      businessInfo:{
+        businessName:form.vendorName,
+        businessImage:"pending-upload",
+        businessType:form.businessType,
+        place:form.place,
+        address:form.address,
+        latitude:Number(form.latitude),
+        longitude:Number(form.longitude),
+      },
+      verification:{
+        gstNumber:form.gstNumber,
+        panNumber:form.panNumber,
+        ifscCode:form.ifscCode,
+        bankAccountNumber:form.bankAccountNumber,
+        fssaiNumber:form.fssaiNumber
+      },
+      documents:{
+        gstCertificate:"pending-upload",
+        fssaiCertificate:"pending-upload",
+        panCard:"pending-upload",
+        businessRegistrationCertificate:'peding-upload'
+
+      },
+    };
+
+    const response=await registerVendor(payload)
+    
+  } catch (error) {
+    
+  }
+}
 
   return (
     <div className="min-h-screen bg-[#f8faf7] px-4 py-10">
@@ -69,11 +125,11 @@ export default function VendorRegister() {
             Become a SaveBite Vendor
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Complete your business details and verification to start selling on SaveBite.
+            Complete your business details and verification to start selling on
+            SaveBite.
           </p>
         </div>
 
-        {/* Step Indicator */}
         <div className="mb-8 flex items-center justify-between">
           {steps.map((item, index) => {
             const Icon = item.icon;
@@ -87,11 +143,12 @@ export default function VendorRegister() {
                     className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold ${
                       active || completed
                         ? "bg-[#2E7C35] text-white"
-                        : "bg-white text-gray-400 border"
+                        : "border bg-white text-gray-400"
                     }`}
                   >
                     {completed ? "✓" : <Icon className="h-4 w-4" />}
                   </div>
+
                   <div>
                     <p
                       className={`text-sm font-semibold ${
@@ -162,21 +219,48 @@ export default function VendorRegister() {
                   file={form.businessImage}
                 />
 
-                <Input
-                  label="Latitude"
-                  name="latitude"
-                  value={form.latitude}
-                  onChange={handleChange}
-                  placeholder="9.9312"
-                />
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Business Address
+                  </label>
+                  <textarea
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    placeholder="Enter street, area, city, PIN"
+                    rows={4}
+                    className="w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none focus:border-[#2E7C35]"
+                  />
+                </div>
 
-                <Input
-                  label="Longitude"
-                  name="longitude"
-                  value={form.longitude}
-                  onChange={handleChange}
-                  placeholder="76.2673"
-                />
+                <div className="md:col-span-2 rounded-2xl border border-dashed bg-green-50 p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                        <MapPin className="h-4 w-4 text-[#2E7C35]" />
+                        Business Location
+                      </p>
+
+                      {form.latitude && form.longitude ? (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Location selected successfully
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Current location not selected
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleUseCurrentLocation}
+                      className="rounded-full bg-[#2E7C35] px-5 py-2 text-sm font-semibold text-white hover:bg-[#25682c]"
+                    >
+                      Use Current Location
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -283,13 +367,12 @@ export default function VendorRegister() {
             </div>
           )}
 
-          {/* Buttons */}
           <div className="mt-10 flex items-center justify-between">
             <button
               type="button"
               disabled={step === 1}
               onClick={() => setStep(step - 1)}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-100"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -326,7 +409,9 @@ type InputProps = {
   value: string;
   placeholder?: string;
   onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => void;
 };
 

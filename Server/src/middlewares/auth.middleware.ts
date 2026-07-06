@@ -27,7 +27,7 @@ export class AuthMiddleware{
             //when the token come we have to verify it and placed it to payload
             const payload=this.tokenService.verifyAccessToken(token);//verify
            
-            (req as any).user = payload;
+            req.user = payload;
             next()
            
             
@@ -36,20 +36,20 @@ export class AuthMiddleware{
         }
     }
 
-    // authorize=(...allowedRoles:Array<"user"|"vendor"|"admin">)=>{
-    //     return (req:AuthRequest,res:Response,next:NextFunction):void=>{
-    //         const role=req.user?.role;
+    authorize=(...allowedRoles:Array<"user"|"vendor"|"admin">)=>{
+        return (req:AuthRequest,res:Response,next:NextFunction):void=>{
+            const role=req.user?.role;
 
-    //         if(!role||!allowedRoles.includes(role)){
-    //             res.status(403).json({
-    //                 success:false,
-    //                 message:'Access denied'
-    //             })
-    //             return 
-    //         }
-    //         next()
-    //     }
-    // }
+            if(!role||!allowedRoles.includes(role)){
+                res.status(403).json({
+                    success:false,
+                    message:'Access denied'
+                })
+                return 
+            }
+            next()
+        }
+    }
 }
 
 //here we are actually checking the accesstoken i mean the authorisation contain Bearer <access_token>

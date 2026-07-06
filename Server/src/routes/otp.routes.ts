@@ -3,7 +3,7 @@ import OtpController from "../controllers/otp.controller";
 import { redisClient } from "../config/redis";
 import OtpService from "../services/auth/otp.service";
 import OtpRepository from "../repositories/user/otp.repository";
-import EmailServce from "../services/email.service";
+import EmailServce from "../services/auth/email.service"
 
 const router=Router()
 //dependency

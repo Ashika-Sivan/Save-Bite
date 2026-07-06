@@ -1,4 +1,4 @@
-import { transporter } from "../config/mailer";
+import { transporter } from '../../config/mailer'
 
 class EmailService {
   async sendOtpEmail(email: string, otp: string) {
@@ -85,6 +85,21 @@ class EmailService {
       console.error(`[Email Error] Failed to send OTP email to ${email}:`, error.message);
       throw error;
     }
+  }
+
+  async sendResetPasswordEmail(email:string,token:string):Promise<void>{
+    const resetLink=`http://localhost:5173/reset-password?token=${token}`;
+    await transporter.sendMail({
+      from:process.env.EMAIL_USER,
+      to:email,
+      subject:'Reset your savebite password',
+      html:`
+         <h2>Reset Password</h2>
+        <p>Click the link below to reset your password.</p>
+        <a href="${resetLink}">Reset Password</a>
+        <p>This link will expire in 15 minutes.</p>
+      `
+    })
   }
 }
 
