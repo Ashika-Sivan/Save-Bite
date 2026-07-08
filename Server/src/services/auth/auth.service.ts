@@ -1,176 +1,219 @@
 import { iAuthService } from "../../interfaces/service/IAuthService";
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
 import { IUser } from "../../models/user/user.model";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
 import { ITokenService } from "../../interfaces/service/ITokenService";
 import { IOtpService } from "../../interfaces/service/IOtpService";
-import crypto from "crypto"
+import crypto from "crypto";
 import { redisClient } from "../../config/redis";
 import { sendResetPasswordEmail } from "../../utils/email.util";
+import { AUTH_MESSAGES } from "../../constants/messages";
+import { StatusCode } from "../../constants/statusCode";
+import { AppError } from "../../errors/AppError";
+import {
+  RegisterRequestDTO,
+  LoginRequestDTO,
+  VerifyOtpRequestDTO,
+  ResendOtpRequestDTO,
+  ForgotPasswordRequestDTO,
+  ResetPasswordRequestDTO,
+} from "../../dtos/auth.dto";
+import { env } from "../../config/env";
 
+export class AuthService implements iAuthService {
+  constructor(
+    private _userRepository: IUserRepository,
+    private _otpService: IOtpService,
+    private _tokenService: ITokenService
+  ) {}
 
+  async register(data: RegisterRequestDTO): Promise<IUser> {
+    const { name, email, password, phone } = data;
 
-export class AuthService implements iAuthService{
-    constructor(
-        private userRepository:IUserRepository,
-        private otpService:IOtpService,
-        private tokenService:ITokenService
-    ){}
+    const existingUser = await this._userRepository.findByEmail(email);
 
-    async register(
-        name:string,
-        email:string,
-        password:string,
-        phone?:string
-    ):Promise<IUser>{
-        
-        const existingUser = await this.userRepository.findByEmail(email);
-
-        if (existingUser) {
-        throw new Error("Email already exists");
-        }
-
-        const hashedPassword=await bcrypt.hash(password,10)
-
-
-        const user=await this.userRepository.create({
-            name,
-            email,
-            password:hashedPassword,
-            phone,
-            isAuthenticated:false
-        })
-
-        await this.otpService.createOtp(email)
-
-        return user
+    if (existingUser) {
+      throw new AppError(
+        AUTH_MESSAGES.EMAIL_ALREADY_EXISTS,
+        StatusCode.CONFILCT
+      );
     }
 
-    async resendOtp(email:string):Promise<boolean>{
-        const user=await this.userRepository.findByEmail(email)
-        if(!user){
-            throw new Error("user not found")
-        }
+    const hashedPassword = await bcrypt.hash(
+      password,
+      env.BCRYPT_SALT_ROUNDS
+    );
 
-        if(user.isAuthenticated){
-            throw new Error("User already verified")
-        }
-        await this.otpService.createOtp(email)
-        return true
-        
+    const user = await this._userRepository.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      isAuthenticated: false,
+    });
+
+    await this._otpService.createOtp(email);
+
+    return user;
+  }
+
+  async resendOtp(data: ResendOtpRequestDTO): Promise<boolean> {
+    const { email } = data;
+
+    const user = await this._userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
     }
 
-    async verifyOtp(email:string,otp:string):Promise<IUser|null>{
-        await this.otpService.verifyOtp(email,otp)
-
-        const user= await this.userRepository.updateAuthenticationStatus(
-            email,
-            true
-
-        )
-        return user
+    if (user.isAuthenticated) {
+      throw new AppError(
+        AUTH_MESSAGES.USER_ALREADY_VERIFIED,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-    async login(email:string,password:string):Promise<{
-        user:IUser,
-        accessToken:string,
-        refreshToken:string
-    }>{
-        const user=await this.userRepository.findByEmail(email)
+    await this._otpService.createOtp(email);
 
-        if(!user){
-            throw new Error("invalid email or password")
-        }
-        if(!user.isAuthenticated){
-            throw new Error('Please verify your email first')
-        }
+    return true;
+  }
 
-        const passwordMatch=await bcrypt.compare(password,user.password)
+  async verifyOtp(data: VerifyOtpRequestDTO): Promise<IUser | null> {
+    const { email } = data;
 
-        if(!passwordMatch){
-            throw new Error('Invalid email or password')
-        }
+    await this._otpService.verifyOtp(data);
 
-        const payload={
-            userId:user._id.toString(),
-            email:user.email,
-            role:user.role,
-        }
-        const accessToken=this.tokenService.generateAccessToken(payload)
+    const user = await this._userRepository.updateAuthenticationStatus(
+      email,
+      true
+    );
 
-        const refreshToken=this.tokenService.generateRefreshToken(payload)
-        return{
-            user,
-            accessToken,
-            refreshToken
-        }
+    return user;
+  }
+
+  async login(data: LoginRequestDTO): Promise<{
+    user: IUser;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const { email, password } = data;
+
+    const user = await this._userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new AppError(
+        AUTH_MESSAGES.INVALID_CREDENTIALS,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-    async refreshToken(refreshToken: string): Promise<{ accessToken: string; }> {
-        const payload=await this.tokenService.verifyRefreshToken(refreshToken)
-        const accessToken=this.tokenService.generateAccessToken({
-            userId:payload.userId,
-            email:payload.email,//filter out the userid and email from the payload and check the token.created new,
-            role:payload.role
-            
-        })
-        return {
-            accessToken
-        }
+    if (!user.isAuthenticated) {
+      throw new AppError(
+        AUTH_MESSAGES.VERIFY_EMAIL_FIRST,
+        StatusCode.UNAUTHORIZED
+      );
     }
 
-    async getMe(userId:string):Promise<IUser|null>{
-        return await this.userRepository.findById(userId)
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      throw new AppError(
+        AUTH_MESSAGES.INVALID_CREDENTIALS,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-     async forgotPassword(email: string): Promise<{ message: string }> {
-        const user = await this.userRepository.findByEmail(email);
+    const payload = {
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
 
-        if (!user) {
-            throw new Error("User not found");
-        }
+    const accessToken = this._tokenService.generateAccessToken(payload);
+    const refreshToken = this._tokenService.generateRefreshToken(payload);
 
-        const resetToken = crypto.randomBytes(32).toString("hex");
+    return {
+      user,
+      accessToken,
+      refreshToken,
+    };
+  }
 
-        await redisClient.getClient().set(
-            `password_reset:${resetToken}`,
-            user._id.toString(),
-            {
-            EX: 15 * 60,
-            }
-        );
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    const payload = await this._tokenService.verifyRefreshToken(refreshToken);
 
-        await sendResetPasswordEmail(user.email, resetToken);
+    const accessToken = this._tokenService.generateAccessToken({
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    });
 
-        return {
-            message: "Password reset link sent to your email",
-        };
+    return {
+      accessToken,
+    };
+  }
+
+  async getMe(userId: string): Promise<IUser | null> {
+    return await this._userRepository.findById(userId);
+  }
+
+  async forgotPassword(
+    data: ForgotPasswordRequestDTO
+  ): Promise<{ message: string }> {
+    const { email } = data;
+
+    const user = await this._userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
     }
 
-    async resetPassword(
-        token: string,
-        newPassword: string
-    ): Promise<{ message: string }> {
-        const userId = await redisClient
-            .getClient()
-            .get(`password_reset:${token}`);
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
-            if (!userId) {
-                throw new Error("Invalid or expired reset token");
-            }
+    await redisClient.getClient().set(
+      `password_reset:${resetToken}`,
+      user._id.toString(),
+      {
+        EX: env.PASSWORD_RESET_EXPIRY,
+      }
+    );
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await sendResetPasswordEmail(user.email, resetToken);
 
-        await this.userRepository.updateById(userId, {
-            password: hashedPassword,
-        });
+    return {
+      message: AUTH_MESSAGES.RESET_LINK_SENT,
+    };
+  }
 
-        await redisClient.getClient().del(`password_reset:${token}`);
+  async resetPassword(
+    data: ResetPasswordRequestDTO
+  ): Promise<{ message: string }> {
+    const { token, newPassword } = data;
 
-        return {
-            message: "Password reset successfully",
-        };
+    const userId = await redisClient
+      .getClient()
+      .get(`password_reset:${token}`);
+
+    if (!userId) {
+      throw new AppError(
+        AUTH_MESSAGES.INVALID_RESET_TOKEN,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-    
+    const hashedPassword = await bcrypt.hash(
+      newPassword,
+      env.BCRYPT_SALT_ROUNDS
+    );
+
+    await this._userRepository.updateById(userId, {
+      password: hashedPassword,
+    });
+
+    await redisClient.getClient().del(`password_reset:${token}`);
+
+    return {
+      message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
+    };
+  }
 }

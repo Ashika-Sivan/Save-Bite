@@ -7,7 +7,7 @@ import { AuthRequest } from "../types/authRequest";
 
 export class VendorController{
     constructor(
-        private vendorService:IVendorService
+        private _vendorService:IVendorService
     ){}
 
     async registerVendor(req:AuthRequest,res:Response):Promise<void>{
@@ -21,7 +21,7 @@ export class VendorController{
             return ;
         }
 
-        const vendor=await this.vendorService.registerVendor(
+        const vendor=await this._vendorService.registerVendor(
             ownerId,
             req.body
         )

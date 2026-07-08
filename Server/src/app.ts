@@ -4,6 +4,7 @@ import otpRoutes from './routes/otp.routes'
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import vendorRoute from "./routes/vendor.route";
+import { errorMiddleware } from "./middlewares/error.middleware"
 
 
 
@@ -33,6 +34,7 @@ export default class App {
     private routes():void{
         this.app.use('/api/auth',authRoutes)
         this.app.use('/api/auth',otpRoutes)
+        this.app.use(errorMiddleware)
     }
    
 }

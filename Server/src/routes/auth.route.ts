@@ -1,16 +1,53 @@
 import { Router } from "express";
 import { authController, authMiddleware } from "../config/dependencies";
-const router=Router()
+import { ROUTES } from "../constants/routes";
 
-router.post("/register",authController.register.bind(authController))//here we used bind to prevent losing this
-router.post("/resend-otp", authController.resendOtp.bind(authController));
-router.post('/verify-otp',authController.verifyOtp.bind(authController))
-router.post('/login',authController.login.bind(authController))
-router.post('/logout',authController.logout.bind(authController))
-router.get("/me",authMiddleware.authenticate,authController.getMe.bind(authController))
-router.post("/refresh",authController.refreshToken.bind(authController))
-router.post("/forgot-password",authController.forgotPassword.bind(authController))
-router.post('/reset-Password',authController.resetPassword.bind(authController))
+const router = Router();
 
+router.post(
+  ROUTES.AUTH.REGISTER,
+  authController.register.bind(authController)
+);
 
-export default router
+router.post(
+  ROUTES.AUTH.RESEND_OTP,
+  authController.resendOtp.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.VERIFY_OTP,
+  authController.verifyOtp.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.LOGIN,
+  authController.login.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.LOGOUT,
+  authController.logout.bind(authController)
+);
+
+router.get(
+  ROUTES.AUTH.GET_ME,
+  authMiddleware.authenticate,
+  authController.getMe.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.REFRESH_TOKEN,
+  authController.refreshToken.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.FORGOT_PASSWORD,
+  authController.forgotPassword.bind(authController)
+);
+
+router.post(
+  ROUTES.AUTH.RESET_PASSWORD,
+  authController.resetPassword.bind(authController)
+);
+
+export default router;

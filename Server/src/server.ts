@@ -10,20 +10,20 @@ import { redisClient } from "./config/redis";
 const appInstance = new App();
 
 class ServerApp {
-    private server: Server;
-    private db:connectDB;
+    private _server: Server;
+    private _db:connectDB;
 
     constructor(){
-        this.server = createServer(appInstance.app);
-        this.db=new connectDB()
+        this._server = createServer(appInstance.app);
+        this._db=new connectDB()
         
     }
 
    public async start(){    
-            await this.db.connect()
+            await this._db.connect()
             await redisClient.connect()
             
-        this.server.listen(5000,()=>{
+        this._server.listen(5000,()=>{
             console.log(`http://localhost:${5000}`);
             
         })

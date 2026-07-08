@@ -1,21 +1,33 @@
-// which define the authentication service shoudl provide
+// src/interfaces/service/IAuthService.ts
 
 import { IUser } from "../../models/user/user.model";
+import {
+  RegisterRequestDTO,
+  LoginRequestDTO,
+  VerifyOtpRequestDTO,
+  ResendOtpRequestDTO,
+  ForgotPasswordRequestDTO,
+  ResetPasswordRequestDTO,
+} from "../../dtos/auth.dto"
 
-//what authentication service can do
-export interface iAuthService{
-    register(name:string,email:string,password:string,phone?:string):Promise<IUser>
-     resendOtp(email: string): Promise<boolean>;
-     verifyOtp(email:string,otp:string):Promise<IUser|null>
-    login(email:string,password:string):Promise<{
-        user:IUser,
-        accessToken:string;
-        refreshToken:string
-    }>
-    refreshToken(refreshToken:string):Promise<{accessToken:string}>//request for getting new accesstoken.the input is old refrsh token and the output is new access token
-    getMe(userId:string):Promise<IUser|null>
-    forgotPassword(email:string):Promise<{message:string}>
-    resetPassword(token:string,newPassword:string):Promise<{message:string}>
+export interface iAuthService {
+  register(data: RegisterRequestDTO): Promise<IUser>;
 
-    
+  resendOtp(data: ResendOtpRequestDTO): Promise<boolean>;
+
+  verifyOtp(data: VerifyOtpRequestDTO): Promise<IUser | null>;
+
+  login(data: LoginRequestDTO): Promise<{
+    user: IUser;
+    accessToken: string;
+    refreshToken: string;
+  }>;
+
+  refreshToken(refreshToken: string): Promise<{ accessToken: string }>;
+
+  getMe(userId: string): Promise<IUser | null>;
+
+  forgotPassword(data: ForgotPasswordRequestDTO): Promise<{ message: string }>;
+
+  resetPassword(data: ResetPasswordRequestDTO): Promise<{ message: string }>;
 }

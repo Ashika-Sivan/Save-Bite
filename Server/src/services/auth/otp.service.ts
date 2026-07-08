@@ -1,38 +1,50 @@
+import { AUTH_MESSAGES } from "../../constants/messages";
+import { StatusCode } from "../../constants/statusCode";
+import { VerifyOtpRequestDTO } from "../../dtos/auth.dto";
+import { AppError } from "../../errors/AppError";
 import { IOtpService } from "../../interfaces/service/IOtpService";
 import OtpRepository from "../../repositories/user/otp.repository";
 import { generateOtp } from "../../utils/generateOtp";
 import EmailServce from "./email.service";
 
-class OtpService implements IOtpService{
-    private otpRepository:OtpRepository
-    private emailService:EmailServce
+class OtpService implements IOtpService {
+  constructor(
+    private _otpRepository: OtpRepository,
+    private _emailService: EmailServce
+  ) {}
 
-    constructor(otpRepository:OtpRepository,emailService:EmailServce){
-        this.otpRepository=otpRepository
-        this.emailService=emailService
+  async createOtp(email: string): Promise<boolean> {
+    const otp = generateOtp();
+
+    await this._otpRepository.storeOtp(email, otp);
+    await this._emailService.sendOtpEmail(email, otp);
+
+    return true;
+  }
+
+  async verifyOtp(data: VerifyOtpRequestDTO): Promise<boolean> {
+    const { email, otp } = data;
+
+    const storedOtp = await this._otpRepository.getOtp(email);
+
+    if (!storedOtp) {
+      throw new AppError(
+        `${AUTH_MESSAGES.OTP_EXPIRED} or ${AUTH_MESSAGES.OTP_NOT_FOUND}`,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-    async createOtp(email:string):Promise<boolean>{
-        const otp=generateOtp()
-        console.log(`OTP: ${otp}`)
-        await this.otpRepository.storeOtp(email,otp)
-        await this.emailService.sendOtpEmail(email,otp)
-
-        return true
+    if (storedOtp !== otp) {
+      throw new AppError(
+        AUTH_MESSAGES.INVALID_OTP,
+        StatusCode.BAD_REQUEST
+      );
     }
 
-    async verifyOtp(email:string,otp:string){
-        const storedOtp=await this.otpRepository.getOtp(email)
-        if(!storedOtp){
-            throw new Error("OTP expired or not found")
-        }
+    await this._otpRepository.deleteOtp(email);
 
-        if(storedOtp!==otp){
-            throw new Error("Invalud otp")
-        }
-        await this.otpRepository.deleteOtp(email)
-        return true
-    }
+    return true;
+  }
 }
 
-export default OtpService
+export default OtpService;

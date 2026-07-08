@@ -1,11 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { TokenService } from "../services/auth/token.service";
 import { AuthRequest } from "../types/authRequest";
+import { StatusCode } from "../constants/statusCode";
+import { AUTH_MESSAGES } from "../constants/messages";
 
 
 export class AuthMiddleware{
     constructor(
-        private tokenService:TokenService
+        private _tokenService:TokenService
     ){}
     authenticate=(req:AuthRequest,res:Response,next:NextFunction):void=>{
         try {
@@ -13,19 +15,19 @@ export class AuthMiddleware{
             const authHeader=req.headers.authorization;
           
             if(!authHeader || !authHeader.startsWith("Bearer ")){
-                res.status(401).json({success:false,message:"Access Token missing"})
+                res.status(StatusCode.UNAUTHORIZED).json({success:false,message:"Access Token missing"})
                 return 
             }
              const token=authHeader.split(" ")[1];
                if(!token){
-                res.status(401).json({
+                res.status(StatusCode.UNAUTHORIZED).json({
                     success:false,
-                    message:'Invalid token format',
+                    message:AUTH_MESSAGES.INVALID_TOKEN_FORMAT,
                 })
                  return 
             }
             //when the token come we have to verify it and placed it to payload
-            const payload=this.tokenService.verifyAccessToken(token);//verify
+            const payload=this._tokenService.verifyAccessToken(token);//verify
            
             req.user = payload;
             next()

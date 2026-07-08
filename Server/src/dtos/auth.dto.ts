@@ -1,25 +1,31 @@
-export interface createUserDTO{
-    name:string;
-    email:string;
-    phone?:string;
-    password:string;
+// src/dto/auth.dto.ts
+
+export interface RegisterRequestDTO {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
 }
-export interface LoginUserDTO{
-    email:string;
-    password:string
+
+export interface LoginRequestDTO {
+  email: string;
+  password: string;
 }
-export interface VerfiyOtpDTO{
-    email:string;
+
+export interface VerifyOtpRequestDTO {
+  email: string;
+  otp: string;
 }
-export interface ResendOtpDTO {
+
+export interface ResendOtpRequestDTO {
   email: string;
 }
 
-export interface ForgotPasswordDTO {
+export interface ForgotPasswordRequestDTO {
   email: string;
 }
 
-export interface ResetPasswordDTO {
+export interface ResetPasswordRequestDTO {
   token: string;
   newPassword: string;
 }

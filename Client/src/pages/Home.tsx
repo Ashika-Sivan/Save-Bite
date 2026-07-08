@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/auth.service";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "../redux/store";
+import { clearCredentials } from "../redux/authSlice";
+
 // import VendorRegister from "./vendor/VendorRegister";
 
 const categories = [
@@ -70,6 +72,7 @@ const foods = [
 ];
 
 export default function Home() {
+  const dispatch =useDispatch()
   const user=useSelector((state:RootState)=>state.auth.user)
   const accessToken=useSelector((state:RootState)=>state.auth.accessToken)
 
@@ -84,8 +87,9 @@ export default function Home() {
     const handleLogout = async () => {
   try {
     await logout();
+    dispatch(clearCredentials())
 
-    navigate("/login", {
+    navigate("/", {
       replace: true,
     });
   } catch (error) {

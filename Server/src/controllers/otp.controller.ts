@@ -1,45 +1,40 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import OtpService from "../services/auth/otp.service";
+import { StatusCode } from "../constants/statusCode";
+import { AUTH_MESSAGES } from "../constants/messages";
 
-class OtpController{
-    private otpService:OtpService
-   
+class OtpController {
+  constructor(private _otpService: OtpService) {}
 
-    constructor(otpService:OtpService){
-        this.otpService=otpService
+  sendOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+
+      await this._otpService.createOtp(email);
+
+      return res.status(StatusCode.OK).json({
+        success: true,
+        message: AUTH_MESSAGES.OTP_GENERATED_SUCCESS,
+      });
+    } catch (error) {
+      next(error);
     }
+  };
 
-    sendOtp=async(req:Request,res:Response)=>{
-        console.log('send otp hit')
-        const {email}=req.body
-        const otp=await this.otpService.createOtp(email)
-        console.log(otp,'otp form the send otp')
-        return res.status(200).json({
-            message:'OTP generated successfully',
-            
-        })
+  verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // const { email, otp } = req.body;
 
+      const result = await this._otpService.verifyOtp(req.body);
+
+      return res.status(StatusCode.OK).json({
+        success: result,
+        message: AUTH_MESSAGES.OTP_VERIFIED_SUCCESS,
+      });
+    } catch (error) {
+      next(error);
     }
-    verifyOtp=async(req:Request,res:Response)=>{
-        console.log('verify otp hit')
-        const {email,otp}=req.body
-        console.log('otp from verify otp',otp)
-        try {
-            const result=await this.otpService.verifyOtp(email,otp)
-            return res.status(200).json({
-                message:'OTP verified successfully',
-                success:result
-            })
-            
-        } catch (error:any) {
-            return res.status(400).json({
-                message:error.message,
-                
-            })
-            
-            
-        }
-    }
+  };
 }
 
-export default OtpController
+export default OtpController;
