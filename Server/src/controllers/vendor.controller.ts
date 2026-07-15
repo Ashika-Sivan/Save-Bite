@@ -1,6 +1,5 @@
-import { Request, Response } from "express";
+import {  Response } from "express";
 import { IVendorService } from "../interfaces/service/IVendorService";
-import { createVendorDTO } from "../dtos/vendor.dto";
 import { AuthRequest } from "../types/authRequest";
 
 
@@ -21,9 +20,28 @@ export class VendorController{
             return ;
         }
 
+        // if(!req.file){
+        //     res.status(400).json({
+        //         success:false,
+        //         message:"Vendor Certificate required"
+        //     })
+        //     return 
+        // }
+        const files=req.files as{
+            [filedName:string]:Express.Multer.File[]
+        }
+
+        const data={
+            businessInfo:JSON.parse(req.body.businessInfo),
+            verification:JSON.parse(req.body.verification),
+        };
+
         const vendor=await this._vendorService.registerVendor(
             ownerId,
-            req.body
+            data,
+            files
+            
+  
         )
         res.status(201).json({
             success:true,

@@ -1,7 +1,7 @@
 import api from "./api";
 
-export const registerVendor=async(data:unknown)=>{
-    const response=await api.post("/vendor/register",data);
+export const registerVendor=async(formData:FormData)=>{
+    const response=await api.post("/vendor/register",FormData);
     return response.data
 }
 

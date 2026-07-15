@@ -4,7 +4,7 @@ export interface IVendor extends Document{
 
     businessInfo:{
         businessName:string;
-        businessImage?:string;
+        businessImageKey?:string;
         businessType:string;
         place:string;
         address:string;
@@ -22,11 +22,11 @@ export interface IVendor extends Document{
         bankAccountNumber:string;
         fssaiNumber:string;
     };
-    documents:{
-        gstCertificate:string;
-        fssaiCertificate:string;
-        panCard:string;
-        businessRegistrationCertificate:string;
+    documents?:{
+        gstCertificateKey?:string;
+        fssaiCertificateKey?:string;
+        panCardKey?:string;
+        businessRegistrationCertificate?:string;
     };
     status:"pending"|"approved"|"rejected";
     rejectionReason?:string
@@ -49,7 +49,7 @@ const vendorSchema=new Schema<IVendor>(
                 type:String,
                 required:true
             },
-            businessImage:{
+            businessImageKey:{
                 type:String,
             },
             businessType:{
@@ -101,19 +101,19 @@ const vendorSchema=new Schema<IVendor>(
 
         },
         documents:{
-            gstCertificate:{
+            gstCertificateKey:{
+                type:String,
+                 required:true
+            },
+            fssaiCertificateKey:{
                 type:String,
                 required:true
             },
-            fssaiCertificate:{
+            panCardKey:{
                 type:String,
                 required:true
             },
-            panCard:{
-                type:String,
-                required:true
-            },
-            businessRegistrationCertificate:{
+            businessRegistrationCertificateKey:{
                 type:String,
                 required:true
             },

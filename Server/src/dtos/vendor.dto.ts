@@ -5,7 +5,6 @@ export interface BusinessInfoDTO{
     address:string;
     latitude:number;
     longitude:number;
-    businessImage:string;
 }
 
 export interface VerificationDTO{
@@ -17,18 +16,31 @@ export interface VerificationDTO{
 }
 
 export interface DocumentsDTO{
-    gstCertificate:string;
-    fssaiCertificate:string;
-    panCard:string;
-    businessRegistrationCertificate:string
+    gstCertificateKey:string;
+    fssaiCertificateKey:string;
+    panCardKey:string;
+    businessRegistrationCertificateKey:string
 }
 
 export interface createVendorDTO{
     businessInfo:BusinessInfoDTO;
     verification:VerificationDTO;
-    documents:DocumentsDTO
 }
 
-export interface VendorCreateData extends createVendorDTO{
+export interface VendorCreateData{
     ownerId:string;
+    businessInfo:{
+        businessName:string;
+        businessType:string;
+        place:string;
+        address:string;
+        businessImageKey:string;
+
+        location:{
+            type:"Point";
+            coordinates:[number,number]
+        };
+    };
+    verification:VerificationDTO;
+    documents:DocumentsDTO
 }

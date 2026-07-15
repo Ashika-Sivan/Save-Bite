@@ -31,7 +31,6 @@ export default function VendorRegister() {
     gstNumber: "",
     panNumber: "",
     ifscCode: "",
-    fullAddress: "",
     fssaiNumber: "",
     bankAccountNumber: "",
 
@@ -84,35 +83,67 @@ export default function VendorRegister() {
   };
 const handleSubmit=async()=>{
   try {
-    const payload={
-      businessInfo:{
-        businessName:form.vendorName,
-        businessImage:"pending-upload",
-        businessType:form.businessType,
-        place:form.place,
-        address:form.address,
-        latitude:Number(form.latitude),
-        longitude:Number(form.longitude),
-      },
-      verification:{
-        gstNumber:form.gstNumber,
-        panNumber:form.panNumber,
-        ifscCode:form.ifscCode,
-        bankAccountNumber:form.bankAccountNumber,
-        fssaiNumber:form.fssaiNumber
-      },
-      documents:{
-        gstCertificate:"pending-upload",
-        fssaiCertificate:"pending-upload",
-        panCard:"pending-upload",
-        businessRegistrationCertificate:'peding-upload'
-
-      },
-    };
-
-    const response=await registerVendor(payload)
+   if(!form.businessImage||!form.gstCertificate||!form.fssaiCertificate||!form.panCard||!form.businessRegistrationCertificate){
+    alert("All field requird")
+    return 
+   }
     
+
+   const businessInfo={
+    businessName:form.vendorName,
+    businessType:form.businessType,
+    place:form.place,
+    address:form.address,
+    latitude:Number(form.latitude),
+    longitude:Number(form.longitude)
+   };
+
+   const verification={
+     gstNumber: form.gstNumber,
+      panNumber: form.panNumber,
+      ifscCode: form.ifscCode,
+      bankAccountNumber: form.bankAccountNumber,
+      fssaiNumber: form.fssaiNumber,
+
+   }
+    const formData=new FormData();
+
+    formData.append(
+      "businessInfo",
+      JSON.stringify(businessInfo)
+    )
+    formData.append(
+      "verification",
+      JSON.stringify(verification)
+    )
+    formData.append(
+      "businessImage",
+      form.businessImage
+    )
+    formData.append(
+      "gstCertificate",
+      form.gstCertificate
+    )
+    formData.append(
+      "fssaiCertificate",
+      form.fssaiCertificate
+    )
+    formData.append(
+      "panCard",
+      form.panCard
+    )
+    formData.append(
+      "businessRegistrationCertificate",
+      form.businessRegistrationCertificate
+    )
+    const response=await registerVendor(formData)
+    alert("Vendor application submitted successfully");
+    console.log(response)
+
+
   } catch (error) {
+    console.error(error);
+    alert("Vendor registration failed");
     
   }
 }
@@ -312,7 +343,7 @@ const handleSubmit=async()=>{
                   placeholder="Enter account number"
                 />
 
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="mb-2 block text-sm font-semibold text-gray-700">
                     Full Address
                   </label>
@@ -324,7 +355,7 @@ const handleSubmit=async()=>{
                     rows={4}
                     className="w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none focus:border-[#2E7C35]"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
           )}
