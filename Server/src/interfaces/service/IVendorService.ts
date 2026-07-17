@@ -1,5 +1,5 @@
 import { createVendorDTO } from "../../dtos/vendor.dto";
-import { IVendor } from "../../models/vendor/vendor.model";
+import { IVendor } from "../models/IVendor.model";
 
 export interface IVendorService{
     registerVendor(
@@ -9,5 +9,10 @@ export interface IVendorService{
             [fieldName:string]:Express.Multer.File[]
         }
     ):Promise<IVendor>
+
+
+    getAllVendors():Promise<IVendor[]>
+    approveVendor(vendorId:string):Promise<IVendor>
+    rejectVendor(vendorId:string,reason:string):Promise<IVendor>
 
 }

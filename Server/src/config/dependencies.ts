@@ -13,15 +13,19 @@ import { VendorController } from "../controllers/vendor.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 import { redisClient } from "./redis";
+import { AdminController } from "../controllers/admin.controller";
 
-const userRepository = new UserRepository();
+
+ const userRepository = new UserRepository();
 const tokenService = new TokenService();
 const otpRepository = new OtpRepository(redisClient.getClient());
 const emailService = new EmailServce();
 const otpService = new OtpService(otpRepository, emailService);
 const vendorRepository = new VendorRepository();
 const authService = new AuthService(userRepository, otpService, tokenService);
-const vendorService = new VendorService(vendorRepository);
+const vendorService = new VendorService(vendorRepository,userRepository);
 export const authController = new AuthController(authService);
 export const vendorController = new VendorController(vendorService);
 export const authMiddleware = new AuthMiddleware(tokenService);
+export const adminController=new AdminController(vendorService)
+

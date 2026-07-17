@@ -25,6 +25,18 @@ export class UserRepository implements IUserRepository{
     async updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>{
         return await User.findByIdAndUpdate(userId,updateData,{new:true})
     }
+    async updateRole(userId: string, role: "vendor"): Promise<IUser | null> {
+        return await User.findByIdAndUpdate(
+            userId,
+            {
+                role,
+                isBusinessOwner:true
+            },
+            {
+                new :true
+            }
+        )
+    }
   
     
 

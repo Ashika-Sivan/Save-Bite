@@ -1,37 +1,38 @@
-import mongoose,{Document,Schema} from "mongoose";
-export interface IVendor extends Document{
-    ownerId:mongoose.Types.ObjectId;
+import mongoose,{Schema} from "mongoose"
+import { IVendor,VendorStatus} from "../../interfaces/models/IVendor.model";
+// export interface IVendor extends Document{
+//     ownerId:mongoose.Types.ObjectId;
 
-    businessInfo:{
-        businessName:string;
-        businessImageKey?:string;
-        businessType:string;
-        place:string;
-        address:string;
+//     businessInfo:{
+//         businessName:string;
+//         businessImageKey?:string;
+//         businessType:string;
+//         place:string;
+//         address:string;
 
-        location:{
-            type:"Point";
-            coordinates:[number,number]
-        }
-    }
+//         location:{
+//             type:"Point";
+//             coordinates:[number,number]
+//         }
+//     }
 
-    verification:{
-        gstNumber:string;
-        panNumber:string;
-        ifscCode:string;
-        bankAccountNumber:string;
-        fssaiNumber:string;
-    };
-    documents?:{
-        gstCertificateKey?:string;
-        fssaiCertificateKey?:string;
-        panCardKey?:string;
-        businessRegistrationCertificate?:string;
-    };
-    status:"pending"|"approved"|"rejected";
-    rejectionReason?:string
-    isLive:boolean
-}
+//     verification:{
+//         gstNumber:string;
+//         panNumber:string;
+//         ifscCode:string;
+//         bankAccountNumber:string;
+//         fssaiNumber:string;
+//     };
+//     documents?:{
+//         gstCertificateKey?:string;
+//         fssaiCertificateKey?:string;
+//         panCardKey?:string;
+//         businessRegistrationCertificate?:string;
+//     };
+//     status:"pending"|"approved"|"rejected";
+//     rejectionReason?:string
+//     isLive:boolean
+// }
 
 
 const vendorSchema=new Schema<IVendor>(
@@ -121,11 +122,12 @@ const vendorSchema=new Schema<IVendor>(
 
         status:{
             type:String,
-            enum:['pending','approved','rejected'],
-            default:'pending'
+            enum:Object.values(VendorStatus),
+            default:VendorStatus.PENDING
         },
         rejectionReason:{
             type:String,
+            default:null
         },
         isLive:{
             type:Boolean,

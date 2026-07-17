@@ -8,3 +8,4 @@ export const upload=multer({
     }
 })
 //storing the uploaded file in the memory
+//recieveing the file from the frontend =>after the req is complete data is released from tge memory (req.file.buffer)=>save the image data in the s3 bucket

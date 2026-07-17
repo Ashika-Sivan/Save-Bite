@@ -5,6 +5,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import vendorRoute from "./routes/vendor.route";
 import { errorMiddleware } from "./middlewares/error.middleware"
+import adminRoute  from "./routes/admin.routes"
 
 
 
@@ -28,6 +29,7 @@ export default class App {
         )
         this.app.use(express.json())
         this.app.use("/api/vendor",vendorRoute)
+        this.app.use("/api/admin",adminRoute)
         this.app.use(cookieParser());
 
     }

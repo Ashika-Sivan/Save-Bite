@@ -3,6 +3,7 @@ import { TokenService } from "../services/auth/token.service";
 import { AuthRequest } from "../types/authRequest";
 import { StatusCode } from "../constants/statusCode";
 import { AUTH_MESSAGES } from "../constants/messages";
+import { Logger } from "../utils/logger";
 
 
 export class AuthMiddleware{
@@ -41,6 +42,10 @@ export class AuthMiddleware{
     authorize=(...allowedRoles:Array<"user"|"vendor"|"admin">)=>{
         return (req:AuthRequest,res:Response,next:NextFunction):void=>{
             const role=req.user?.role;
+            Logger.info("Authorization Check", {
+                role: req.user?.role,
+                allowedRoles
+});
 
             if(!role||!allowedRoles.includes(role)){
                 res.status(403).json({
