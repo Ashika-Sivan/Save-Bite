@@ -130,11 +130,25 @@ export class VendorService implements IVendorService{
     }
 
     async approveVendor(vendorId: string): Promise<IVendor> {
-        const vendor=await this.vendorRepository.approveVendor(vendorId)
-        if(!vendor){
+
+        const existingVendor=await this.vendorRepository.findById(vendorId)
+        if(!existingVendor){
             throw new AppError("vendor not found",404)
         }
 
+
+        if(existingVendor.status===VendorStatus.APPROVED){
+            throw new AppError("vendor is already approved",400)
+        }
+
+        if(existingVendor.status===VendorStatus.REJECTED){
+            throw new AppError("Rejected vendor cannot be approved directly",400)
+        }
+
+        const vendor=await this.vendorRepository.approveVendor(vendorId)
+        if(!vendor){
+            throw new AppError("failed to approve vendor",500)
+        }
         await this._userRepository.updateRole(
             vendor.ownerId.toString(),
             "vendor"
@@ -143,12 +157,28 @@ export class VendorService implements IVendorService{
     }
 
     async rejectVendor(vendorId: string, reason: string): Promise<IVendor> {
-        if(!reason.trim()){
+        if(!reason||!reason.trim()){
             throw new AppError("Rejection reason is required",400);
         }
+
+        const existingVendor=await this.vendorRepository.findById(vendorId)
+
+                if(!existingVendor){
+                    throw new AppError("vendor not found",404)
+
+                }
+                if(existingVendor.status===VendorStatus.REJECTED){
+                    throw new AppError("vendor already rejected",400)
+                }
+
+                if(existingVendor.status===VendorStatus.APPROVED){
+                    throw new AppError("Approved vendor cannot be rejeted directly",400)
+                }
+
+
             const vendor=await this.vendorRepository.rejectVendor(
                 vendorId,
-                reason
+                reason.trim()
             );
 
             if(!vendor){
@@ -156,6 +186,20 @@ export class VendorService implements IVendorService{
             }
             return vendor
     }
+    async getVendorStatus(ownerId: string): Promise<{ hasApplication: boolean; status?: VendorStatus; rejectReason?: string | null}> {
+        const vendor=await this.vendorRepository.findByOwnerId(ownerId);
+        if(!vendor){
+            return {hasApplication:false}
+        }
+        return {
+            hasApplication:true,
+            status:vendor.status,
+            rejectReason:vendor.rejectionReason
+        }
+        
+    }
+
+
 }
 
 // {

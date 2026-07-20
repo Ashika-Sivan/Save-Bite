@@ -1,5 +1,5 @@
 import { createVendorDTO } from "../../dtos/vendor.dto";
-import { IVendor } from "../models/IVendor.model";
+import { IVendor, VendorStatus } from "../models/IVendor.model";
 
 export interface IVendorService{
     registerVendor(
@@ -14,5 +14,10 @@ export interface IVendorService{
     getAllVendors():Promise<IVendor[]>
     approveVendor(vendorId:string):Promise<IVendor>
     rejectVendor(vendorId:string,reason:string):Promise<IVendor>
+    getVendorStatus(ownerId:string):Promise<{
+        hasApplication:boolean;
+        status?:VendorStatus,
+        rejectReason?:string|null
+    }>;
 
 }

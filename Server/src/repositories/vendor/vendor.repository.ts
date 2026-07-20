@@ -48,5 +48,9 @@ export class VendorRepository implements IVendorRepository{//how we created the 
         
     }
 
+    async findById(vendorId: string): Promise<IVendor | null> {
+        return await Vendor.findById(vendorId)
+    }
+
 
 }

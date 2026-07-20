@@ -1,3 +1,4 @@
+
 import api from './api'
 export interface signupData{
     name:string;
@@ -5,6 +6,7 @@ export interface signupData{
     password:string;
     phone?:string
 }
+
 
 export const signupUser=async(data:signupData)=>{//here the data parameter follow the signup structure
     const response=await api.post("/auth/register",data)
@@ -65,3 +67,5 @@ export const registerVendor=async(data:unknown)=>{
     const response=await api.post("/auth/reset-password",data);
     return response.data
  }
+
+

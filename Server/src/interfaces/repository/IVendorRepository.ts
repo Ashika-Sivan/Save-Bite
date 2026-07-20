@@ -7,4 +7,5 @@ export interface IVendorRepository{
    findAll():Promise<IVendor[]>
    approveVendor(vendorId:string):Promise<IVendor|null>
    rejectVendor(vendorId:string,reason:string):Promise<IVendor|null>
+   findById(vendorId:string):Promise<IVendor|null>
 }

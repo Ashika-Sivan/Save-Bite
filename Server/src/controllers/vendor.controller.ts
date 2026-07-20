@@ -1,4 +1,4 @@
-import {  Response } from "express";
+import {  NextFunction, Request, Response } from "express";
 import { IVendorService } from "../interfaces/service/IVendorService";
 import { AuthRequest } from "../types/authRequest";
 
@@ -56,5 +56,30 @@ export class VendorController{
         })
         
        }
+    }
+
+    async getVendorStatus(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
+        try {
+            const ownerId=req.user?.userId;
+            if(!ownerId){
+                res.status(401).json({
+                    success:false,
+                    message:"user not authenticated"
+                    
+                })
+                return 
+            }
+
+            const status=await this._vendorService.getVendorStatus(ownerId)
+            res.status(200).json({
+                success:true,
+                message:"vendor status fetched successfully",
+                data:status
+            })
+            
+        } catch (error) {
+            next(error)
+            
+        }
     }
 }
