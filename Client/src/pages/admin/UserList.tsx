@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, UserRound } from "lucide-react";
+
 import DataTable, {
-  type TableColumn,
+  type TableColumn
 } from "../../components/common/DataTable";
+
 import StatusBadge from "../../components/common/StatusBadge";
+import { getAllUsers,toggleUserStatus} from "../../services/admin.service";
 
 interface User {
   _id: string;
@@ -14,44 +17,76 @@ interface User {
   createdAt: string;
 }
 
-const sampleUsers: User[] = [
-  {
-    _id: "1",
-    name: "Ashika Sivan",
-    email: "ashika@example.com",
-    role: "user",
-    isActive: true,
-    createdAt: "2026-07-20",
-  },
-  {
-    _id: "2",
-    name: "Rahul Nair",
-    email: "rahul@example.com",
-    role: "user",
-    isActive: false,
-    createdAt: "2026-07-18",
-  },
-];
-
 const UserList = () => {
+  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await getAllUsers();//call api
+
+        console.log("User API response:", response);
+
+        setUsers(
+          Array.isArray(response.data)
+            ? response.data
+            : []
+        );
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch users"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
 
     if (!searchValue) {
-      return sampleUsers;
+      return users;
     }
 
-    return sampleUsers.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchValue) ||
-        user.email.toLowerCase().includes(searchValue),
-    );
-  }, [search]);
+    return users.filter((user) => {
+      const name = user.name?.toLowerCase() ?? "";
+      const email = user.email?.toLowerCase() ?? "";
 
-  const handleBlockToggle = (user: User) => {
-    console.log(user.isActive ? "Block user" : "Unblock user", user._id);
+      return (
+        name.includes(searchValue) ||
+        email.includes(searchValue)
+      );
+    });
+  }, [users, search]);
+
+  const handleBlockToggle = async(user: User) => {
+    try {
+      const response=await toggleUserStatus(user._id)
+      const updatedUser=response.data;
+      setUsers((prevUsers) =>
+      prevUsers.map((currentUser) =>
+        currentUser._id === updatedUser._id
+          ? updatedUser
+          : currentUser
+      )
+    );
+      
+      
+    } catch (error) {
+      console.log(error)
+      
+    }
   };
 
   const columns: TableColumn<User>[] = [
@@ -64,35 +99,45 @@ const UserList = () => {
           </div>
 
           <div>
-            <p className="font-semibold text-gray-900">{user.name}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="font-semibold text-gray-900">
+              {user.name}
+            </p>
+
+            <p className="text-xs text-gray-500">
+              {user.email}
+            </p>
           </div>
         </div>
-      ),
+      )
     },
     {
       header: "Role",
       render: (user) => (
-        <span className="capitalize text-gray-700">{user.role}</span>
-      ),
+        <span className="capitalize">
+          {user.role}
+        </span>
+      )
     },
     {
-      header: "Joined",
+      header: "Joined On",
       render: (user) =>
-        new Date(user.createdAt).toLocaleDateString("en-IN"),
+        new Date(user.createdAt).toLocaleDateString("en-IN")
     },
     {
       header: "Status",
       render: (user) => (
-        <StatusBadge status={user.isActive ? "Active" : "Blocked"} />
-      ),
+        <StatusBadge
+          status={user.isActive ? "Active" : "Blocked"}
+        />
+      )
     },
     {
       header: "Action",
       render: (user) => (
         <button
+          type="button"
           onClick={() => handleBlockToggle(user)}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
             user.isActive
               ? "bg-red-50 text-red-600 hover:bg-red-100"
               : "bg-green-50 text-green-700 hover:bg-green-100"
@@ -100,17 +145,36 @@ const UserList = () => {
         >
           {user.isActive ? "Block" : "Unblock"}
         </button>
-      ),
-    },
+      )
+    }
   ];
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-gray-500">
+        Loading users...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-red-50 p-4 text-red-600">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Users
+          </h1>
+
           <p className="mt-1 text-gray-500">
-            View and manage registered SaveBite users.
+            View and manage registered users.
           </p>
         </div>
 
@@ -123,9 +187,11 @@ const UserList = () => {
           <input
             type="text"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
             placeholder="Search name or email"
-            className="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+            className="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
           />
         </div>
       </div>
@@ -134,8 +200,8 @@ const UserList = () => {
         <DataTable
           columns={columns}
           data={filteredUsers}
-          emptyMessage="No users found"
           getRowKey={(user) => user._id}
+          emptyMessage="No users found"
         />
       </div>
     </div>
