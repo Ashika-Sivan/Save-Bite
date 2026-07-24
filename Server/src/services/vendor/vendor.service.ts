@@ -1,12 +1,16 @@
 
-import { createVendorDTO, VendorCreateData } from "../../dtos/vendor.dto";
+import { IAdminVendorDetailsDTO, IAdminVendorDocumentListDTO, IAdminVendorListDTO, ICreateVendorDTO, IVendorCreateData } from "../../dtos/vendor.dto";
 import { IVendorRepository } from "../../interfaces/repository/IVendorRepository";
 import { IVendorService } from "../../interfaces/service/IVendorService";
 import { IVendor, VendorStatus } from "../../interfaces/models/IVendor.model";
 import { uploadToS3 } from "../../utils/uploadToS3";
 import { AppError } from "../../errors/AppError";
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
-import { Vendor } from "../../models/vendor/vendor.model";
+import { IUser } from "../../models/user/user.model";
+import { StatusCode } from "../../constants/statusCode";
+import { validateVendorVertification } from "../../validations/vendor.validations";
+import { getSignedS3Url } from "../../utils/getSignedS3Url";
+import { toAdminVendorDetailsDTO, toAdminVendorListDTO } from "../../mappers/vendor.mapper";
 
 
 export class VendorService implements IVendorService{
@@ -17,9 +21,11 @@ export class VendorService implements IVendorService{
 
     async registerVendor(
         ownerId: string,
-        data: createVendorDTO,
+        data: ICreateVendorDTO,
         files: { [fieldName: string]: Express.Multer.File[] }
     ): Promise<IVendor> {
+
+        
         const existingVendor =
             await this.vendorRepository.findByOwnerId(ownerId);
 
@@ -45,6 +51,7 @@ export class VendorService implements IVendorService{
                 )
             }
         }
+        validateVendorVertification(data.verification);
 
         const businessImage = files.businessImage?.[0];//if file exist take first file otherwise return undefined
         const gstCertificate = files.gstCertificate?.[0];
@@ -90,7 +97,7 @@ export class VendorService implements IVendorService{
             "vendor-documents"
         );
 
-        const vendorData: VendorCreateData = {
+        const vendorData: IVendorCreateData = {
             ownerId,
 
             businessInfo: {
@@ -125,8 +132,10 @@ export class VendorService implements IVendorService{
 
     //ADMIN..........................................
 
-    async getAllVendors(): Promise<IVendor[]> {
-        return await this.vendorRepository.findAll()
+    async getAllVendors(): Promise<IAdminVendorListDTO[]> {
+        const vendors= await this.vendorRepository.findAll();
+        return vendors.map(toAdminVendorListDTO)
+        
     }
 
     async approveVendor(vendorId: string): Promise<IVendor> {
@@ -199,9 +208,60 @@ export class VendorService implements IVendorService{
         
     }
 
+    async getAllUsers(): Promise<IUser[]> {
+        return await this.vendorRepository.getAllUsers()
+      
+    }
+    async toggleUserStatus(userId: string): Promise<IUser> {
+    
+            const user=await this._userRepository.findById(userId)
+            if(!user){
+                throw new AppError("user not found",404)
+            }
 
+            const updatedUser=await this.vendorRepository.updateUserStatus(userId,!user.isActive);
+            if(!updatedUser){
+                throw new AppError("failed to update user status",500)
+            }
+            return updatedUser
+    }
+
+    async getVendorById(vendorId: string): Promise<IAdminVendorDocumentListDTO> {
+        const vendor=await this.vendorRepository.findById(vendorId)
+        if(!vendor){
+            throw new AppError("vendor application not found",StatusCode.NOT_FOUND)
+        }
+         const documentUrls = {
+        gstCertificateUrl:
+        await getSignedS3Url(
+            vendor.documents.gstCertificateKey
+        ),
+
+        fssaiCertificateUrl:
+        await getSignedS3Url(
+            vendor.documents.fssaiCertificateKey
+        ),
+
+        panCardUrl:
+        await getSignedS3Url(
+            vendor.documents.panCardKey
+        ),
+
+        registrationCertificateUrl:
+        await getSignedS3Url(
+            vendor.documents.businessRegistrationCertificateKey
+        ),
+    
+            
+        };
+
+        const vendorData=toAdminVendorDetailsDTO(vendor)
+        return {
+            vendor:vendorData,
+            documentUrls
+        }
+
+
+    }
 }
 
-// {
-//     key: "vendor-certificates/random-file-name.pdf"
-// }

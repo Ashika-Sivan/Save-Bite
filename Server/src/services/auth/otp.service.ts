@@ -1,6 +1,6 @@
 import { AUTH_MESSAGES } from "../../constants/messages";
 import { StatusCode } from "../../constants/statusCode";
-import { VerifyOtpRequestDTO } from "../../dtos/auth.dto";
+import { IVerifyOtpRequestDTO } from "../../dtos/auth.dto";
 import { AppError } from "../../errors/AppError";
 import { IOtpService } from "../../interfaces/service/IOtpService";
 import OtpRepository from "../../repositories/user/otp.repository";
@@ -22,7 +22,7 @@ class OtpService implements IOtpService {
     return true;
   }
 
-  async verifyOtp(data: VerifyOtpRequestDTO): Promise<boolean> {
+  async verifyOtp(data: IVerifyOtpRequestDTO): Promise<boolean> {
     const { email, otp } = data;
 
     const storedOtp = await this._otpRepository.getOtp(email);

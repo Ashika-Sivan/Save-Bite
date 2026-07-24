@@ -528,8 +528,8 @@ export default function VendorRegister() {
     businessImage: null as File | null,
     place: "",
     address: "",
-    latitude: "",
-    longitude: "",
+    latitude: 0,
+    longitude: 0,
     businessType: "",
 
     gstNumber: "",
@@ -563,26 +563,43 @@ export default function VendorRegister() {
     });
   };
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
+ const handleCurrentLocation = () => {
+  console.log("Function called");
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setForm({
-          ...form,
-          latitude: position.coords.latitude.toString(),
-          longitude: position.coords.longitude.toString(),
-        });
-        alert("Location selected successfully");
-      },
-      () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser");
+    return;
+  }
+
+  console.log("Geolocation available");
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      console.log("Location success:", position);
+
+      setForm((previous) => ({
+        ...previous,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      }));
+
+      alert("Location selected successfully");
+    },
+    (error) => {
+      console.log("Location error:", error);
+
+      if (error.code === error.PERMISSION_DENIED) {
         alert("Please allow location permission");
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        alert("Your location is unavailable");
+      } else if (error.code === error.TIMEOUT) {
+        alert("Location request timed out");
+      } else {
+        alert("Unable to get your location");
       }
-    );
-  };
+    }
+  );
+};
 
   const handleSubmit = async () => {
     try {
@@ -607,8 +624,8 @@ export default function VendorRegister() {
         businessType: form.businessType,
         place: form.place,
         address: form.address,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
+        latitude:form.latitude,
+        longitude:form.longitude,
       };
 
       const verification = {
@@ -778,7 +795,7 @@ export default function VendorRegister() {
 
                     <button
                       type="button"
-                      onClick={handleUseCurrentLocation}
+                      onClick={handleCurrentLocation}
                       className="rounded-full bg-[#2E7C35] px-5 py-2 text-sm font-semibold text-white hover:bg-[#25682c]"
                     >
                       Use Current Location

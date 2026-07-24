@@ -14,5 +14,6 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     findById(userId:string):Promise<IUser|null>
     updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>
     updateRole(userId:string,role:"vendor"):Promise<IUser|null>
+    //  getUser(name:string):Promise<IUser[]>
 
 }

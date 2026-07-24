@@ -1,13 +1,14 @@
 //the main responsibily of this is save vendor and find vendor by owner id
 
-import { createVendorDTO, VendorCreateData } from "../../dtos/vendor.dto";
+import { ICreateVendorDTO, IVendorCreateData } from "../../dtos/vendor.dto";
 import { Vendor } from "../../models/vendor/vendor.model";
 import { IVendor, VendorStatus } from "../../interfaces/models/IVendor.model";
 import { IVendorRepository } from "../../interfaces/repository/IVendorRepository";
 import { Logger } from "../../utils/logger";
+import { IUser, User } from "../../models/user/user.model";
 
 export class VendorRepository implements IVendorRepository{//how we created the vendor
-    async createVendor(data:VendorCreateData):Promise<IVendor>{
+    async createVendor(data:IVendorCreateData):Promise<IVendor>{
         return await Vendor.create(data)
     }
 
@@ -25,7 +26,7 @@ export class VendorRepository implements IVendorRepository{//how we created the 
             vendorId,
             {
                 status:VendorStatus.APPROVED,
-                isLive:true,
+                // isLive:true,
                 rejectionReason: null,
 
             },
@@ -51,6 +52,15 @@ export class VendorRepository implements IVendorRepository{//how we created the 
     async findById(vendorId: string): Promise<IVendor | null> {
         return await Vendor.findById(vendorId)
     }
+    async getAllUsers(): Promise<IUser[]> {
+        return await User.find({role:'user'}).select("-password").sort({createdAt:-1})
+    }
 
+    async updateUserStatus(userId: string, isActive: boolean): Promise<IUser | null> {
+        return await User.findByIdAndUpdate(userId,{isActive},{new:true}).select("-password")
+    }
+    //  async getVendorById(vendorId: string): Promise<IVendor | null> {
+    //     return await Vendor.findById(vendorId)
+    // }
 
 }

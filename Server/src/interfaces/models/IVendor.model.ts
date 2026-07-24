@@ -7,11 +7,12 @@ export enum VendorStatus {
 }
 
 export interface IVendor {
+  _id:Types.ObjectId
   ownerId: Types.ObjectId;
 
   businessInfo: {
     businessName: string;
-    businessImageKey?: string;
+    businessImageKey: string;
     businessType: string;
     place: string;
     address: string;
@@ -40,4 +41,6 @@ export interface IVendor {
   status: VendorStatus;
   rejectionReason?: string | null;
   isLive: boolean;
+  createdAt:Date;
+  updatedAt:Date
 }

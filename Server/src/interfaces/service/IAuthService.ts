@@ -2,32 +2,33 @@
 
 import { IUser } from "../../models/user/user.model";
 import {
-  RegisterRequestDTO,
-  LoginRequestDTO,
-  VerifyOtpRequestDTO,
-  ResendOtpRequestDTO,
-  ForgotPasswordRequestDTO,
-  ResetPasswordRequestDTO,
+  IRegisterRequestDTO,
+  ILoginRequestDTO,
+  IVerifyOtpRequestDTO,
+  IResendOtpRequestDTO,
+  IForgotPasswordRequestDTO,
+  IResetPasswordRequestDTO,
+  ILoginResponseDTO,
+  ILoginServiceResult,
 } from "../../dtos/auth.dto"
 
 export interface iAuthService {
-  register(data: RegisterRequestDTO): Promise<IUser>;
+  register(data: IRegisterRequestDTO): Promise<IUser>;
 
-  resendOtp(data: ResendOtpRequestDTO): Promise<boolean>;
+  resendOtp(data: IResendOtpRequestDTO): Promise<boolean>;
 
-  verifyOtp(data: VerifyOtpRequestDTO): Promise<IUser | null>;
+  verifyOtp(data: IVerifyOtpRequestDTO): Promise<IUser | null>;
 
-  login(data: LoginRequestDTO): Promise<{
-    user: IUser;
-    accessToken: string;
-    refreshToken: string;
-  }>;
+  login(data: ILoginRequestDTO): Promise<ILoginServiceResult>;
+  
 
   refreshToken(refreshToken: string): Promise<{ accessToken: string }>;
 
   getMe(userId: string): Promise<IUser | null>;
 
-  forgotPassword(data: ForgotPasswordRequestDTO): Promise<{ message: string }>;
+  forgotPassword(data: IForgotPasswordRequestDTO): Promise<{ message: string }>;
 
-  resetPassword(data: ResetPasswordRequestDTO): Promise<{ message: string }>;
+  resetPassword(data: IResetPasswordRequestDTO): Promise<{ message: string }>;
+  
+  // regexUser(userId:string):Promise<IUser|null>
 }

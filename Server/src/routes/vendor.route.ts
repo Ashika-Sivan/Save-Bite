@@ -25,4 +25,5 @@ router.post(
 router.get("/status",authMiddleware.authenticate,authMiddleware.authorize("user","vendor"),vendorController.getVendorStatus.bind(vendorController))
 //when vendor making reg req check:-has already applied,application pending,was it approved,rehjected>?
 
+
 export default router;
