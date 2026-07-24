@@ -20,11 +20,12 @@ export class AuthController {
       Logger.info("Register controller hit");
 
       const user = await this._authService.register(req.body);
+      const userData=toUserResponseDTO(user)
 
       res.status(StatusCode.CREATED).json({
         success: true,
         message: AUTH_MESSAGES.REGISTER_SUCCESS,
-        user,
+        user:userData,
       });
     } catch (error) {
       next(error);
@@ -47,11 +48,12 @@ export class AuthController {
   async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = await this._authService.verifyOtp(req.body);
+      const userData=user?toUserResponseDTO(user):null
 
       res.status(StatusCode.OK).json({
         success: true,
         message: AUTH_MESSAGES.OTP_VERIFIED_SUCCESS,
-        user,
+        user:userData,
       });
     } catch (error) {
       next(error);
@@ -70,7 +72,7 @@ export class AuthController {
         maxAge: env.REFRESH_COOKIE_MAX_AGE,
       });
 
-    const userData=toUserResponseDTO(user)
+    const userData=user?toUserResponseDTO(user):null
       res.status(StatusCode.OK).json({
         success: true,
         message: AUTH_MESSAGES.LOGIN_SUCCESS,
@@ -179,4 +181,6 @@ export class AuthController {
       next(error);
     }
   }
+
+  
 }

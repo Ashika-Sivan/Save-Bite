@@ -6,6 +6,7 @@ interface User {
   email: string;
   phone?: string;
   isAuthenticated: boolean;
+  role:"user"|"vendor"|"admin"
 }
 //token:-redux authetication statte
 interface AuthState {
