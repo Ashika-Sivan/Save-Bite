@@ -518,10 +518,13 @@ const steps = [
 ];
 
 import { registerVendor } from "../../services/auth.service";
+import { useNavigate } from "react-router-dom";
+
 
 export default function VendorRegister() {
   const [step, setStep] = useState(1);
   const [accepted, setAccepted] = useState(false);
+  const navigate=useNavigate()
 
   const [form, setForm] = useState({
     vendorName: "",
@@ -651,6 +654,7 @@ export default function VendorRegister() {
 
       const response = await registerVendor(formData);
       alert("Vendor application submitted successfully");
+      navigate('/vendor/pending')
       console.log(response);
     } catch (error) {
       console.error(error);

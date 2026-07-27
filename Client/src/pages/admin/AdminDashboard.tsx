@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   LayoutDashboard,
   Users,
@@ -9,12 +10,69 @@ import {
   Clock3,
   Menu,
 } from "lucide-react";
+import { useAppDispatch } from "../../hooks/reduxHooks";
+import { clearCredentials } from "../../redux/authSlice";
+import { logout } from "../../services/auth.service";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+    const confirmLogout = async (toastId: string) => {
+    toast.dismiss(toastId);
+
+    try {
+      await logout();
+
+      dispatch(clearCredentials());
+
+      toast.success("Admin logged out successfully");
+
+      navigate("/admin/login", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error("Admin logout failed:", error);
+      toast.error("Logout failed. Please try again.");
+    }
+  };
 
   const handleLogout = () => {
-    navigate("/admin/login");
+    toast.custom(
+      (currentToast) => (
+        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-4 shadow-xl">
+          <h3 className="font-semibold text-gray-900">
+            Confirm logout
+          </h3>
+
+          <p className="mt-1 text-sm text-gray-600">
+            Are you sure you want to log out from the admin panel?
+          </p>
+
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(currentToast.id)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={() => confirmLogout(currentToast.id)}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+            >
+              Yes, Logout
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: "top-center",
+      }
+    );
   };
 
   return (

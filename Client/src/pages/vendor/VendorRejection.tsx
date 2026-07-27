@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   LifeBuoy,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   reason?: string;
@@ -17,10 +18,16 @@ type Props = {
 };
 
 export default function VendorRejected({
+ 
   reason = "Your FSSAI certificate has expired. Please upload a valid certificate before submitting again.",
   onApplyAgain,
   onBackHome,
-}: Props) {
+
+
+}: Props)
+   
+ {
+  const navigate=useNavigate()
   return (
     <div className="min-h-screen bg-[#faf7ef] text-slate-900 antialiased">
       {/* Header */}
@@ -127,14 +134,14 @@ export default function VendorRejected({
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={onApplyAgain}
+              onClick={()=>navigate('/vendor/VendorRegister')}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#15803d] px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#166534] hover:shadow-md"
             >
               <RefreshCw className="h-4 w-4" />
               Apply Again
             </button>
             <button
-              onClick={onBackHome}
+              onClick={()=>navigate('/')}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
             >
               <ArrowLeft className="h-4 w-4" />

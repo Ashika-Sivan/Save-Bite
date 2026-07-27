@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { adminLogin } from "../../services/admin.service";
 import { useAppDispatch} from "../../hooks/reduxHooks";
 import { setCredentials } from "../../redux/authSlice";
+import toast from "react-hot-toast";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -15,41 +16,48 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    try {
-      const response = await adminLogin({
-        email,
-        password,
-      });
+  try {
+    const response = await adminLogin({
+      email,
+      password,
+    });
 
-      const { user, accessToken } = response;
+    const { user, accessToken } = response;
 
-      if (user.role !== "admin") {
-        setError("You are not authorized to access the admin panel.");
-        return;
-      }
+    if (user.role !== "admin") {
+      const message = "You are not authorized to access the admin panel.";
 
-      dispatch(
-        setCredentials({
-          user,
-          accessToken,
-        })
-      );
-
-      navigate("/admin/dashboard");
-    } catch (error: any) {
-      setError(error.message || "Login failed");
-    } finally {
-      setLoading(false);
+      setError(message);
+      toast.error(message);
+      return;
     }
-  };
+
+    dispatch(
+      setCredentials({
+        user,
+        accessToken,
+      })
+    );
+
+    toast.success("Admin login successful!");
+
+    navigate("/admin/dashboard");
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Admin login failed";
+
+    setError(message);
+    toast.error(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#faf7ef] flex items-center justify-center p-5">
