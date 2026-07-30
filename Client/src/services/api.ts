@@ -24,8 +24,7 @@ api.interceptors.request.use(
     },
 
 
-    //if something goes wrong before sending the req
-    //reject the promise so the error can be hanldes later
+    //if something goes wrong bee error can be hanldes later
 
     (error)=>{
         return Promise.reject(error)

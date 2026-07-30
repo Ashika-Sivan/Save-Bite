@@ -37,6 +37,9 @@ export class UserRepository implements IUserRepository{
             }
         )
     }
+    // async getUser(name: string): Promise<IUser[]> {
+    //     return await User.find({name:{$regex:`^${name}`}})
+    // }
   
     
 

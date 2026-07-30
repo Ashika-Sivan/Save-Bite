@@ -15,6 +15,9 @@ import AdminLogin from "../pages/admin/AdminLogin.tsx";
 import AdminDashboard from "../pages/admin/AdminDashboard.tsx";
 import UserList from "../pages/admin/UserList.tsx";
 import VendorList from "../pages/admin/VendorList.tsx";
+import AdminRoute from "./AdminRoutes.tsx";
+import AdminPublicRoute from "./AdminPublicRoutes.tsx";
+import VendorDetails from "../pages/admin/VendorDetails.tsx";
 
 export default function AppRoutes() {
   return (
@@ -78,10 +81,17 @@ export default function AppRoutes() {
         <Route path="/vendor/dashboard" element={<VendorDashboard/>}/>
 
         {/* ADMIN SIDE*/}
+        <Route element={<AdminPublicRoute/>}>
         <Route path="/admin/login" element={<AdminLogin/>}/>
+        </Route>
+        <Route element={<AdminRoute/>}>
         <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
         <Route path="/admin/userList" element={<UserList/>}/>
         <Route path="/admin/vendorList" element={<VendorList/>}/>
+        <Route path="/admin/vendors/:vendorId" element={<VendorDetails/>}/> 
+        </Route>
+        
+        
 
 
 

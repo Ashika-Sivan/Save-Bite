@@ -1,31 +1,59 @@
 // src/dto/auth.dto.ts
+//convert object to another object
 
-export interface RegisterRequestDTO {
+import { IUser } from "../models/user/user.model";
+
+export interface IRegisterRequestDTO {//register expects
   name: string;
   email: string;
   password: string;
   phone?: string;
 }
 
-export interface LoginRequestDTO {
+export interface ILoginRequestDTO {
   email: string;
   password: string;
 }
 
-export interface VerifyOtpRequestDTO {
+export interface IVerifyOtpRequestDTO {
   email: string;
   otp: string;
 }
 
-export interface ResendOtpRequestDTO {
+export interface IResendOtpRequestDTO {
   email: string;
 }
 
-export interface ForgotPasswordRequestDTO {
+export interface IForgotPasswordRequestDTO {
   email: string;
 }
 
-export interface ResetPasswordRequestDTO {
+export interface IResetPasswordRequestDTO {
   token: string;
   newPassword: string;
+}
+
+//response DTO
+export interface IUserResponseDTO{
+  id:string;
+  name:string;
+  email:string;
+  role:string;
+  phone?:string;
+  isAuthenticated:boolean
+}
+export interface ILoginResponseDTO{
+  user:IUserResponseDTO;
+  accessToken:string;
+
+
+}
+export interface IMessageResponseDTO{
+  message:string;
+}
+export interface ILoginServiceResult{
+  user:IUser,
+  accessToken:string;
+  refreshToken:string;
+
 }

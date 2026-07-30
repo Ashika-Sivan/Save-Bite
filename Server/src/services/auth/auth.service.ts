@@ -11,12 +11,13 @@ import { AUTH_MESSAGES } from "../../constants/messages";
 import { StatusCode } from "../../constants/statusCode";
 import { AppError } from "../../errors/AppError";
 import {
-  RegisterRequestDTO,
-  LoginRequestDTO,
-  VerifyOtpRequestDTO,
-  ResendOtpRequestDTO,
-  ForgotPasswordRequestDTO,
-  ResetPasswordRequestDTO,
+  IRegisterRequestDTO,
+  ILoginRequestDTO,
+  IVerifyOtpRequestDTO,
+  IResendOtpRequestDTO,
+  IForgotPasswordRequestDTO,
+  IResetPasswordRequestDTO,
+  ILoginServiceResult,
 } from "../../dtos/auth.dto";
 import { env } from "../../config/env";
 
@@ -27,7 +28,7 @@ export class AuthService implements iAuthService {
     private _tokenService: ITokenService
   ) {}
 
-  async register(data: RegisterRequestDTO): Promise<IUser> {
+  async register(data:IRegisterRequestDTO): Promise<IUser> {
     const { name, email, password, phone } = data;
 
     const existingUser = await this._userRepository.findByEmail(email);
@@ -57,7 +58,7 @@ export class AuthService implements iAuthService {
     return user;
   }
 
-  async resendOtp(data: ResendOtpRequestDTO): Promise<boolean> {
+  async resendOtp(data: IResendOtpRequestDTO): Promise<boolean> {
     const { email } = data;
 
     const user = await this._userRepository.findByEmail(email);
@@ -78,7 +79,7 @@ export class AuthService implements iAuthService {
     return true;
   }
 
-  async verifyOtp(data: VerifyOtpRequestDTO): Promise<IUser | null> {
+  async verifyOtp(data: IVerifyOtpRequestDTO): Promise<IUser | null> {
     const { email } = data;
 
     await this._otpService.verifyOtp(data);
@@ -91,11 +92,7 @@ export class AuthService implements iAuthService {
     return user;
   }
 
-  async login(data: LoginRequestDTO): Promise<{
-    user: IUser;
-    accessToken: string;
-    refreshToken: string;
-  }> {
+  async login(data:ILoginRequestDTO): Promise<ILoginServiceResult> {
     const { email, password } = data;
 
     const user = await this._userRepository.findByEmail(email);
@@ -131,6 +128,13 @@ export class AuthService implements iAuthService {
 
     const accessToken = this._tokenService.generateAccessToken(payload);
     const refreshToken = this._tokenService.generateRefreshToken(payload);
+    // const userResponse:IUserResponseDTO={
+    //    id: user._id.toString(),
+    //   name: user.name,
+    //   email: user.email,
+    //   role: user.role,
+    //   phone: user.phone,
+    // }
 
     return {
       user,
@@ -158,7 +162,7 @@ export class AuthService implements iAuthService {
   }
 
   async forgotPassword(
-    data: ForgotPasswordRequestDTO
+    data: IForgotPasswordRequestDTO
   ): Promise<{ message: string }> {
     const { email } = data;
 
@@ -186,7 +190,7 @@ export class AuthService implements iAuthService {
   }
 
   async resetPassword(
-    data: ResetPasswordRequestDTO
+    data: IResetPasswordRequestDTO
   ): Promise<{ message: string }> {
     const { token, newPassword } = data;
 
@@ -216,4 +220,9 @@ export class AuthService implements iAuthService {
       message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
     };
   }
+
+  // async regexUser(userId: string): Promise<IUser | null> {
+  //   const findUser=await this._userRepository.getUser(userId)
+  //   return findUser
+  // }
 }
