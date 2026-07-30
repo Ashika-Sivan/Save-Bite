@@ -10,6 +10,7 @@ export interface IUser extends Document{
     isActive:boolean,
     isAdmin:boolean,
     role: "user" | "vendor" | "admin";
+    createdAt:Date
 
 }
 

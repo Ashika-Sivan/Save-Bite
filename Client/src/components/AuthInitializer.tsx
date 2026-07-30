@@ -3,39 +3,39 @@ import { useDispatch } from "react-redux";
 import { getMe, refreshAccessToken } from "../services/auth.service";
 import { setAccessToken, setCredentials } from "../redux/authSlice";
 
-interface Props{
-    children:React.ReactNode;//here we are wrap inside the component
+interface Props {
+    children: React.ReactNode;//here we are wrap inside the component
 }
 
 
-export default function AuthInitializer({children}:Props) {
+export default function AuthInitializer({ children }: Props) {
     console.log("AuthInitializer running");
-    const dispatch=useDispatch();//to getting the redux dispatchh funtion
+    const dispatch = useDispatch();//to getting the redux dispatchh funtion
 
     //which run only once when the app star
-    useEffect(()=>{
-        const initialAuth=async()=>{
+    useEffect(() => {
+        const initialAuth = async () => {
             try {
-                const refreshResponse=await refreshAccessToken()
-                const accessToken=await refreshResponse.accessToken//save accesstokn new
+                const refreshResponse = await refreshAccessToken()
+                const accessToken = await refreshResponse.data.accessToken//save accesstokn new
                 dispatch(setAccessToken(accessToken));
-                const meResponse=await getMe()//get logged in users details
+                const meResponse = await getMe()//get logged in users details
                 dispatch(
                     setCredentials({//redux restore
-                        user:meResponse.user,
+                        user: meResponse.data.user,
                         accessToken,
                     })
                 )
-                
-            } catch (error) {
+
+            } catch (_error) {
                 console.log('no active session')
-                
+
             }
 
         }
         initialAuth();
 
-    },[dispatch])
+    }, [dispatch])
     return <>{children}</>
 }
 

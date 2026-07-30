@@ -18,6 +18,8 @@ import VendorList from "../pages/admin/VendorList.tsx";
 import AdminRoute from "./AdminRoutes.tsx";
 import AdminPublicRoute from "./AdminPublicRoutes.tsx";
 import VendorDetails from "../pages/admin/VendorDetails.tsx";
+import VendorRoute from "./VendorRoute.tsx";
+import AdminLayout from "../components/admin/AdminLayout.tsx";
 
 export default function AppRoutes() {
   return (
@@ -75,20 +77,42 @@ export default function AppRoutes() {
 
            {/* VENDOR SIDE*/}
 
-          <Route path="/vendor/VendorRegister" element={<VendorRegister />} />
-        <Route path="/vendor/pending" element={<VendorPending/>}/>
-        <Route path="/vendor/rejected" element={<VendorRejected/>}/>
-        <Route path="/vendor/dashboard" element={<VendorDashboard/>}/>
+          <Route path="/vendor/VendorRegister" element={
+          <ProtectedRoute>
+               <VendorRegister />
+            </ProtectedRoute>
+            } />
+            
+        <Route path="/vendor/pending" element={
+          <ProtectedRoute>
+            <VendorPending/>
+          </ProtectedRoute>
+          }/>
+
+        <Route path="/vendor/rejected" element={
+          <ProtectedRoute>
+            <VendorRejected/>
+          </ProtectedRoute>
+          }/>
+      <Route element={<VendorRoute/>}>
+        <Route path="/vendor/dashboard" element={
+          // <ProtectedRoute>
+            <VendorDashboard/>
+          //  </ProtectedRoute>
+          }/>
+      </Route>
 
         {/* ADMIN SIDE*/}
         <Route element={<AdminPublicRoute/>}>
         <Route path="/admin/login" element={<AdminLogin/>}/>
         </Route>
         <Route element={<AdminRoute/>}>
+        <Route element={<AdminLayout />}>
         <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
         <Route path="/admin/userList" element={<UserList/>}/>
         <Route path="/admin/vendorList" element={<VendorList/>}/>
         <Route path="/admin/vendors/:vendorId" element={<VendorDetails/>}/> 
+        </Route>
         </Route>
         
         

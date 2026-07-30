@@ -100,10 +100,9 @@ export interface IRejectVendorRequestDTO {
 //response dto
 
 export interface IVendorStatusResponseDTO {
-  id: string;
-  status: "pending" | "approved" | "rejected";
-  isLive: boolean;
-  rejectionReason?: string;
+  hasApplication:boolean
+  status?: "pending" | "approved" | "rejected";
+  rejectionReason?: string|null;
 }
 
 export interface IAdminVendorDocumentListDTO{//url list

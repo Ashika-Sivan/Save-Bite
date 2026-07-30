@@ -20,31 +20,31 @@ const Otp = () => {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleVerify = async () => {
-  const otpValue = otp.join("");
+    const otpValue = otp.join("");
 
-  if (otpValue.length < OTP_LENGTH) {
-    setStatusMsg({
-      text: "Please enter all 6 digits.",
-      type: "error",
-    });
-    return;
-  }
+    if (otpValue.length < OTP_LENGTH) {
+      setStatusMsg({
+        text: "Please enter all 6 digits.",
+        type: "error",
+      });
+      return;
+    }
 
-  try {
-    await verifyOtp(email, otpValue);
+    try {
+      await verifyOtp(email, otpValue);
 
-    toast.success("OTP verified successfully! Registration completed.");
+      toast.success("OTP verified successfully! Registration completed.");
 
-    navigate("/login");
-  } catch {
-    toast.error("Invalid OTP. Please try again.");
+      navigate("/login");
+    } catch {
+      toast.error("Invalid OTP. Please try again.");
 
-    setStatusMsg({
-      text: "Invalid OTP. Please try again.",
-      type: "error",
-    });
-  }
-};
+      setStatusMsg({
+        text: "Invalid OTP. Please try again.",
+        type: "error",
+      });
+    }
+  };
 
   const startTimer = () => {
     setSeconds(TIMER_SECONDS);
@@ -64,7 +64,17 @@ const Otp = () => {
   };
 
   useEffect(() => {
-    startTimer();
+    intervalRef.current = setInterval(() => {
+      setSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current!);
+          setCanResend(true);
+          setStatusMsg({ text: "OTP expired. Please resend.", type: "error" });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(intervalRef.current!);
   }, []);
 
@@ -202,9 +212,8 @@ const Otp = () => {
             <button
               onClick={handleResend}
               disabled={!canResend}
-              className={`font-medium transition ${
-                canResend ? "text-green-800 hover:underline cursor-pointer" : "text-gray-400 cursor-not-allowed"
-              }`}
+              className={`font-medium transition ${canResend ? "text-green-800 hover:underline cursor-pointer" : "text-gray-400 cursor-not-allowed"
+                }`}
             >
               Resend OTP
             </button>

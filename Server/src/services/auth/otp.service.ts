@@ -2,15 +2,15 @@ import { AUTH_MESSAGES } from "../../constants/messages";
 import { StatusCode } from "../../constants/statusCode";
 import { IVerifyOtpRequestDTO } from "../../dtos/auth.dto";
 import { AppError } from "../../errors/AppError";
-import { IOtpService } from "../../interfaces/service/IOtpService";
+import { IOtpService } from "../../interfaces/service/auth/IOtpService";
 import OtpRepository from "../../repositories/user/otp.repository";
 import { generateOtp } from "../../utils/generateOtp";
-import EmailServce from "./email.service";
+import { EmailService } from "./email.service";
 
 class OtpService implements IOtpService {
   constructor(
     private _otpRepository: OtpRepository,
-    private _emailService: EmailServce
+    private _emailService: EmailService
   ) {}
 
   async createOtp(email: string): Promise<boolean> {

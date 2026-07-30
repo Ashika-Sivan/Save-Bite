@@ -6,6 +6,7 @@ import { clearCredentials } from "../redux/authSlice";
 import { checkVendorStatus } from "../services/vendor.service";
 import { logout } from "../services/auth.service";
 import toast from "react-hot-toast";
+import { updateUser } from "../redux/authSlice";
 
 const categories = [
   "All",
@@ -98,13 +99,13 @@ export default function Home() {
 
       console.log("Vendor status response:", response);
 
-      const { hasApplication, status } = response.data;
+      const { hasApplication, status } = response.data
       console.log("4. hasApplication:", hasApplication);
     console.log("5. status:", status);
 
       if (!hasApplication) {
            console.log("6. Going to registration");
-        navigate("/vendor/vendorRegister");
+        navigate("/vendor/VendorRegister");
         return;
       }
 
@@ -116,6 +117,7 @@ export default function Home() {
 
       if (status === "approved") {
          console.log("6. Going to dashboard");
+         dispatch(updateUser({ role: "vendor" }));
         navigate("/vendor/dashboard");
         return;
       }

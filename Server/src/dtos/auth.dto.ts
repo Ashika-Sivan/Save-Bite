@@ -1,4 +1,4 @@
-// src/dto/auth.dto.ts
+
 //convert object to another object
 
 import { IUser } from "../models/user/user.model";

@@ -5,13 +5,15 @@ import StatusBadge from "../../components/common/StatusBadge";
 import { getAllUsers, toggleUserStatus } from "../../services/admin.service";
 
 interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   role: string;
   isActive: boolean;
   createdAt: string;
 }
+
+
 
 type StatusTab = "all" | "active" | "blocked";
 
@@ -61,15 +63,19 @@ const UserList = () => {
 
   const handleBlockToggle = async (user: User) => {
     try {
-      const response = await toggleUserStatus(user._id);
-      const updatedUser = response.data;
-      setUsers((prev) =>
-        prev.map((u) => (u._id === updatedUser._id ? updatedUser : u)),
-      );
+        const response = await toggleUserStatus(user.id);
+
+        const updatedUser = response.data;
+
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === updatedUser.id ? updatedUser : u
+          )
+        );
     } catch (err) {
       console.log(err);
     }
-  };
+};
 
   const columns: TableColumn<User>[] = [
     {
@@ -77,7 +83,7 @@ const UserList = () => {
       render: (user) => (
         <div>
           <p className="font-semibold text-gray-900">{user.name}</p>
-          <p className="text-xs text-gray-500">{user._id}</p>
+          <p className="text-xs text-gray-500">{user.id}</p>
         </div>
       ),
     },
@@ -189,7 +195,7 @@ const UserList = () => {
           <DataTable
             columns={columns}
             data={filteredUsers}
-            getRowKey={(user) => user._id}
+            getRowKey={(user) => user.id}
             emptyMessage="No users found"
           />
         )}

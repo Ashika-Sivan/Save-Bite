@@ -1,8 +1,8 @@
-// src/repositories/base.repository.ts
 
-import { Document, Model, UpdateQuery } from "mongoose";
 
-export class BaseRepository<T extends Document> {
+import { Model, UpdateQuery } from "mongoose";
+
+export class BaseRepository<T> {
   constructor(protected _model: Model<T>) {}
 
   async create(data: Partial<T>): Promise<T> {

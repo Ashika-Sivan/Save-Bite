@@ -1,11 +1,12 @@
 //it is a normal typescript file
+import toast from "react-hot-toast";
 
 import axios from "axios";//to make the http request
 import { store } from "../redux/store";
-import { clearCredentials, setAccessToken } from "../redux/authSlice";
+import { clearCredentials, setAccessToken, setCredentials } from "../redux/authSlice";
 ///import the redux store so we ca acess the access token
 const api=axios.create({
-    baseURL:"http://localhost:5000/api",
+    baseURL:import.meta.env.VITE_BASE_URL,
     withCredentials:true//send refresh token cookie
 
 })
@@ -76,12 +77,15 @@ api.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config;
+    const status=error.response?.status
+    const message=error.response?.data?.message
 
     // If refresh API itself failed, don't retry again
     if (originalRequest?.url === "/auth/refresh") {
       store.dispatch(clearCredentials());
       return Promise.reject(error);
     }
+
 
     if (
       error.response?.status === 401 &&
@@ -92,9 +96,20 @@ api.interceptors.response.use(
       try {
         const response = await api.post("/auth/refresh");//toget the new access token:-if the accesstoken expire
 
-        const newAccessToken = response.data.accessToken;
+        const newAccessToken = response.data.data.accessToken;
+        store.dispatch(
+          setAccessToken(newAccessToken)
+        )
 
-        store.dispatch(setAccessToken(newAccessToken));
+        const meResponse=await api.get("/auth/me")//this is to fetch the latest user from the backedn
+
+        // store.dispatch(setAccessToken(newAccessToken));
+        store.dispatch(setCredentials({
+          user:meResponse.data.data.user,
+          accessToken:newAccessToken
+        }))
+
+        //here we are updating failed req with new token
 
         originalRequest.headers = {
           ...originalRequest.headers,
@@ -108,7 +123,12 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    if(status===403){
+      toast.error(message||"you donot have permission to perform this action")
+    }else if(status && status>=500){
+      toast.error(message||"Something went wrong on the server. Please try again later.")
+    }
+          return Promise.reject(error);
   }
 );
 

@@ -1,7 +1,7 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import s3Client from "../config/s3";
 
-const path=require('path')
+import path from "path"
 
 interface UploadedFile{
     buffer:Buffer;

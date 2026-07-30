@@ -1,6 +1,6 @@
-// src/interfaces/service/IAuthService.ts
 
-import { IUser } from "../../models/user/user.model";
+
+import { IUser } from "../../../models/user/user.model";
 import {
   IRegisterRequestDTO,
   ILoginRequestDTO,
@@ -8,11 +8,10 @@ import {
   IResendOtpRequestDTO,
   IForgotPasswordRequestDTO,
   IResetPasswordRequestDTO,
-  ILoginResponseDTO,
   ILoginServiceResult,
-} from "../../dtos/auth.dto"
+} from "../../../dtos/auth.dto"
 
-export interface iAuthService {
+export interface IAuthService {
   register(data: IRegisterRequestDTO): Promise<IUser>;
 
   resendOtp(data: IResendOtpRequestDTO): Promise<boolean>;
@@ -30,5 +29,5 @@ export interface iAuthService {
 
   resetPassword(data: IResetPasswordRequestDTO): Promise<{ message: string }>;
   
-  // regexUser(userId:string):Promise<IUser|null>
+
 }

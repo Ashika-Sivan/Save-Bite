@@ -1,118 +1,161 @@
 import { NextFunction, Request, Response } from "express";
-import { IVendorService } from "../interfaces/service/IVendorService";
-import { Logger } from "../utils/logger";
 import { StatusCode } from "../constants/statusCode";
 import { AppError } from "../errors/AppError";
+import { VENDOR_MESSAGES, ADMIN_MESSAGES } from "../constants/messages";
+import { IAdminService } from "../interfaces/service/admin/IAdminService";
+import { ResponseHelper } from "../utils/ResponseHelper";
 
+export class AdminController {
+  constructor(private readonly _adminService: IAdminService) {}
 
-
-export class AdminController{
-   constructor(
-    private readonly _vendorService:IVendorService
-   ){}
-
-   async getAllVendors(req:Request,res:Response,next:NextFunction):Promise<void>{
-    
+  async getAllVendors(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-        const vendors=await this._vendorService.getAllVendors();
-        res.status(200).json({
-            success:true,
-            message:"Vendor fetched successfully",
-            data:vendors
-        })
-        
+      const vendors = await this._adminService.getAllVendors();
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        ADMIN_MESSAGES.VENDORS_FETCHED,
+        vendors,
+      );
     } catch (error) {
-        next(error)
-        
+      next(error);
     }
-   }
-
-   async approveVendor(req:Request<{vendorId:string}>,res:Response,next:NextFunction){
-    Logger.info("vendor controlller hit.........")
-        try {
-            const {vendorId}=req.params
-            Logger.info('Approving vendor with ID:', {vendorId,length:vendorId.length});
-            const vendor=await this._vendorService.approveVendor(vendorId);
-            res.status(200).json({
-                success:true,
-                message:'vendor approved successfully',
-                data:vendor
-            })
-        } catch (error) {
-            next(error)
-            
-        }
-   }
-
-
-   async rejectVendor(req:Request<{vendorId:string}>,res:Response,next:NextFunction):Promise<void>{
+  }
+/**
+ * 
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+  async approveVendor(
+    req: Request<{ vendorId: string }>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-        const {vendorId}=req.params;
-        const {reason}=req.body
-        const vendor=await this._vendorService.rejectVendor(
-            vendorId,
-            reason
-        )
+      const { vendorId } = req.params;
+      if (!vendorId) {
+        throw new AppError(
+          ADMIN_MESSAGES.VENDOR_ID_REQUIRED,
+          StatusCode.BAD_REQUEST,
+        );
+      }
 
-        res.status(200).json({
-            success:true,
-            message:"vendor rejected successfully",
-            data:vendor,
-        })
+      const vendor = await this._adminService.approveVendor(vendorId);
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        VENDOR_MESSAGES.APPROVED_SUCCESS,
+        vendor,
+      );
     } catch (error) {
-        next(error)
-        
+      next(error);
     }
+  }
 
-   }
-   async getAllUsers(req:Request,res:Response,next:NextFunction){
+  async rejectVendor(
+    req: Request<{ vendorId: string }>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-        const users=await this._vendorService.getAllUsers()
-        res.status(200).json({success:true,message:'user fetched successfully',data:users})
-        
+      const { vendorId } = req.params;
+      const { reason } = req.body;
+
+      if (!vendorId) {
+        throw new AppError(
+          ADMIN_MESSAGES.VENDOR_ID_REQUIRED,
+          StatusCode.BAD_REQUEST,
+        );
+      }
+
+      const vendor = await this._adminService.rejectVendor(vendorId, reason);
+
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        VENDOR_MESSAGES.REJECTED_SUCCESS,
+        vendor,
+      );
     } catch (error) {
-        next(error)
-        
+      next(error);
     }
-   }
+  }
 
-   async toggleUserStatus(req:Request,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const {userId}=req.params
-            if(!userId||Array.isArray(userId)){
-                res.status(400).json({
-                    success: false,
-                    message: "Valid user ID is required"
-                });
-                return;
+  async getAllUsers(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const users = await this._adminService.getAllUsers();
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        ADMIN_MESSAGES.USERS_FETCHED,
+        users,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 
-            }
-            const updatedUser=await this._vendorService.toggleUserStatus(userId);
-            res.status(200).json({
-                success:true,
-                message:updatedUser.isActive?"user unblocked successfully":"user blocked successfull",
-                data:updatedUser
-            })
+  async toggleUserStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { userId } = req.params;
+      if (!userId || Array.isArray(userId)) {
+        throw new AppError(
+          ADMIN_MESSAGES.VALID_USER_ID_REQUIRED,
+          StatusCode.BAD_REQUEST,
+        );
+      }
 
-            
-        } catch (error) {
-            next(error)
-            
-        }
-   }
-   async getVendorById(req:Request,res:Response,next:NextFunction):Promise<void>{
-       try {
-        const vendorId=req.params.vendorId
-        if(!vendorId||Array.isArray(vendorId)){
-            throw new AppError("vendor id is required",StatusCode.BAD_REQUEST)
-        }
-        const result=await this._vendorService.getVendorById(vendorId)
-        res.status(StatusCode.OK).json({success:true,message:"vendor fetched successfully,",result})
-        
-       } catch (error) {
-        next(error)
-        
-       }
-   }
-   
+      const updatedUser = await this._adminService.toggleUserStatus(userId);
+
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        updatedUser.isActive
+          ? ADMIN_MESSAGES.USER_UNBLOCKED
+          : ADMIN_MESSAGES.USER_BLOCKED,
+        updatedUser,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getVendorById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const vendorId = req.params.vendorId;
+      if (!vendorId || Array.isArray(vendorId)) {
+        throw new AppError(
+          ADMIN_MESSAGES.VENDOR_ID_REQUIRED,
+          StatusCode.BAD_REQUEST,
+        );
+      }
+
+      const result = await this._adminService.getVendorById(vendorId);
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        VENDOR_MESSAGES.VENDOR_FETCHED,
+        result,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }

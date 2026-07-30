@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
       setError("");
       await forgotPassword(email);
       setSubmitted(true);
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to send reset link");
     }
   };

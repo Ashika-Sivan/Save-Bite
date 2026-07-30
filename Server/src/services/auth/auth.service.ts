@@ -1,12 +1,8 @@
-import { iAuthService } from "../../interfaces/service/IAuthService";
+import { IAuthService } from "../../interfaces/service/auth/IAuthService";
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
 import { IUser } from "../../models/user/user.model";
-import bcrypt from "bcrypt";
-import { ITokenService } from "../../interfaces/service/ITokenService";
-import { IOtpService } from "../../interfaces/service/IOtpService";
-import crypto from "crypto";
-import { redisClient } from "../../config/redis";
-import { sendResetPasswordEmail } from "../../utils/email.util";
+import { ITokenService } from "../../interfaces/service/auth/ITokenService";
+import { IOtpService } from "../../interfaces/service/auth/IOtpService";
 import { AUTH_MESSAGES } from "../../constants/messages";
 import { StatusCode } from "../../constants/statusCode";
 import { AppError } from "../../errors/AppError";
@@ -19,16 +15,21 @@ import {
   IResetPasswordRequestDTO,
   ILoginServiceResult,
 } from "../../dtos/auth.dto";
-import { env } from "../../config/env";
+import { IPasswordHasher } from "../../interfaces/service/auth/IPasswordHasher";
+import { IPasswordResetTokenService } from "../../interfaces/service/auth/IPasswordResetTokenService";
+import { IEmailService } from "../../interfaces/service/auth/IEmailService";
 
-export class AuthService implements iAuthService {
+export class AuthService implements IAuthService {
   constructor(
     private _userRepository: IUserRepository,
     private _otpService: IOtpService,
-    private _tokenService: ITokenService
+    private _tokenService: ITokenService,
+    private _passwordHasher: IPasswordHasher,
+    private _resetTokenService: IPasswordResetTokenService,
+    private _emailService: IEmailService
   ) {}
 
-  async register(data:IRegisterRequestDTO): Promise<IUser> {
+  async register(data: IRegisterRequestDTO): Promise<IUser> {
     const { name, email, password, phone } = data;
 
     const existingUser = await this._userRepository.findByEmail(email);
@@ -40,10 +41,7 @@ export class AuthService implements iAuthService {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      env.BCRYPT_SALT_ROUNDS
-    );
+    const hashedPassword = await this._passwordHasher.hash(password);
 
     const user = await this._userRepository.create({
       name,
@@ -92,7 +90,7 @@ export class AuthService implements iAuthService {
     return user;
   }
 
-  async login(data:ILoginRequestDTO): Promise<ILoginServiceResult> {
+  async login(data: ILoginRequestDTO): Promise<ILoginServiceResult> {
     const { email, password } = data;
 
     const user = await this._userRepository.findByEmail(email);
@@ -111,7 +109,10 @@ export class AuthService implements iAuthService {
       );
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await this._passwordHasher.compare(
+      password,
+      user.password
+    );
 
     if (!passwordMatch) {
       throw new AppError(
@@ -128,13 +129,6 @@ export class AuthService implements iAuthService {
 
     const accessToken = this._tokenService.generateAccessToken(payload);
     const refreshToken = this._tokenService.generateRefreshToken(payload);
-    // const userResponse:IUserResponseDTO={
-    //    id: user._id.toString(),
-    //   name: user.name,
-    //   email: user.email,
-    //   role: user.role,
-    //   phone: user.phone,
-    // }
 
     return {
       user,
@@ -146,10 +140,15 @@ export class AuthService implements iAuthService {
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     const payload = await this._tokenService.verifyRefreshToken(refreshToken);
 
+    const user = await this._userRepository.findById(payload.userId);
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
+    }
+
     const accessToken = this._tokenService.generateAccessToken({
-      userId: payload.userId,
-      email: payload.email,
-      role: payload.role,
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
     });
 
     return {
@@ -172,17 +171,11 @@ export class AuthService implements iAuthService {
       throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
     }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-
-    await redisClient.getClient().set(
-      `password_reset:${resetToken}`,
-      user._id.toString(),
-      {
-        EX: env.PASSWORD_RESET_EXPIRY,
-      }
+    const resetToken = await this._resetTokenService.generateAndStore(
+      user._id.toString()
     );
 
-    await sendResetPasswordEmail(user.email, resetToken);
+    await this._emailService.sendResetPasswordEmail(user.email, resetToken);
 
     return {
       message: AUTH_MESSAGES.RESET_LINK_SENT,
@@ -194,9 +187,7 @@ export class AuthService implements iAuthService {
   ): Promise<{ message: string }> {
     const { token, newPassword } = data;
 
-    const userId = await redisClient
-      .getClient()
-      .get(`password_reset:${token}`);
+    const userId = await this._resetTokenService.resolve(token);
 
     if (!userId) {
       throw new AppError(
@@ -205,24 +196,16 @@ export class AuthService implements iAuthService {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(
-      newPassword,
-      env.BCRYPT_SALT_ROUNDS
-    );
+    const hashedPassword = await this._passwordHasher.hash(newPassword);
 
     await this._userRepository.updateById(userId, {
       password: hashedPassword,
     });
 
-    await redisClient.getClient().del(`password_reset:${token}`);
+    await this._resetTokenService.invalidate(token);
 
     return {
       message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
     };
   }
-
-  // async regexUser(userId: string): Promise<IUser | null> {
-  //   const findUser=await this._userRepository.getUser(userId)
-  //   return findUser
-  // }
 }

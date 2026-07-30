@@ -101,9 +101,9 @@ const DataTable = <T,>({
         <table className="w-full min-w-[900px] text-sm">
           <thead>
             <tr>
-              {columns.map((column) => (
+              {columns.map((column, colIndex) => (
                 <th
-                  key={column.header || Math.random().toString()}
+                  key={column.header || colIndex}
                   className={`px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${alignClass(column.align)}`}
                 >
                   {column.header}

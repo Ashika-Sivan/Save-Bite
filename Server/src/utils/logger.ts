@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export class Logger {
   static info(message: string, data?: unknown): void {
     console.log(`[INFO] ${message}`);
