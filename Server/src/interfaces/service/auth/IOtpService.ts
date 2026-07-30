@@ -1,4 +1,4 @@
-import { IVerifyOtpRequestDTO } from "../../dtos/auth.dto"
+import { IVerifyOtpRequestDTO } from "../../../dtos/auth.dto"
 
 export interface IOtpService{
     createOtp(email:string):Promise<boolean>

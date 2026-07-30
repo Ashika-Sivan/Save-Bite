@@ -9,18 +9,37 @@ import {
   ArrowLeft,
   LifeBuoy,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { checkVendorStatus } from "../../services/vendor.service";
 
-type Props = {
-  reason?: string;
-  onApplyAgain?: () => void;
-  onBackHome?: () => void;
-};
 
-export default function VendorRejected({
-  reason = "Your FSSAI certificate has expired. Please upload a valid certificate before submitting again.",
-  onApplyAgain,
-  onBackHome,
-}: Props) {
+
+export default function VendorRejected() {
+
+  const navigate = useNavigate()
+  const [reason, setReason] = useState("")
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const fetchVendorStatus = async () => {
+      try {
+        const response = await checkVendorStatus()
+        console.log("vendor status:", response);
+        setReason(
+          response.data?.rejectionReason || "your vendor application was rejected."
+        )
+
+      } catch (error) {
+        console.error("Failed to fetch rejection reason:", error);
+
+        setReason("Unable to load the rejection reason.");
+
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchVendorStatus()
+  }, [])
   return (
     <div className="min-h-screen bg-[#faf7ef] text-slate-900 antialiased">
       {/* Header */}
@@ -82,7 +101,6 @@ export default function VendorRejected({
             </p>
           </div>
 
-          {/* Rejection reason */}
           <section className="mt-10 rounded-2xl border border-red-200 bg-red-50/60 p-5 sm:p-6">
             <div className="mb-3 flex items-center gap-2">
               <XCircle className="h-5 w-5 text-red-600" />
@@ -90,7 +108,7 @@ export default function VendorRejected({
                 Reason for Rejection
               </h2>
             </div>
-            <p className="text-sm leading-relaxed text-red-900/90">{reason}</p>
+            <p className="text-sm leading-relaxed text-red-900/90">{loading ? "Loading rejection reason..." : reason}</p>
           </section>
 
           {/* Next steps */}
@@ -127,14 +145,14 @@ export default function VendorRejected({
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={onApplyAgain}
+              onClick={() => navigate('/vendor/VendorRegister')}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#15803d] px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#166534] hover:shadow-md"
             >
               <RefreshCw className="h-4 w-4" />
               Apply Again
             </button>
             <button
-              onClick={onBackHome}
+              onClick={() => navigate('/')}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
             >
               <ArrowLeft className="h-4 w-4" />

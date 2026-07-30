@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { verifyOtp, sendOtp } from "../../services/auth.service";
+import toast from "react-hot-toast";
 
 const OTP_LENGTH = 6;
 const TIMER_SECONDS = 60;
@@ -17,6 +18,33 @@ const Otp = () => {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const handleVerify = async () => {
+    const otpValue = otp.join("");
+
+    if (otpValue.length < OTP_LENGTH) {
+      setStatusMsg({
+        text: "Please enter all 6 digits.",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      await verifyOtp(email, otpValue);
+
+      toast.success("OTP verified successfully! Registration completed.");
+
+      navigate("/login");
+    } catch {
+      toast.error("Invalid OTP. Please try again.");
+
+      setStatusMsg({
+        text: "Invalid OTP. Please try again.",
+        type: "error",
+      });
+    }
+  };
 
   const startTimer = () => {
     setSeconds(TIMER_SECONDS);
@@ -36,7 +64,17 @@ const Otp = () => {
   };
 
   useEffect(() => {
-    startTimer();
+    intervalRef.current = setInterval(() => {
+      setSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current!);
+          setCanResend(true);
+          setStatusMsg({ text: "OTP expired. Please resend.", type: "error" });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(intervalRef.current!);
   }, []);
 
@@ -81,19 +119,19 @@ const Otp = () => {
     }
   };
 
-  const handleVerify = async () => {
-    const otpValue = otp.join("");
-    if (otpValue.length < OTP_LENGTH) {
-      setStatusMsg({ text: "Please enter all 6 digits.", type: "error" });
-      return;
-    }
-    try {
-      await verifyOtp(email, otpValue);
-      navigate("/login");
-    } catch {
-      setStatusMsg({ text: "Invalid OTP. Please try again.", type: "error" });
-    }
-  };
+  // const handleVerify = async () => {
+  //   const otpValue = otp.join("");
+  //   if (otpValue.length < OTP_LENGTH) {
+  //     setStatusMsg({ text: "Please enter all 6 digits.", type: "error" });
+  //     return;
+  //   }
+  //   try {
+  //     await verifyOtp(email, otpValue);
+  //     navigate("/login");
+  //   } catch {
+  //     setStatusMsg({ text: "Invalid OTP. Please try again.", type: "error" });
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex bg-[#f8f4ec]">
@@ -174,9 +212,8 @@ const Otp = () => {
             <button
               onClick={handleResend}
               disabled={!canResend}
-              className={`font-medium transition ${
-                canResend ? "text-green-800 hover:underline cursor-pointer" : "text-gray-400 cursor-not-allowed"
-              }`}
+              className={`font-medium transition ${canResend ? "text-green-800 hover:underline cursor-pointer" : "text-gray-400 cursor-not-allowed"
+                }`}
             >
               Resend OTP
             </button>

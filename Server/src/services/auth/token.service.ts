@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import {
   ITokenService,
   TokenPayload,
-} from "../../interfaces/service/ITokenService";
+} from "../../interfaces/service/auth/ITokenService";
 
 import { jwtConfig } from "../../config/jwt";
 

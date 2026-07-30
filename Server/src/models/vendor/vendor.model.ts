@@ -1,5 +1,17 @@
-import mongoose,{Schema} from "mongoose"
+import mongoose,{Schema, Types} from "mongoose"
 import { IVendor,VendorStatus} from "../../interfaces/models/IVendor.model";
+
+export interface IPopulatedVendorOwner {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface IVendorWithOwner
+  extends Omit<IVendor, "ownerId"> {
+  ownerId: IPopulatedVendorOwner|null;
+}
 
 
 const vendorSchema=new Schema<IVendor>(

@@ -17,9 +17,8 @@ const StatusBadge = ({ status }: StatusBadgeProps) => {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-        styles[normalizedStatus] ?? "bg-gray-100 text-gray-600"
-      }`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${styles[normalizedStatus] ?? "bg-gray-100 text-gray-600"
+        }`}
     >
       {status}
     </span>

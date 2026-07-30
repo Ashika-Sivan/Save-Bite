@@ -5,6 +5,8 @@ import type { RootState } from "../redux/store";
 import { clearCredentials } from "../redux/authSlice";
 import { checkVendorStatus } from "../services/vendor.service";
 import { logout } from "../services/auth.service";
+import toast from "react-hot-toast";
+import { updateUser } from "../redux/authSlice";
 
 const categories = [
   "All",
@@ -83,53 +85,114 @@ export default function Home() {
 
   const handleBecomeVendor = async () => {
     try {
+       console.log("1. Become vendor clicked");
+    console.log("2. Current user:", user);
+
+
       if (!user) {
         navigate("/login");
         return;
       }
 
       const response = await checkVendorStatus();
+    
 
       console.log("Vendor status response:", response);
 
-      const { hasApplication, status } = response.data;
+      const { hasApplication, status } = response.data
+      console.log("4. hasApplication:", hasApplication);
+    console.log("5. status:", status);
 
       if (!hasApplication) {
-        navigate("/vendor/vendorRegister");
+           console.log("6. Going to registration");
+        navigate("/vendor/VendorRegister");
         return;
       }
 
       if (status === "pending") {
+         console.log("6. Going to pending");
         navigate("/vendor/pending");
         return;
       }
 
       if (status === "approved") {
+         console.log("6. Going to dashboard");
+         dispatch(updateUser({ role: "vendor" }));
         navigate("/vendor/dashboard");
         return;
       }
 
       if (status === "rejected") {
+        
         navigate("/vendor/rejected");
+
       }
+       console.log("No navigation condition matched");
     } catch (error) {
       console.error("Failed to check vendor status:", error);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
+ const confirmLogout = async (toastId: string) => {
+  toast.dismiss(toastId);
 
-      dispatch(clearCredentials());
+  try {
+    await logout();
 
-      navigate("/", {
-        replace: true,
-      });
-    } catch (error) {
-      console.error("Logout failed:", error);
+    dispatch(clearCredentials());
+
+    toast.success("Logged out successfully");
+
+    navigate("/", {
+      replace: true,
+    });
+  } catch (error) {
+    console.error("Logout failed:", error);
+    toast.error("Logout failed. Please try again.");
+  }
+};
+
+const handleLogout = () => {
+  setOpen(false);
+
+  toast.custom(
+    (currentToast) => (
+      <div
+        className={`w-full max-w-sm rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition ${
+          currentToast.visible ? "animate-enter" : "animate-leave"
+        }`}
+      >
+        <h3 className="font-semibold text-gray-900">Confirm logout</h3>
+
+        <p className="mt-1 text-sm text-gray-600">
+          Are you sure you want to log out?
+        </p>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(currentToast.id)}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={() => confirmLogout(currentToast.id)}
+            className="rounded-lg bg-green-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-900"
+          >
+            Yes, Logout
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      duration: Infinity,
+      position: "top-center",
     }
-  };
+  );
+};
 
   return (
     <div className="min-h-screen bg-[#faf7ef] px-3 py-5 text-gray-900 sm:px-5 lg:px-8">
@@ -228,12 +291,14 @@ export default function Home() {
                     Browse restaurants
                   </button>
 
+              {user?.role!=='admin' &&(
                   <button
                     onClick={handleBecomeVendor}
                     className="rounded-full border border-white/30 bg-white/15 px-5 py-3 text-sm font-semibold transition hover:bg-white/25"
                   >
                     Become a Vendor
                   </button>
+                  )}
                 </div>
               </div>
 

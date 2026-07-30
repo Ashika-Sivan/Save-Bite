@@ -1,4 +1,4 @@
-// src/pages/admin/VendorDetails.tsx
+
 import { useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -97,27 +97,34 @@ const VendorDetails = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchVendor = async () => {
-      if (!vendorId) {
-        setError("Vendor id is missing");
-        setLoading(false);
-        return;
-      }
-      try {
-        const response = await getVendorById(vendorId);
-        console.log("Vendor response:", response);
-        setVendor(response.result.vendor);
-        setDocumentUrls(response.result.documentUrls);
-      } catch (err) {
-        console.error("Failed to fetch vendor", err);
-        setError("Failed to fetch vendor details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchVendor();
-  }, [vendorId]);
+useEffect(() => {
+  const fetchVendor = async () => {
+    if (!vendorId) {
+      setError("Vendor id is missing");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await getVendorById(vendorId);
+
+      console.log("Vendor response:", response);
+
+      setVendor(response.data.vendor);
+      setDocumentUrls(response.data.documentUrls);
+    } catch (error) {
+      console.error("Failed to fetch vendor:", error);
+      setError("Failed to fetch vendor details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVendor();
+}, [vendorId]);
 
   const handleApprove = async () => {
     if (!vendorId) return;

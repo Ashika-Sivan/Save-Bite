@@ -12,7 +12,7 @@ import {
   Star,
 } from "lucide-react";
 
-export default function  VendorDashboard(){
+export default function VendorDashboard() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -56,7 +56,7 @@ export default function  VendorDashboard(){
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
               >
                 <Utensils size={20} />
-                Menu
+                Hotel List
               </button>
 
               <button

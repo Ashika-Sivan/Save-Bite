@@ -18,5 +18,14 @@ export const ROUTES = {
 
   VENDOR: {
     REGISTER: "/register",
+    STATUS: "/status",
+  },
+  ADMIN: {
+    VENDORS: "/vendors",
+    VENDOR_APPROVE: "/vendors/:vendorId/approve",
+    VENDOR_REJECT: "/vendors/:vendorId/reject",
+    VENDOR_BY_ID: "/vendors/:vendorId",
+    USERS: "/users",
+    USER_STATUS: "/users/:userId/status",
   },
 };

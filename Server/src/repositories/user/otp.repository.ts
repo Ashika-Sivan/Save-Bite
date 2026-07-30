@@ -1,5 +1,4 @@
 import { RedisClientType } from "@redis/client";
-import { RedisClient } from "redis";
 //get otp
 //save otp
 //delete otp

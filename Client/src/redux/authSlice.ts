@@ -34,6 +34,11 @@ const authSlice = createSlice({//evrything related to authentication comes here
     setAccessToken:(state,action)=>{
         state.accessToken=action.payload//replace old access to new 
     },
+    updateUser:(state,action)=>{
+      if(state.user){
+        state.user={...state.user,...action.payload}
+      }
+    },
     clearCredentials: (state) => {//closed during the logout
       state.user = null;
       state.accessToken = null;
@@ -42,7 +47,7 @@ const authSlice = createSlice({//evrything related to authentication comes here
   },
 });
 
-export const { setCredentials,clearCredentials,setAccessToken } = authSlice.actions;
+export const { setCredentials,clearCredentials,setAccessToken,updateUser } = authSlice.actions;
 export default authSlice.reducer;
 
 //it define the struture of the authenticatin statte  stored in the redux

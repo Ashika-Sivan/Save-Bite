@@ -18,6 +18,9 @@ export const AUTH_MESSAGES = {
   SOMETHING_WENT_WRONG:"something went wrong",
   INTERNAL_SERVER_ERROR:"internal server error",
   INVALID_TOKEN_FORMAT:"invalid token format",
+  ACCESS_DENIED:"Access denied",
+  TOKEN_MISSING:"Token missing",
+  INVALID_OR_EXPIRED_TOKEN:"Invalid or expired token",
 
   OTP_RESENT_SUCCESS: "OTP resend successfully",
   OTP_VERIFIED_SUCCESS: "OTP verified successfully",
@@ -34,3 +37,42 @@ export const AUTH_MESSAGES = {
    OTP_GENERATED_SUCCESS: "OTP generated successfully",
 
 }
+
+
+export const VENDOR_MESSAGES = {
+  APPLICATION_SUBMITTED: "Vendor application submitted successfully",
+  APPLICATION_PENDING: "Your vendor application is already pending",
+  ALREADY_APPROVED: "You are already an approved vendor",
+  APPLICATION_REJECTED: "Your vendor application was rejected",
+  VENDOR_NOT_FOUND: "Vendor not found",
+  APPROVED_SUCCESS: "Vendor approved successfully",
+  REJECTED_SUCCESS: "Vendor rejected successfully",
+  STATUS_FETCHED: "Vendor status fetched successfully",
+  VENDOR_FETCHED: "Vendor fetched successfully",
+  VENDOR_ALREADY_APPROVED:"vendor already approved",
+  ALL_FILES_REQUIRED:"all files required"
+};
+
+export const ADMIN_MESSAGES = {
+  VENDORS_FETCHED: "Vendors fetched successfully",
+  USERS_FETCHED: "Users fetched successfully",
+  VENDOR_ID_REQUIRED: "Vendor ID is required",
+  VALID_USER_ID_REQUIRED: "Valid user ID is required",
+  USER_BLOCKED: "User blocked successfully",
+  USER_UNBLOCKED: "User unblocked successfully",
+  REJECTED_VENDOR_CANNOT_APPROVE:"Cannot approve for rejected vendors",
+  VENDOR_APPROVE_FAILED:"vendor message failed",
+  REJECTION_REASON_REQUIRED:"rejection reason required",
+  VENDOR_ALREADY_REJECTED:"Vendor already rejected",
+  APPROVED_VENDOR_CANNOT_REJECT: "Approved vendor cannot be rejected directly",
+  USER_NOT_FOUND: "User not found",
+  USER_STATUS_UPDATE_FAILED: "Failed to update user status",
+  VENDOR_APPLICATION_NOT_FOUND: "Vendor application not found",
+
+
+  
+
+  
+
+
+};

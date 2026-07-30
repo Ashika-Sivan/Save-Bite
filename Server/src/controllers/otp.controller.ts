@@ -1,36 +1,37 @@
 import { Request, Response, NextFunction } from "express";
-import OtpService from "../services/auth/otp.service";
 import { StatusCode } from "../constants/statusCode";
 import { AUTH_MESSAGES } from "../constants/messages";
+import { ResponseHelper } from "../utils/ResponseHelper";
+import { IOtpService } from "../interfaces/service/auth/IOtpService";
 
 class OtpController {
-  constructor(private _otpService: OtpService) {}
+  constructor(private _otpService: IOtpService) {}
 
-  sendOtp = async (req: Request, res: Response, next: NextFunction) => {
+  sendOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { email } = req.body;
 
       await this._otpService.createOtp(email);
 
-      return res.status(StatusCode.OK).json({
-        success: true,
-        message: AUTH_MESSAGES.OTP_GENERATED_SUCCESS,
-      });
+      ResponseHelper.success(res, StatusCode.OK, AUTH_MESSAGES.OTP_GENERATED_SUCCESS);
     } catch (error) {
       next(error);
     }
   };
 
-  verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
+  verifyOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      // const { email, otp } = req.body;
+      await this._otpService.verifyOtp(req.body);
 
-      const result = await this._otpService.verifyOtp(req.body);
-
-      return res.status(StatusCode.OK).json({
-        success: result,
-        message: AUTH_MESSAGES.OTP_VERIFIED_SUCCESS,
-      });
+      ResponseHelper.success(res, StatusCode.OK, AUTH_MESSAGES.OTP_VERIFIED_SUCCESS);
     } catch (error) {
       next(error);
     }
