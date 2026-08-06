@@ -1,9 +1,12 @@
 import { Router } from "express";
-import { authMiddleware, vendorController } from "../config/dependencies";
+import { authMiddleware, dailyMenuController, vendorController } from "../config/dependencies";
 import { ROUTES } from "../constants/routes";
 import { upload } from "../middlewares/upload.middleware";
+import hotelRouter from "./hotel.routes";
+
 
 const router = Router();
+router.use("/hotels",hotelRouter)
 
 router.post(
   ROUTES.VENDOR.REGISTER,
@@ -19,12 +22,15 @@ router.post(
   vendorController.registerVendor.bind(vendorController)
 );
 
-router.get(
-  ROUTES.VENDOR.STATUS,
-  authMiddleware.authenticate,
-  authMiddleware.authorize("user", "vendor"),
-  vendorController.getVendorStatus.bind(vendorController)
-);
+router.get(ROUTES.VENDOR.STATUS,authMiddleware.authenticate,authMiddleware.authorize("user", "vendor"),vendorController.getVendorStatus.bind(vendorController));
 // when vendor making reg req check:- has already applied, application pending, was it approved, rejected?
+
+router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.createMenu.bind(dailyMenuController))
+router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.addMenuItem.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.GO_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.goLive.bind(dailyMenuController))
+router.get(ROUTES.VENDOR.GET_TODAY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.getTodayMenu.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.END_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.endLive.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_PICKUP_WINDOW,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.updatePickupWindow.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.updateMenuItem.bind(dailyMenuController))
 
 export default router;

@@ -19,6 +19,13 @@ export const ROUTES = {
   VENDOR: {
     REGISTER: "/register",
     STATUS: "/status",
+    CREATE_DAILY_MENU: "/hotels/:hotelId/daily-menu",
+     ADD_DAILY_MENU_ITEM: "/daily-menus/:menuId/items",
+      GO_LIVE:"/daily-menus/:menuId/go-live",
+      GET_TODAY_MENU:"/hotels/:hotelId/daily-menu/today",
+      END_LIVE:"/daily-menus/:menuId/end-live",
+    UPDATE_PICKUP_WINDOW: "/daily-menus/:menuId/pickup-window",
+    UPDATE_DAILY_MENU_ITEM:"/daily-menus/:menuId/items/:itemId"
   },
   ADMIN: {
     VENDORS: "/vendors",

@@ -16,6 +16,10 @@ import { EmailService } from "../services/auth/email.service";
 import OtpService from "../services/auth/otp.service";
 import { VendorRepository } from "../repositories/vendor/vendor.repository";
 import { AuthService } from "../services/auth/auth.service";
+import { HotelRepository } from "../repositories/hotel/hotel.repository";
+import { DailyMenuRepository } from "../repositories/dailyMenu/dailyMenu.repository";
+import { DailyMenuService } from "../services/vendor/dailyMenu.service";
+import { DailyMenuController } from "../controllers/dailyMenu.controller";
 
 const userRepository = new UserRepository();
 const tokenService = new TokenService();
@@ -23,6 +27,8 @@ const otpRepository = new OtpRepository(redisClient.getClient());
 const emailService = new EmailService();
 const otpService = new OtpService(otpRepository, emailService);
 const vendorRepository = new VendorRepository();
+const hotelRepository=new HotelRepository()
+const dailyMenuRepository=new DailyMenuRepository()
 const passwordHasher = new BcryptPasswordHasher();
 const resetTokenService = new RedisPasswordResetTokenService();
 
@@ -34,11 +40,14 @@ const authService = new AuthService(
   resetTokenService,
   emailService
 );
-
-const vendorService = new VendorService(vendorRepository);
+const vendorService = new VendorService(vendorRepository)
+const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository)
 const adminService = new AdminService(vendorRepository, userRepository);
 
 export const authController = new AuthController(authService);
 export const vendorController = new VendorController(vendorService);
 export const adminController = new AdminController(adminService);
 export const authMiddleware = new AuthMiddleware(tokenService);
+
+//daily menu
+export const dailyMenuController=new DailyMenuController(dailyMenuService)

@@ -7,13 +7,13 @@ export interface IHotel{
 
     hotelName:string;
     businessType:string;
-    hotelImageKey?:string;
+    hotelImageKey:string;
 
     place:string;
     address:string;
 
     location:{
-        type:"point",
+        type:"Point",
         coordinates:[number,number]
     }
     isActive:boolean;

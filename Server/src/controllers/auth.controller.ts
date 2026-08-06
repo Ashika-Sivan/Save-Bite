@@ -68,8 +68,9 @@ export class AuthController {
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: env.REFRESH_COOKIE_MAX_AGE,
+        path:'/'
       });
 
       const userData = user ? toUserResponseDTO(user) : null;
@@ -121,7 +122,7 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const refreshToken = req.cookies?.refreshToken;
 
       if (!refreshToken) {
         throw new AppError(

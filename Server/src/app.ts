@@ -28,15 +28,20 @@ export default class App {
             
         )
         this.app.use(express.json())
-        this.app.use("/api/vendor",vendorRoute)
-        this.app.use("/api/admin",adminRoute)
-        this.app.use(cookieParser());
+         this.app.use(cookieParser());
+        
 
     }
     private routes():void{
         this.app.use('/api/auth',authRoutes)
         this.app.use('/api/auth',otpRoutes)
-        this.app.use(errorMiddleware)
+        this.app.use("/api/vendor",vendorRoute)
+        this.app.use("/api/admin",adminRoute)
+       
+    }
+
+    private errorHandler():void{
+         this.app.use(errorMiddleware)
     }
    
 }

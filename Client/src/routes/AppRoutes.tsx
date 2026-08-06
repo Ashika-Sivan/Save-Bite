@@ -20,6 +20,10 @@ import AdminPublicRoute from "./AdminPublicRoutes.tsx";
 import VendorDetails from "../pages/admin/VendorDetails.tsx";
 import VendorRoute from "./VendorRoute.tsx";
 import AdminLayout from "../components/admin/AdminLayout.tsx";
+import AddHotel from "../pages/vendor/AddHotel.tsx";
+import HotelList from "../pages/vendor/HotelList.tsx";
+import TodayMenu from "../pages/vendor/TodayMenu.tsx";
+
 
 export default function AppRoutes() {
   return (
@@ -77,30 +81,54 @@ export default function AppRoutes() {
 
            {/* VENDOR SIDE*/}
 
-          <Route path="/vendor/VendorRegister" element={
-          <ProtectedRoute>
-               <VendorRegister />
+        <Route
+          path="/vendor/VendorRegister"
+          element={
+            <ProtectedRoute>
+              <VendorRegister />
             </ProtectedRoute>
-            } />
-            
-        <Route path="/vendor/pending" element={
-          <ProtectedRoute>
-            <VendorPending/>
-          </ProtectedRoute>
-          }/>
+          }
+        />
 
-        <Route path="/vendor/rejected" element={
-          <ProtectedRoute>
-            <VendorRejected/>
-          </ProtectedRoute>
-          }/>
-      <Route element={<VendorRoute/>}>
-        <Route path="/vendor/dashboard" element={
-          // <ProtectedRoute>
-            <VendorDashboard/>
-          //  </ProtectedRoute>
-          }/>
-      </Route>
+        <Route
+          path="/vendor/pending"
+          element={
+            <ProtectedRoute>
+              <VendorPending />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor/rejected"
+          element={
+            <ProtectedRoute>
+              <VendorRejected />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route element={<VendorRoute />}>
+          <Route
+            path="/vendor/dashboard"
+            element={<VendorDashboard />}
+          />
+
+          <Route
+            path="/vendor/hotels"
+            element={<HotelList />}
+          />
+
+          <Route
+            path="/vendor/hotels/add"
+            element={<AddHotel />}
+          />
+
+          <Route
+            path="/vendor/hotels/:hotelId/menu"
+            element={<TodayMenu />}
+          />
+        </Route>
 
         {/* ADMIN SIDE*/}
         <Route element={<AdminPublicRoute/>}>
