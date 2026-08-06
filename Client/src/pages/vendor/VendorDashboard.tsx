@@ -52,7 +52,7 @@ export default function VendorDashboard() {
               </button>
 
               <button
-                onClick={() => navigate("/vendor/menu")}
+                onClick={() => navigate("/vendor/hotels")}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
               >
                 <Utensils size={20} />

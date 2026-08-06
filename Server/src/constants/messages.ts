@@ -52,6 +52,9 @@ export const VENDOR_MESSAGES = {
   VENDOR_ALREADY_APPROVED:"vendor already approved",
   ALL_FILES_REQUIRED:"all files required"
 };
+/*
+for admin
+*/
 
 export const ADMIN_MESSAGES = {
   VENDORS_FETCHED: "Vendors fetched successfully",
@@ -68,11 +71,29 @@ export const ADMIN_MESSAGES = {
   USER_NOT_FOUND: "User not found",
   USER_STATUS_UPDATE_FAILED: "Failed to update user status",
   VENDOR_APPLICATION_NOT_FOUND: "Vendor application not found",
-
-
-  
-
-  
-
-
 };
+/*
+For hotels
+*/
+export const HOTEL_MESSAGES = {
+    CREATED: "Hotel added successfully",
+    FETCHED: "Hotels fetched successfully",
+    DETAILS_FETCHED: "Hotel details fetched successfully",
+    NOT_FOUND: "Hotel not found",
+    IMAGE_REQUIRED: "Hotel image is required",
+    INVALID_DATA: "Please provide valid hotel information",
+    INVALID_LOCATION: "Please provide valid latitude and longitude",
+    VENDOR_NOT_FOUND: "Vendor account not found",
+    VENDOR_NOT_APPROVED: "Only approved vendors can manage hotels",
+};
+//for menu
+export const DAILY_MENU_MESSAGES = {
+    CREATED: "Daily menu created successfully",
+    ITEM_ADDED: "Menu item added successfully",
+    GO_LIVE_SUCCESS: "Menu is now live",
+    TODAY_MENU_FETCHED: "Today's menu fetched successfully",
+    END_LIVE_SUCCESS:"Menu live session ended successfully",
+    PICKUP_WINDOW_UPDATED:"pickup widnow has been updated successfully",
+    ITEM_UPDATED:"Item updated successfully"
+} as const;
+  

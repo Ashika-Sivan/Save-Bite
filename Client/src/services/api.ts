@@ -70,68 +70,249 @@ api.interceptors.request.use(
 // )
 
 
+// api.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+
+//   async (error) => {
+//     const originalRequest = error.config;
+//     const status=error.response?.status
+//     const message=error.response?.data?.message
+
+//     // If refresh API itself failed, don't retry again
+//     if (originalRequest?.url === "/auth/refresh") {
+//       store.dispatch(clearCredentials());
+//       return Promise.reject(error);
+//     }
+
+
+//     if (
+//       error.response?.status === 401 &&
+//       !originalRequest._retry
+//     ) {
+//       originalRequest._retry = true;
+
+//       try {
+//         const response = await api.post("/auth/refresh");//toget the new access token:-if the accesstoken expire
+
+//         const newAccessToken = response.data.data.accessToken;
+//         store.dispatch(
+//           setAccessToken(newAccessToken)
+//         )
+
+//         const meResponse=await api.get("/auth/me")//this is to fetch the latest user from the backedn
+
+//         // store.dispatch(setAccessToken(newAccessToken));
+//         store.dispatch(setCredentials({
+//           user:meResponse.data.data.user,
+//           accessToken:newAccessToken
+//         }))
+
+//         //here we are updating failed req with new token
+
+//         originalRequest.headers = {
+//           ...originalRequest.headers,
+//           Authorization: `Bearer ${newAccessToken}`,
+//         };
+
+//         return api(originalRequest);
+//       } catch (refreshError) {
+//         store.dispatch(clearCredentials());
+//         return Promise.reject(refreshError);
+//       }
+//     }
+
+//     if(status===403){
+//       toast.error(message||"you donot have permission to perform this action")
+//     }else if(status && status>=500){
+//       toast.error(message||"Something went wrong on the server. Please try again later.")
+//     }
+//           return Promise.reject(error);
+//   }
+// );
+
+
+
+// api.interceptors.response.use(
+//     (response) => response,
+
+//     async (error) => {
+//         const originalRequest = error.config;
+//         const status = error.response?.status;
+//         const message = error.response?.data?.message;
+
+//         if (!originalRequest) {
+//             return Promise.reject(error);
+//         }
+
+//         const isRefreshRequest =
+//             originalRequest.url === "/auth/refresh";
+
+//         if (isRefreshRequest) {
+//             store.dispatch(clearCredentials());
+//             return Promise.reject(error);
+//         }
+
+//         const hadAccessToken =
+//             Boolean(originalRequest.headers?.Authorization);
+
+//         if (
+//             status === 401 &&
+//             hadAccessToken &&
+//             !originalRequest._retry
+//         ) {
+//             originalRequest._retry = true;
+
+//             try {
+//                 const response = await api.post(
+//                     "/auth/refresh"
+//                 );
+
+//                 const newAccessToken =
+//                     response.data.data.accessToken;
+
+//                 store.dispatch(
+//                     setAccessToken(newAccessToken)
+//                 );
+
+//                 originalRequest.headers = {
+//                     ...originalRequest.headers,
+//                     Authorization: `Bearer ${newAccessToken}`,
+//                 };
+
+//                 const retryResponse =
+//                     await api(originalRequest);
+
+//                 const meResponse =
+//                     await api.get("/auth/me");
+
+//                 store.dispatch(
+//                     setCredentials({
+//                         user: meResponse.data.data.user,
+//                         accessToken: newAccessToken,
+//                     })
+//                 );
+
+//                 return retryResponse;
+//             } catch (refreshError) {
+//                 store.dispatch(clearCredentials());
+//                 return Promise.reject(refreshError);
+//             }
+//         }
+
+//         if (status === 403) {
+//             toast.error(
+//                 message ||
+//                     "You do not have permission to perform this action"
+//             );
+//         } else if (status && status >= 500) {
+//             toast.error(
+//                 message ||
+//                     "Something went wrong on the server"
+//             );
+//         }
+
+//         return Promise.reject(error);
+//     }
+// );
+
+
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+    (response) => response,
 
-  async (error) => {
-    const originalRequest = error.config;
-    const status=error.response?.status
-    const message=error.response?.data?.message
+    async (error) => {
+        const originalRequest = error.config;//contain failed req
+        const status = error.response?.status;//401/403/404/500
+        const message =
+            error.response?.data?.message;//messsage:'access token expired
 
-    // If refresh API itself failed, don't retry again
-    if (originalRequest?.url === "/auth/refresh") {
-      store.dispatch(clearCredentials());
-      return Promise.reject(error);
+        if (!originalRequest) {
+            return Promise.reject(error);//interceptor couldnt solve problm
+        }
+
+        const requestUrl =
+            originalRequest.url as string;//get error endpoint that failed
+
+        const publicAuthRoutes = [
+            "/auth/login",
+            "/auth/register",
+            "/auth/verify-otp",
+            "/auth/resend-otp",
+            "/auth/forgot-password",
+            "/auth/reset-password",
+        ];
+
+        const isRefreshRequest =
+            requestUrl === "/auth/refresh";
+
+        const isPublicAuthRequest =
+            publicAuthRoutes.includes(requestUrl);//this check  the failed url is inside the public route arr
+
+        if (isRefreshRequest) {//handle failed req:-if refresh fail the sesiion no lobgr restore
+            store.dispatch(clearCredentials());//clear redux
+            return Promise.reject(error);
+        }
+
+        if (
+            status === 401 &&
+            !isPublicAuthRequest &&
+            !originalRequest._retry
+        ) {
+            originalRequest._retry = true;
+
+            try {
+                const refreshResponse =
+                    await api.post("/auth/refresh");
+
+                const newAccessToken =
+                    refreshResponse.data.data.accessToken;
+
+                store.dispatch(
+                    setAccessToken(newAccessToken)
+                );
+
+                originalRequest.headers = {
+                    ...originalRequest.headers,
+                    Authorization:
+                        `Bearer ${newAccessToken}`,
+                };
+
+                const retryResponse =
+                    await api(originalRequest);
+
+                const meResponse =
+                    await api.get("/auth/me");
+
+                store.dispatch(
+                    setCredentials({
+                        user: meResponse.data.data.user,
+                        accessToken: newAccessToken,
+                    })
+                );
+
+                return retryResponse;
+            } catch (refreshError) {
+                store.dispatch(clearCredentials());
+                return Promise.reject(refreshError);
+            }
+        }
+
+        if (status === 403) {
+            toast.error(
+                message ||
+                    "You do not have permission to perform this action"
+            );
+        } else if (status && status >= 500) {
+            toast.error(
+                message ||
+                    "Something went wrong on the server"
+            );
+        }
+
+        return Promise.reject(error);
     }
-
-
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-
-      try {
-        const response = await api.post("/auth/refresh");//toget the new access token:-if the accesstoken expire
-
-        const newAccessToken = response.data.data.accessToken;
-        store.dispatch(
-          setAccessToken(newAccessToken)
-        )
-
-        const meResponse=await api.get("/auth/me")//this is to fetch the latest user from the backedn
-
-        // store.dispatch(setAccessToken(newAccessToken));
-        store.dispatch(setCredentials({
-          user:meResponse.data.data.user,
-          accessToken:newAccessToken
-        }))
-
-        //here we are updating failed req with new token
-
-        originalRequest.headers = {
-          ...originalRequest.headers,
-          Authorization: `Bearer ${newAccessToken}`,
-        };
-
-        return api(originalRequest);
-      } catch (refreshError) {
-        store.dispatch(clearCredentials());
-        return Promise.reject(refreshError);
-      }
-    }
-
-    if(status===403){
-      toast.error(message||"you donot have permission to perform this action")
-    }else if(status && status>=500){
-      toast.error(message||"Something went wrong on the server. Please try again later.")
-    }
-          return Promise.reject(error);
-  }
 );
-
 
 export default api
 
