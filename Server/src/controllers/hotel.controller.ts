@@ -6,7 +6,6 @@ import { AUTH_MESSAGES, HOTEL_MESSAGES } from "../constants/messages";
 import { StatusCode } from "../constants/statusCode";
 import { ICreateHotelDTO } from "../dtos/hotel.dto";
 import { ResponseHelper } from "../utils/ResponseHelper";
-import App from "../app";
 
 export class HotelController{
     constructor(private _hotelService:IHotelService){}
@@ -36,7 +35,7 @@ export class HotelController{
 
             ResponseHelper.success(res,StatusCode.CREATED,HOTEL_MESSAGES.CREATED,hotel);
         } catch (error) {
-            
+            next(error);
         }
     }
     async getVendorHotels(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{

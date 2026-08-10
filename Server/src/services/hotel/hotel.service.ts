@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 import { HOTEL_MESSAGES } from "../../constants/messages";
 import { StatusCode } from "../../constants/statusCode";
-import { ICreateHotelDTO, IHotelCreateData } from "../../dtos/hotel.dto";
+import { ICreateHotelDTO, IHotelCreateData,IHotelResponseDTO } from "../../dtos/hotel.dto";
+import { getSignedS3Url } from "../../utils/getSignedS3Url";
 import { AppError } from "../../errors/AppError";
 import { IHotel } from "../../interfaces/models/IHotel.model";
 import { IVendor, VendorStatus } from "../../interfaces/models/IVendor.model";
@@ -54,11 +55,24 @@ export class HotelService implements IHotelService{
         return await this._hotelRepository.createHotel(hotelData);
     }    
 
-    async getVendorHotels(ownerId: string): Promise<IHotel[]> {
-        const vendor=await this.getApprovedVendor(ownerId)
-        return await this._hotelRepository.findByVendorId(vendor._id.toString())
-    }
-    async getHotelById(ownerId: string, hotelId: string): Promise<IHotel> {
+    async getVendorHotels(
+    ownerId: string
+): Promise<IHotelResponseDTO[]> {
+    const vendor =
+        await this.getApprovedVendor(ownerId);
+
+    const hotels =
+        await this._hotelRepository.findByVendorId(
+            vendor._id.toString()
+        );
+
+    return await Promise.all(
+        hotels.map((hotel) =>
+            this.toHotelResponse(hotel)
+        )
+    );
+}
+    async getHotelById(ownerId: string, hotelId: string): Promise<IHotelResponseDTO> {
        const vendor=await this.getApprovedVendor(ownerId);
        if(!Types.ObjectId.isValid(hotelId)){
         throw new AppError(HOTEL_MESSAGES.NOT_FOUND,StatusCode.NOT_FOUND)
@@ -69,7 +83,7 @@ export class HotelService implements IHotelService{
        if(!hotel){
         throw new AppError(HOTEL_MESSAGES.NOT_FOUND,StatusCode.NOT_FOUND)
        }
-       return hotel
+       return await this.toHotelResponse(hotel)
     }
       private validateHotelData(data: ICreateHotelDTO): void {
         if (
@@ -97,7 +111,30 @@ export class HotelService implements IHotelService{
                 StatusCode.BAD_REQUEST
             );
         }
+
+        
     }
+    private async toHotelResponse(
+    hotel: IHotel
+): Promise<IHotelResponseDTO> {
+    const hotelImageUrl = await getSignedS3Url(
+        hotel.hotelImageKey
+    );
+
+    return {
+        _id: hotel._id.toString(),
+        vendorId: hotel.vendorId.toString(),
+        hotelName: hotel.hotelName,
+        businessType: hotel.businessType,
+        hotelImageUrl,
+        place: hotel.place,
+        address: hotel.address,
+        location: hotel.location,
+        isActive: hotel.isActive,
+        createdAt: hotel.createdAt,
+        updatedAt: hotel.updatedAt,
+    };
+}
     
 
 

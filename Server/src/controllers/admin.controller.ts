@@ -6,36 +6,34 @@ import { IAdminService } from "../interfaces/service/admin/IAdminService";
 import { ResponseHelper } from "../utils/ResponseHelper";
 
 export class AdminController {
-  constructor(private readonly _adminService: IAdminService) {}
+  constructor(private readonly _adminService: IAdminService) { }
 
-  async getAllVendors(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  async getAllVendors(req: Request, res: Response,next: NextFunction,): Promise<void> {
     try {
-      const vendors = await this._adminService.getAllVendors();
+      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      const search = req.query.search as string | undefined;
+      const status = req.query.status as string | undefined;
+
+      const result = await this._adminService.getAllVendors({
+        page,
+        limit,
+        search,
+        status,
+      });
+
       ResponseHelper.success(
         res,
         StatusCode.OK,
         ADMIN_MESSAGES.VENDORS_FETCHED,
-        vendors,
+        result,
       );
     } catch (error) {
       next(error);
     }
   }
-/**
- * 
- * @param req 
- * @param res 
- * @param next 
- */
-  async approveVendor(
-    req: Request<{ vendorId: string }>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+ 
+  async approveVendor( req: Request<{ vendorId: string }>, res: Response, next: NextFunction,): Promise<void> {
     try {
       const { vendorId } = req.params;
       if (!vendorId) {
@@ -57,11 +55,7 @@ export class AdminController {
     }
   }
 
-  async rejectVendor(
-    req: Request<{ vendorId: string }>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  async rejectVendor(  req: Request<{ vendorId: string }>, res: Response, next: NextFunction,): Promise<void> {
     try {
       const { vendorId } = req.params;
       const { reason } = req.body;
@@ -86,29 +80,32 @@ export class AdminController {
     }
   }
 
-  async getAllUsers(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  async getAllUsers(req: Request,res: Response,next: NextFunction, ): Promise<void> {
     try {
-      const users = await this._adminService.getAllUsers();
+      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      const search = req.query.search as string | undefined;
+      const status = req.query.status as string | undefined;
+
+      const result = await this._adminService.getAllUsers({
+        page,
+        limit,
+        search,
+        status,
+      });
+
       ResponseHelper.success(
         res,
         StatusCode.OK,
         ADMIN_MESSAGES.USERS_FETCHED,
-        users,
+        result,
       );
     } catch (error) {
       next(error);
     }
   }
 
-  async toggleUserStatus(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  async toggleUserStatus( req: Request, res: Response, next: NextFunction,): Promise<void> {
     try {
       const { userId } = req.params;
       if (!userId || Array.isArray(userId)) {
@@ -133,11 +130,7 @@ export class AdminController {
     }
   }
 
-  async getVendorById(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  async getVendorById( req: Request,res: Response,next: NextFunction, ): Promise<void> {
     try {
       const vendorId = req.params.vendorId;
       if (!vendorId || Array.isArray(vendorId)) {

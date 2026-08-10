@@ -89,6 +89,7 @@ export class AuthService implements IAuthService {
 
     return user;
   }
+  
 
   async login(data: ILoginRequestDTO): Promise<ILoginServiceResult> {
     const { email, password } = data;

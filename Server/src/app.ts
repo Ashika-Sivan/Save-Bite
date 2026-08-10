@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser"
 import vendorRoute from "./routes/vendor.route";
 import { errorMiddleware } from "./middlewares/error.middleware"
 import adminRoute  from "./routes/admin.routes"
+import customerBrowseRouter from "./routes/customerBrowse.routes"
 
 
 
@@ -37,6 +38,7 @@ export default class App {
         this.app.use('/api/auth',otpRoutes)
         this.app.use("/api/vendor",vendorRoute)
         this.app.use("/api/admin",adminRoute)
+        this.app.use("/api/customer",customerBrowseRouter)
        
     }
 

@@ -16,6 +16,7 @@ import {
 } from "../../mappers/vendor.mapper";
 import { IAdminUserListDTO } from "../../dtos/user.dto";
 import { toAdminUserListDTO } from "../../mappers/user.mapper";
+import { IPaginatedResult, IPaginationOptions } from "../../types/pagination.types";
 
 export class AdminService implements IAdminService {
     constructor(
@@ -23,9 +24,18 @@ export class AdminService implements IAdminService {
         private _userRepository: IUserRepository
     ) { }
 
-    async getAllVendors(): Promise<IAdminVendorListDTO[]> {
-        const vendors = await this._vendorRepository.findAllWithOwner();
-        return vendors.map(toAdminVendorListDTO);
+    async getAllVendors(options?: IPaginationOptions): Promise<IPaginatedResult<IAdminVendorListDTO>> {
+        const page = Math.max(1, options?.page || 1);
+        const limit = Math.max(1, options?.limit || 10);
+        const { vendors, total } = await this._vendorRepository.findAllWithOwner(options);
+        const totalPages = Math.ceil(total / limit);
+        return {
+            items: vendors.map(toAdminVendorListDTO),
+            total,
+            page,
+            limit,
+            totalPages,
+        };
     }
 
     async approveVendor(vendorId: string): Promise<IVendor> {
@@ -112,10 +122,20 @@ export class AdminService implements IAdminService {
         return vendor;
     }
 
-    async getAllUsers(): Promise<IAdminUserListDTO[]> {
-        const users = await this._vendorRepository.getAllUsers();
-        return users.map(toAdminUserListDTO)
+    async getAllUsers(options?: IPaginationOptions): Promise<IPaginatedResult<IAdminUserListDTO>> {
+        const page = Math.max(1, options?.page || 1);
+        const limit = Math.max(1, options?.limit || 10);
+        const { users, total } = await this._vendorRepository.getAllUsers(options);
+        const totalPages = Math.ceil(total / limit);
+        return {
+            items: users.map(toAdminUserListDTO),
+            total,
+            page,
+            limit,
+            totalPages,
+        };
     }
+
 
     async toggleUserStatus(userId: string): Promise<IAdminUserListDTO> {
         const user = await this._userRepository.findById(userId);

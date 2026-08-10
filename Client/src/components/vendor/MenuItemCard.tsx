@@ -23,9 +23,17 @@ const MenuItemCard = ({
             item.originalPrice) *
             100
     );
+    const isAvailable=item.isAvailable&&item.stockQuantity>0
 
     return (
         <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            {item.itemImageUrl?(
+                <img src={item.itemImageUrl} alt={item.itemName} className="h-52 w-full object-cover" loading="lazy"/>
+            ):(
+                <div className="flex h-52 w-full items-center bg-gray-100 text-sm text-gray-500">
+                    no food image available
+                </div>
+            )}
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">
@@ -39,14 +47,12 @@ const MenuItemCard = ({
 
                 <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        item.isAvailable &&
-                        item.stockQuantity > 0
+                        isAvailable 
                             ? "bg-green-100 text-green-700"
                             : "bg-gray-100 text-gray-600"
                     }`}
                 >
-                    {item.isAvailable &&
-                    item.stockQuantity > 0
+                    {isAvailable 
                         ? "Available"
                         : "Unavailable"}
                 </span>

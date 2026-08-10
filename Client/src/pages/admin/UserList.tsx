@@ -1,19 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import Pagination from "../../components/common/Pagination";
+import { useEffect, useState, useCallback } from "react";
 import { Search } from "lucide-react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
 import { getAllUsers, toggleUserStatus } from "../../services/admin.service";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-
+import type { UserDTO } from "../../types/admin.types";
 
 type StatusTab = "all" | "active" | "blocked";
 
@@ -23,61 +14,65 @@ const TABS: { key: StatusTab; label: string }[] = [
   { key: "blocked", label: "Blocked" },
 ];
 
+const LIMIT = 7;
+
 const UserList = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserDTO[]>([]);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<StatusTab>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const result = await getAllUsers({
+        page,
+        limit: LIMIT,
+        search: search.trim() || undefined,
+        status: tab === "all" ? undefined : tab,
+      });
+      setUsers(result.items);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, tab, search]);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await getAllUsers();
-        console.log("User API response:", response);
-        setUsers(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch users");
-      } finally {
-        setLoading(false);
-      }
-    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  const filteredUsers = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
-    return users
-      .filter((u) =>
-        tab === "all" ? true : tab === "active" ? u.isActive : !u.isActive,
-      )
-      .filter((user) => {
-        if (!searchValue) return true;
-        const name = user.name?.toLowerCase() ?? "";
-        const email = user.email?.toLowerCase() ?? "";
-        return name.includes(searchValue) || email.includes(searchValue);
-      });
-  }, [users, search, tab]);
+  const handleTabChange = (key: StatusTab) => {
+    setTab(key);
+    setPage(1);
+  };
 
-  const handleBlockToggle = async (user: User) => {
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleBlockToggle = async (user: UserDTO) => {
     try {
-        const response = await toggleUserStatus(user.id);
-
-        const updatedUser = response.data;
-
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === updatedUser.id ? updatedUser : u
-          )
-        );
+      const updatedUser = await toggleUserStatus(user.id);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+      );
     } catch (err) {
       console.log(err);
     }
-};
+  };
 
-  const columns: TableColumn<User>[] = [
+  const columns: TableColumn<UserDTO>[] = [
     {
       header: "User",
       render: (user) => (
@@ -122,11 +117,10 @@ const UserList = () => {
         <button
           type="button"
           onClick={() => handleBlockToggle(user)}
-          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-            user.isActive
-              ? "bg-red-50 text-red-600 hover:bg-red-100"
-              : "bg-green-50 text-green-700 hover:bg-green-100"
-          }`}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${user.isActive
+            ? "bg-red-50 text-red-600 hover:bg-red-100"
+            : "bg-green-50 text-green-700 hover:bg-green-100"
+            }`}
         >
           {user.isActive ? "Block" : "Unblock"}
         </button>
@@ -155,7 +149,7 @@ const UserList = () => {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search users..."
               className="w-72 rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
             />
@@ -171,12 +165,11 @@ const UserList = () => {
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`rounded-lg px-4 py-1.5 text-sm transition-colors ${
-              tab === t.key
-                ? "bg-green-700 text-white"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
+            onClick={() => handleTabChange(t.key)}
+            className={`rounded-lg px-4 py-1.5 text-sm transition-colors ${tab === t.key
+              ? "bg-green-700 text-white"
+              : "text-gray-500 hover:text-gray-900"
+              }`}
           >
             {t.label}
           </button>
@@ -192,12 +185,22 @@ const UserList = () => {
         ) : error ? (
           <div className="rounded-xl bg-red-50 p-4 text-red-600">{error}</div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={filteredUsers}
-            getRowKey={(user) => user.id}
-            emptyMessage="No users found"
-          />
+          <>
+            <DataTable
+              columns={columns}
+              data={users}
+              getRowKey={(user) => user.id}
+              emptyMessage="No users found"
+            />
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              limit={LIMIT}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </div>
     </div>

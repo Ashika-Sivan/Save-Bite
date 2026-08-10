@@ -1,54 +1,115 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+} from "react-router-dom";
+import { APP_ROUTES } from "../constants/appRoutes";
+
 import Signup from "../pages/auth/Signup";
 import Otp from "../pages/auth/Otp";
 import Login from "../pages/auth/Login";
-import Home from "../pages/Home";
-import ProtectedRoute from "./ProtectedRoute";
-import PublicRoute from "./PublicRoute.tsx";
-import VendorRegister from "../pages/vendor/VendorRegister.tsx";
-import ForgotPassword from "../pages/auth/ForgotPassword.tsx";
-import ResetPassword from "../pages/auth/ResetPassword.tsx";
-import VendorPending from "../pages/vendor/VendorPending.tsx";
-import VendorRejected from "../pages/vendor/VendorRejection.tsx";
-import VendorDashboard from "../pages/vendor/VendorDashboard.tsx";
-import AdminLogin from "../pages/admin/AdminLogin.tsx";
-import AdminDashboard from "../pages/admin/AdminDashboard.tsx";
-import UserList from "../pages/admin/UserList.tsx";
-import VendorList from "../pages/admin/VendorList.tsx";
-import AdminRoute from "./AdminRoutes.tsx";
-import AdminPublicRoute from "./AdminPublicRoutes.tsx";
-import VendorDetails from "../pages/admin/VendorDetails.tsx";
-import VendorRoute from "./VendorRoute.tsx";
-import AdminLayout from "../components/admin/AdminLayout.tsx";
-import AddHotel from "../pages/vendor/AddHotel.tsx";
-import HotelList from "../pages/vendor/HotelList.tsx";
-import TodayMenu from "../pages/vendor/TodayMenu.tsx";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
+import Home from "../pages/Home";
+
+import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
+
+import VendorRegister from "../pages/vendor/VendorRegister";
+import VendorReapply from "../pages/vendor/VendorReapply";
+import VendorPending from "../pages/vendor/VendorPending";
+import VendorRejected from "../pages/vendor/VendorRejection";
+import VendorDashboard from "../pages/vendor/VendorDashboard";
+import AddHotel from "../pages/vendor/AddHotel";
+import HotelList from "../pages/vendor/HotelList";
+import TodayMenu from "../pages/vendor/TodayMenu";
+import VendorRoute from "./VendorRoute";
+
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import UserList from "../pages/admin/UserList";
+import VendorList from "../pages/admin/VendorList";
+import VendorDetails from "../pages/admin/VendorDetails";
+import AdminRoute from "./AdminRoutes";
+import AdminPublicRoute from "./AdminPublicRoutes";
+import AdminLayout from "../components/admin/AdminLayout";
+
+import LiveHotelMenuPage from "../pages/customer/LiveHotelMenu";
+import CartPage from "../pages/customer/Cart";
+import CustomerLayout from "../components/layouts/CustomerLayout";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-      <Route
-        path="/signup"
-        element={
-          <PublicRoute>
-            <Signup />
-          </PublicRoute>
-        }
-      />
+        {/* CUSTOMER LAYOUT */}
+        <Route element={<CustomerLayout />}>
+          {/* Public home page */}
+          <Route
+            path={APP_ROUTES.PUBLIC.HOME}
+            element={<Home />}
+          />
+
+          {/* Logged-in customer home */}
+          <Route
+            path={APP_ROUTES.CUSTOMER.HOME}
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={APP_ROUTES.CUSTOMER.LIVE_MENU(":hotelId")}
+            element={
+              <ProtectedRoute>
+                <LiveHotelMenuPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={APP_ROUTES.CUSTOMER.CART}
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* AUTH ROUTES */}
+        <Route
+          path={APP_ROUTES.PUBLIC.SIGNUP}
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
 
         <Route
-          path="/otp"
+          path={APP_ROUTES.PUBLIC.OTP}
           element={
             <PublicRoute>
               <Otp />
             </PublicRoute>
           }
         />
-         <Route
-          path="/forgot-password"
+
+        <Route
+          path={APP_ROUTES.PUBLIC.LOGIN}
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path={APP_ROUTES.PUBLIC.FORGOT_PASSWORD}
           element={
             <PublicRoute>
               <ForgotPassword />
@@ -57,7 +118,7 @@ export default function AppRoutes() {
         />
 
         <Route
-          path="/reset-password"
+          path={APP_ROUTES.PUBLIC.RESET_PASSWORD}
           element={
             <PublicRoute>
               <ResetPassword />
@@ -65,24 +126,9 @@ export default function AppRoutes() {
           }
         />
 
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-           <Route path="/home" element={
-            <ProtectedRoute>
-            <Home/>
-            </ProtectedRoute>
-          }/>
-
-           {/* VENDOR SIDE*/}
-
+        {/* VENDOR REGISTRATION */}
         <Route
-          path="/vendor/VendorRegister"
+          path={APP_ROUTES.VENDOR.REGISTER}
           element={
             <ProtectedRoute>
               <VendorRegister />
@@ -91,7 +137,16 @@ export default function AppRoutes() {
         />
 
         <Route
-          path="/vendor/pending"
+          path={APP_ROUTES.VENDOR.REAPPLY}
+          element={
+            <ProtectedRoute>
+              <VendorReapply />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={APP_ROUTES.VENDOR.PENDING}
           element={
             <ProtectedRoute>
               <VendorPending />
@@ -100,7 +155,7 @@ export default function AppRoutes() {
         />
 
         <Route
-          path="/vendor/rejected"
+          path={APP_ROUTES.VENDOR.REJECTED}
           element={
             <ProtectedRoute>
               <VendorRejected />
@@ -108,46 +163,61 @@ export default function AppRoutes() {
           }
         />
 
+        {/* APPROVED VENDOR ROUTES */}
         <Route element={<VendorRoute />}>
           <Route
-            path="/vendor/dashboard"
+            path={APP_ROUTES.VENDOR.DASHBOARD}
             element={<VendorDashboard />}
           />
 
           <Route
-            path="/vendor/hotels"
+            path={APP_ROUTES.VENDOR.HOTELS}
             element={<HotelList />}
           />
 
           <Route
-            path="/vendor/hotels/add"
+            path={APP_ROUTES.VENDOR.ADD_HOTEL}
             element={<AddHotel />}
           />
 
           <Route
-            path="/vendor/hotels/:hotelId/menu"
+            path={APP_ROUTES.VENDOR.HOTEL_MENU(":hotelId")}
             element={<TodayMenu />}
           />
         </Route>
 
-        {/* ADMIN SIDE*/}
-        <Route element={<AdminPublicRoute/>}>
-        <Route path="/admin/login" element={<AdminLogin/>}/>
+        {/* ADMIN PUBLIC ROUTES */}
+        <Route element={<AdminPublicRoute />}>
+          <Route
+            path={APP_ROUTES.ADMIN.LOGIN}
+            element={<AdminLogin />}
+          />
         </Route>
-        <Route element={<AdminRoute/>}>
-        <Route element={<AdminLayout />}>
-        <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
-        <Route path="/admin/userList" element={<UserList/>}/>
-        <Route path="/admin/vendorList" element={<VendorList/>}/>
-        <Route path="/admin/vendors/:vendorId" element={<VendorDetails/>}/> 
+
+        {/* ADMIN PROTECTED ROUTES */}
+        <Route element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route
+              path={APP_ROUTES.ADMIN.DASHBOARD}
+              element={<AdminDashboard />}
+            />
+
+            <Route
+              path={APP_ROUTES.ADMIN.USER_LIST}
+              element={<UserList />}
+            />
+
+            <Route
+              path={APP_ROUTES.ADMIN.VENDOR_LIST}
+              element={<VendorList />}
+            />
+
+            <Route
+              path={APP_ROUTES.ADMIN.VENDOR_DETAILS(":vendorId")}
+              element={<VendorDetails />}
+            />
+          </Route>
         </Route>
-        </Route>
-        
-        
-
-
-
-
       </Routes>
     </BrowserRouter>
   );
