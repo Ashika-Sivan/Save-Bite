@@ -17,7 +17,7 @@ export class DailyMenuRepository extends BaseRepository<IDailyMenu>implements ID
         return await this.create(data);
     }
     async addItem(menuId: string,vendorId:Types.ObjectId, data: IDailyMenuItemCreateData): Promise<IDailyMenu | null> {
-        return DailyMenu.findByIdAndUpdate({_id:new Types.ObjectId(menuId),vendorId},{
+        return DailyMenu.findOneAndUpdate({_id:new Types.ObjectId(menuId),vendorId},{
                 $push:{
                     items:data
                 },
@@ -45,7 +45,7 @@ export class DailyMenuRepository extends BaseRepository<IDailyMenu>implements ID
             },
             {
                 new:true,
-                runValidator:true
+                runValidators:true
             }
         )
     }
@@ -86,6 +86,34 @@ export class DailyMenuRepository extends BaseRepository<IDailyMenu>implements ID
         });
 
         return await DailyMenu.findOneAndUpdate({_id:menuId,vendorId,"items._id":itemId},{$set:updateFields,},{new:true,runValidators:true})
+    }
+
+    async findLatestMenuBeforeDate(hotelId: Types.ObjectId, vendorId: Types.ObjectId, beforeDate: Date): Promise<IDailyMenu | null> {
+        return await DailyMenu.findOne({hotelId,vendorId,menuDate:{$lt:beforeDate},"items.0":{
+            $exists:true,
+        },
+    }).sort({menuDate:-1,createdAt:-1})
+    }
+    async setItemIfEmpty(menuId:string,vendorId:Types.ObjectId,items:IDailyMenuItemCreateData[]):Promise<IDailyMenu|null>{
+        return await DailyMenu.findOneAndUpdate(
+            {
+                _id:new Types.ObjectId(menuId),
+                vendorId,
+                isLive:false,
+                items:{
+                    $size:0
+                },
+            },
+            {
+                $set:{
+                    items,
+                },
+            },
+            {
+                new:true,
+                runValidators:true
+            }
+        )
     }
 
 }

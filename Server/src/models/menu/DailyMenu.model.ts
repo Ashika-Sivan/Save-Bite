@@ -11,6 +11,11 @@ const dailyMenuItemSchema = new Schema<IDailyMenuItem>(
             required: true,
             trim: true,
         },
+        itemImageKey:{
+            type:String,
+            required:true,
+            trim:true
+        },
 
         unitType: {
             type: String,
@@ -93,7 +98,7 @@ const dailyMenuSchema=new Schema<IDailyMenu>(
 /*
 ahotel can only one daily menu document for a particulr date
 */
-dailyMenuItemSchema.index(
+dailyMenuSchema.index(
     {
         hotelId:1,
         menuDate:1

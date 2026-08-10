@@ -11,7 +11,9 @@ import {
     ArrowLeft,
     Loader2,
     Power,
+    Copy
 } from "lucide-react";
+import { usePreviousMenu } from "../../services/menu.service";
 
 import PickupWindowForm from
     "../../components/vendor/PickupWindowForm";
@@ -69,6 +71,7 @@ const formatDateTime = (
 
 const TodayMenu = () => {
     const navigate = useNavigate();
+    const [isUsingPreviousMenu,setIsUsingPreviousMenu]=useState(false)
 
     const { hotelId } = useParams<{
         hotelId: string;
@@ -282,6 +285,25 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
         );
     }
 
+
+
+    const handleUsePreviousMenu=async():Promise<void>=>{
+        if(!menu){
+            return
+        }
+        try {
+            setIsUsingPreviousMenu(true)
+            const response=await usePreviousMenu(menu.id)
+            setMenu(response.data)
+            toast.success(response.message);
+            
+        } catch (error) {
+            toast.error(getErrorMessage(error,"unable to use the previous menu"))
+        }finally{
+            setIsUsingPreviousMenu(false)
+        }
+    }
+
     return (
         <main className="min-h-screen bg-[#f7f8f3] px-4 py-8">
             <div className="mx-auto max-w-5xl">
@@ -438,6 +460,51 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                                 Add today&apos;s available
                                 leftover food and stock.
                             </p>
+
+                            {menu &&
+    !menu.isLive &&
+    menu.items.length === 0 && (
+        <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-4">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                    <h3 className="font-semibold text-gray-900">
+                        Reuse your previous menu
+                    </h3>
+
+                    <p className="mt-1 text-sm text-gray-600">
+                        Copy names, images and prices
+                        from this hotel&apos;s latest
+                        menu. Today&apos;s stock will
+                        start at zero.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        void handleUsePreviousMenu()
+                    }
+                    disabled={
+                        isUsingPreviousMenu
+                    }
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-green-700 bg-white px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {isUsingPreviousMenu ? (
+                        <Loader2
+                            size={18}
+                            className="animate-spin"
+                        />
+                    ) : (
+                        <Copy size={18} />
+                    )}
+
+                    {isUsingPreviousMenu
+                        ? "Copying..."
+                        : "Use Previous Menu"}
+                </button>
+            </div>
+        </div>
+    )}
 
                             <div className="mt-5">
                                 <MenuItemForm

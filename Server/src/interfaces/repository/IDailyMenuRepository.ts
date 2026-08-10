@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { IDailyMenu, MenuUnitType } from "../models/IDailyMenu.model";
-import { IDailyMenuItemUpdateData, IUpdatePickupWindowDTO } from "../../dtos/dailyMenu.dto";
+import { IDailyMenuItemUpdateData } from "../../dtos/dailyMenu.dto";
 
 export interface IDailyMenuCreateData{//database ready data
     vendorId:Types.ObjectId;
@@ -17,6 +17,7 @@ export interface IPickupWindowUpdateData {
 }
 export interface IDailyMenuItemCreateData {
     itemName: string;
+     itemImageKey: string;
     unitType:MenuUnitType;
     originalPrice: number;
     discountedPrice: number;
@@ -32,4 +33,8 @@ export interface IDailyMenuRepository{//it is for repository
     findTodayMenuByHotel(hotelId:string,vendorId:Types.ObjectId,startOfDay:Date,endOfDay:Date):Promise<IDailyMenu|null>
     updatePickupWindow(menuId:string,vendorId:Types.ObjectId,pickupWindow:IPickupWindowUpdateData):Promise<IDailyMenu|null>;
     updateItem(menuId:string,itemId:string,vendorId:Types.ObjectId,data:IDailyMenuItemUpdateData):Promise<IDailyMenu|null>
+    findLatestMenuBeforeDate(hotelId:Types.ObjectId,vendorId:Types.ObjectId,beforeDate:Date):Promise<IDailyMenu|null>
+    setItemIfEmpty(menuId:string,vendorId:Types.ObjectId,items:IDailyMenuItemCreateData[]):Promise<IDailyMenu|null>
+       
+    
 }

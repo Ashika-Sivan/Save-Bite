@@ -36,6 +36,7 @@ const EditMenuItemForm = ({
     const [stockQuantity, setStockQuantity] = useState("");
     const [isAvailable, setIsAvailable] = useState(true);
 
+     
     useEffect(() => {
         setItemName(item.itemName);
         setUnitType(item.unitType);
@@ -43,6 +44,7 @@ const EditMenuItemForm = ({
         setDiscountedPrice(String(item.discountedPrice));
         setStockQuantity(String(item.stockQuantity));
         setIsAvailable(item.isAvailable);
+     
     }, [item]);
 
     const handleSubmit = async (

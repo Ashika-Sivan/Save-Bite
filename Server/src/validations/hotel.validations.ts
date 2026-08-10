@@ -1,4 +1,3 @@
-import App from "../app";
 import { HOTEL_MESSAGES } from "../constants/messages";
 import { StatusCode } from "../constants/statusCode";
 import { ICreateHotelDTO } from "../dtos/hotel.dto";

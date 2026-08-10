@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkVendorStatus } from "../../services/vendor.service";
+import { APP_ROUTES } from "../../constants/appRoutes";
 
 
 
@@ -145,14 +146,14 @@ export default function VendorRejected() {
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={() => navigate('/vendor/VendorRegister')}
+              onClick={() => navigate(APP_ROUTES.VENDOR.REAPPLY)}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#15803d] px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#166534] hover:shadow-md"
             >
               <RefreshCw className="h-4 w-4" />
               Apply Again
             </button>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(APP_ROUTES.PUBLIC.HOME)}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
             >
               <ArrowLeft className="h-4 w-4" />

@@ -50,7 +50,10 @@ export const VENDOR_MESSAGES = {
   STATUS_FETCHED: "Vendor status fetched successfully",
   VENDOR_FETCHED: "Vendor fetched successfully",
   VENDOR_ALREADY_APPROVED:"vendor already approved",
-  ALL_FILES_REQUIRED:"all files required"
+  ALL_FILES_REQUIRED:"all files required",
+  REAPPLY_SUCCESS: "Vendor re-application submitted successfully",
+  NOT_REJECTED: "Only rejected applications can be re-submitted",
+  NO_EXISTING_APPLICATION: "No existing vendor application found to re-apply",
 };
 /*
 for admin
@@ -94,6 +97,8 @@ export const DAILY_MENU_MESSAGES = {
     TODAY_MENU_FETCHED: "Today's menu fetched successfully",
     END_LIVE_SUCCESS:"Menu live session ended successfully",
     PICKUP_WINDOW_UPDATED:"pickup widnow has been updated successfully",
-    ITEM_UPDATED:"Item updated successfully"
+    ITEM_UPDATED:"Item updated successfully",
+    IMAGE_REQUIRED:"Food image required",
+    INVALID_ID:"Invalid menu id"
 } as const;
   

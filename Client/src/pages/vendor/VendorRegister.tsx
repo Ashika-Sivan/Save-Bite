@@ -21,6 +21,7 @@ const steps = [
 
 import { registerVendor } from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
+import { APP_ROUTES } from "../../constants/appRoutes";
 
 
 export default function VendorRegister() {
@@ -156,7 +157,7 @@ export default function VendorRegister() {
 
       const response = await registerVendor(formData);
       toast.success("Vendor application submitted successfully");
-      navigate('/vendor/pending')
+      navigate(APP_ROUTES.VENDOR.PENDING)
       console.log(response);
     } catch (error) {
       console.error(error);

@@ -10,4 +10,9 @@ export interface IVendorService {
 
     getVendorStatus(ownerId: string): Promise<IVendorStatusResponseDTO>;
 
+    reapplyVendor(
+        ownerId: string,
+        data: ICreateVendorDTO,
+        files: { [fieldName: string]: Express.Multer.File[] }
+    ): Promise<IVendor>;
 }

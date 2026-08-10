@@ -30,11 +30,13 @@ export interface IUpdateDailyMenuItemDTO{
 export interface IDailyMenuItemResponseDTO {
     id: string;
     itemName: string;
+    itemImageUrl:string;
     unitType: MenuUnitType;
     originalPrice: number;
     discountedPrice: number;
     stockQuantity: number;
     isAvailable: boolean;
+    
 }
 export interface IDailyMenuResponseDTO{
     id:string;

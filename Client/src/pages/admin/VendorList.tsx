@@ -1,25 +1,11 @@
-  
-import { useEffect, useMemo, useState } from "react";
+import Pagination from "../../components/common/Pagination";
+import { useEffect, useState, useCallback } from "react";
 import { Search, ArrowUpRight } from "lucide-react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
 import { getAllVendors } from "../../services/admin.service";
 import { useNavigate } from "react-router-dom";
-
-type VendorStatus = "pending" | "approved" | "rejected" | "suspended";
-
-interface Vendor {
-  id: string;
-  ownerName: string;
-  ownerEmail: string;
-  businessName: string;
-  businessType: string;
-  place: string;
-  status: VendorStatus;
-  isLive: boolean;
-  createdAt: string;
-  revenue?: number;
-}
+import type { VendorDTO, VendorStatus } from "../../types/admin.types";
 
 const TABS: { key: "all" | VendorStatus; label: string }[] = [
   { key: "all", label: "All" },
@@ -29,54 +15,58 @@ const TABS: { key: "all" | VendorStatus; label: string }[] = [
   { key: "rejected", label: "Rejected" },
 ];
 
+const LIMIT = 7;
+
 const VendorList = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendors, setVendors] = useState<VendorDTO[]>([]);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
+  const fetchVendors = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const result = await getAllVendors({
+        page,
+        limit: LIMIT,
+        search: search.trim() || undefined,
+        status: tab === "all" ? undefined : tab,
+      });
+      setVendors(result.items);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch vendors");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, tab, search]);
 
   useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await getAllVendors();
-        console.log("vendor api responses", response);
-        setVendors(response.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch vendors");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchVendors();
-  }, []);
+  }, [fetchVendors]);
 
-  const filteredVendors = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
-    return vendors
-      .filter((v) => (tab === "all" ? true : v.status === tab))
-      .filter((v) => {
-        if (!searchValue) return true;
-        const businessName = v.businessName?.toLowerCase() ?? "";
-        const ownerName = v.ownerName?.toLowerCase() ?? "";
-        const ownerEmail = v.ownerEmail?.toLowerCase() ?? "";
-        return (
-          businessName.includes(searchValue) ||
-          ownerName.includes(searchValue) ||
-          ownerEmail.includes(searchValue)
-        );
-      });
-  }, [search, tab, vendors]);
+  const handleTabChange = (key: (typeof TABS)[number]["key"]) => {
+    setTab(key);
+    setPage(1);
+  };
 
- const handleReview = (vendorId: string) => {
-  navigate(`/admin/vendors/${vendorId}`);
-};
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
-  const columns: TableColumn<Vendor>[] = [
+  const handleReview = (vendorId: string) => {
+    navigate(`/admin/vendors/${vendorId}`);
+  };
+
+  const columns: TableColumn<VendorDTO>[] = [
     {
       header: "Business",
       render: (v) => (
@@ -108,11 +98,11 @@ const VendorList = () => {
       align: "right",
       render: (v) => (
         <button
-        onClick={() => handleReview(v.id)}
-        className="inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline"
-      >
-        Review <ArrowUpRight size={14} />
-      </button>
+          onClick={() => handleReview(v.id)}
+          className="inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline"
+        >
+          Review <ArrowUpRight size={14} />
+        </button>
       ),
     },
   ];
@@ -132,7 +122,7 @@ const VendorList = () => {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search vendors..."
               className="w-72 rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
             />
@@ -148,10 +138,9 @@ const VendorList = () => {
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`rounded-lg px-4 py-1.5 text-sm transition-colors ${
-              tab === t.key ? "bg-green-700 text-white" : "text-gray-500 hover:text-gray-900"
-            }`}
+            onClick={() => handleTabChange(t.key)}
+            className={`rounded-lg px-4 py-1.5 text-sm transition-colors ${tab === t.key ? "bg-green-700 text-white" : "text-gray-500 hover:text-gray-900"
+              }`}
           >
             {t.label}
           </button>
@@ -167,12 +156,22 @@ const VendorList = () => {
         ) : error ? (
           <div className="rounded-xl bg-red-50 p-4 text-red-600">{error}</div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={filteredVendors}
-            emptyMessage="No vendors match."
-            getRowKey={(v) => v.id}
-          />
+          <>
+            <DataTable
+              columns={columns}
+              data={vendors}
+              emptyMessage="No vendors match."
+              getRowKey={(v) => v.id}
+            />
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              limit={LIMIT}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </div>
     </div>
@@ -180,4 +179,3 @@ const VendorList = () => {
 };
 
 export default VendorList;
-

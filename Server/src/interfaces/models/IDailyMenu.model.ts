@@ -14,6 +14,7 @@ export interface IDailyMenuItem{
     unitType:MenuUnitType;
     originalPrice:number;
     discountedPrice:number;
+    itemImageKey:string
     stockQuantity:number;
     isAvailable:boolean
 }
