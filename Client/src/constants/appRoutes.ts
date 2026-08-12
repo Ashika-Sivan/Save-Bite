@@ -14,10 +14,13 @@ export const APP_ROUTES = {
     HOME: "/home",
     LIVE_MENU: (hotelId: string) => `/customer/restaurants/${hotelId}/menu`,
     CART: "/cart",
+    CHECKOUT:"/checkout",
+    PAYMENT_SUCCESS:"/payment-success",
+    MY_ORDERS: "/orders"
   },
 
   VENDOR: {
-    REGISTER: "/vendor/VendorRegister",
+    REGISTER: "/vendor/register",
     REAPPLY: "/vendor/reapply",
     PENDING: "/vendor/pending",
     REJECTED: "/vendor/rejected",

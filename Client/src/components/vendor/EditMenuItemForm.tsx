@@ -1,4 +1,4 @@
-import  {useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import type { DailyMenuItem,MenuUnitType,UpdateDailyMenuItemData } from "../../services/menu.service";
 
@@ -27,25 +27,23 @@ const EditMenuItemForm = ({
     onSubmit,
     onCancel,
 }: EditMenuItemFormProps) => {
-    const [itemName, setItemName] = useState("");
-    const [unitType, setUnitType] =
-        useState<MenuUnitType>("full");
-    const [originalPrice, setOriginalPrice] = useState("");
-    const [discountedPrice, setDiscountedPrice] =
-        useState("");
-    const [stockQuantity, setStockQuantity] = useState("");
-    const [isAvailable, setIsAvailable] = useState(true);
+    const [itemName, setItemName] = useState(item.itemName);
+    const [unitType, setUnitType] = useState<MenuUnitType>(item.unitType);
+    const [originalPrice, setOriginalPrice] = useState(String(item.originalPrice));
+    const [discountedPrice, setDiscountedPrice] = useState(String(item.discountedPrice));
+    const [stockQuantity, setStockQuantity] = useState(String(item.stockQuantity));
+    const [isAvailable, setIsAvailable] = useState(item.isAvailable);
 
-     
-    useEffect(() => {
+    const [prevItem, setPrevItem] = useState(item);
+    if (prevItem !== item) {
+        setPrevItem(item);
         setItemName(item.itemName);
         setUnitType(item.unitType);
         setOriginalPrice(String(item.originalPrice));
         setDiscountedPrice(String(item.discountedPrice));
         setStockQuantity(String(item.stockQuantity));
         setIsAvailable(item.isAvailable);
-     
-    }, [item]);
+    }
 
     const handleSubmit = async (
         event: FormEvent<HTMLFormElement>

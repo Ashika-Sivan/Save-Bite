@@ -69,7 +69,6 @@ export const rejectVendor = async (vendorId: string, reason: string) => {
   return response.data;
 };
 
-// ─── User helpers ─────────────────────────────────────────────────────────────
 
 /** Map a single raw user record coming from the API into a UserDTO. */
 const toUserDTO = (raw: Record<string, unknown>): UserDTO => ({
@@ -81,7 +80,6 @@ const toUserDTO = (raw: Record<string, unknown>): UserDTO => ({
   createdAt: raw.createdAt as string ?? "",
 });
 
-// ─── User service functions ───────────────────────────────────────────────────
 
 export const getAllUsers = async (
   params?: UserQueryParams

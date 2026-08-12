@@ -1,5 +1,4 @@
 import {
-    useCallback,
     useEffect,
     useState,
 } from "react";
@@ -13,7 +12,7 @@ import {
     Power,
     Copy
 } from "lucide-react";
-import { usePreviousMenu } from "../../services/menu.service";
+import { usePreviousMenu as applyPreviousMenuApi } from "../../services/menu.service";
 
 import PickupWindowForm from
     "../../components/vendor/PickupWindowForm";
@@ -104,8 +103,10 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
         setIsChangingLiveStatus,
     ] = useState(false);
 
-    const fetchTodayMenu =
-        useCallback(async () => {
+    useEffect(() => {
+        let ignore = false;
+        const fetchTodayMenu = async () => {
+            await Promise.resolve();
             if (!hotelId) {
                 toast.error("Hotel ID is missing");
                 navigate("/vendor/hotels");
@@ -118,22 +119,30 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                 const response =
                     await getTodayMenu(hotelId);
 
-                setMenu(response.data);
+                if (!ignore) {
+                    setMenu(response.data);
+                }
             } catch (error) {
-                toast.error(
-                    getErrorMessage(
-                        error,
-                        "Unable to fetch today's menu"
-                    )
-                );
+                if (!ignore) {
+                    toast.error(
+                        getErrorMessage(
+                            error,
+                            "Unable to fetch today's menu"
+                        )
+                    );
+                }
             } finally {
-                setIsLoading(false);
+                if (!ignore) {
+                    setIsLoading(false);
+                }
             }
-        }, [hotelId, navigate]);
+        };
 
-    useEffect(() => {
         void fetchTodayMenu();
-    }, [fetchTodayMenu]);
+        return () => {
+            ignore = true;
+        };
+    }, [hotelId, navigate]);
 
     const handleCreateMenu = async (
         data: CreateDailyMenuData
@@ -293,7 +302,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
         }
         try {
             setIsUsingPreviousMenu(true)
-            const response=await usePreviousMenu(menu.id)
+            const response=await applyPreviousMenuApi(menu.id)
             setMenu(response.data)
             toast.success(response.message);
             

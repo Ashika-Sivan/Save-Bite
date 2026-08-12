@@ -4,6 +4,7 @@ import { AuthRequest } from "../types/authRequest";
 import { ResponseHelper } from "../utils/ResponseHelper";
 import { StatusCode } from "../constants/statusCode";
 import { AppError } from "../errors/AppError";
+import { CUSTOMER_MESSAGES } from "../constants/messages";
 
 export class CustomerBrowseController{
     constructor(private readonly _customerBrowseService:ICustomerBrowseService){}
@@ -28,7 +29,7 @@ export class CustomerBrowseController{
                 );
             }
             const result=await this._customerBrowseService.getLiveHotels(query);
-            ResponseHelper.success(res,StatusCode.OK,"live hotels fetched successfully",result)
+            ResponseHelper.success(res,StatusCode.OK,CUSTOMER_MESSAGES.LIVE_HOTELS_FETCHED,result)
             
             
         } catch (error) {
@@ -40,10 +41,10 @@ export class CustomerBrowseController{
         try {
             const {hotelId}=req.params
             if(typeof hotelId!=="string"){
-                throw new AppError("innvalid hotel id",StatusCode.BAD_REQUEST)
+                throw new AppError("Invalid hotel id",StatusCode.BAD_REQUEST)
             }
             const result=await this._customerBrowseService.getLiveHotelMenu(hotelId)
-            ResponseHelper.success(res,StatusCode.OK,"live hotel menu fetched successfully",result)
+            ResponseHelper.success(res,StatusCode.OK,CUSTOMER_MESSAGES.LIVE_HOTEL_MENU_FETCHED,result)
         } catch (error){
 
         next(error)

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -10,6 +11,8 @@ import { setCredentials } from "../../redux/authSlice";
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -214,16 +217,27 @@ export default function Login() {
               </Link>
             </div>
 
-            <input
-              id="password"
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              className={inputClass(errors.password)}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                className={`${inputClass(errors.password)} pr-10`}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             {errors.password && (
               <p className="text-sm text-red-500">

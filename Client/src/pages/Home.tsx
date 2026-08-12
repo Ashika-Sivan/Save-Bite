@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
 import type { RootState } from "../redux/store";
+import { APP_ROUTES } from "../constants/appRoutes";
 import { clearCredentials, updateUser } from "../redux/authSlice";
 import { checkVendorStatus } from "../services/vendor.service";
 import { logout } from "../services/auth.service";
@@ -14,6 +15,7 @@ import {
   type LiveHotelMenu,
   type LiveMenuItem,
 } from "../services/customerBrowse.service";
+import { addToCart, replaceCart, type AddToCartPayload } from "../redux/cartSlice";
 
 const categories = [
   "All",
@@ -60,11 +62,83 @@ export default function Home() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const cartHotelId = useSelector((state: RootState) => state.cart.hotelId);
 
-  const [open, setOpen] = useState(false);
+  const handleAddToCartFromHome = (item: DisplayMenuItem) => {
+    if (!user) {
+      toast.error("Please log in to add items to your cart");
+      navigate("/login");
+      return;
+    }
+
+    const menu = menus.find((m) => m.hotelId === item.hotelId);
+    if (!menu) {
+      toast.error("Restaurant menu not found");
+      return;
+    }
+
+    const payload: AddToCartPayload = {
+      hotelId: menu.hotelId,
+      menuId: menu.menuId,
+      hotelName: menu.hotelName,
+      pickupWindow: {
+        startTime: menu.pickupWindow.startTime,
+        endTime: menu.pickupWindow.endTime,
+      },
+      itemId: item.itemId,
+      itemName: item.itemName,
+      unitType: item.unitType,
+      originalPrice: item.originalPrice,
+      discountedPrice: item.discountedPrice,
+      availableStock: item.stockQuantity,
+      quantity: 1,
+    };
+
+    if (cartHotelId && cartHotelId !== menu.hotelId) {
+      toast.custom(
+        (currentToast) => (
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
+            <h3 className="font-semibold text-gray-900">Replace current cart?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Your cart contains food from another restaurant. Clear it and add food from {menu.hotelName}?
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => toast.dismiss(currentToast.id)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toast.dismiss(currentToast.id);
+                  dispatch(replaceCart(payload));
+                  toast.success(`Added ${item.itemName} to cart`);
+                  navigate("/cart");
+                }}
+                className="rounded-lg bg-green-800 px-4 py-2 text-sm font-semibold text-white hover:bg-green-900"
+              >
+                Clear & Add
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: Infinity, position: "top-center" }
+      );
+      return;
+    }
+
+    dispatch(addToCart(payload));
+    toast.success(`Added ${item.itemName} to cart`);
+    // navigate("/cart");
+  };
+
+  const [_open, setOpen] = useState(false);
   const [hotels, setHotels] = useState<LiveHotel[]>([]);
   const [menus, setMenus] = useState<LiveHotelMenu[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,12 +153,12 @@ export default function Home() {
         : null;
     });
 
-  const [isGettingLocation, setIsGettingLocation] =
+  const [_isGettingLocation, setIsGettingLocation] =
     useState(false)
 
 
 
-  const handleUseCurrentLocation = (): void => {
+  const _handleUseCurrentLocation = (): void => {
     if (!navigator.geolocation) {
       toast.error(
         "Location is not supported by your browser"
@@ -140,6 +214,13 @@ export default function Home() {
 
   useEffect(() => {
     const loadLiveHotels = async () => {
+      await Promise.resolve();
+      if (user?.role !== "user") {
+        setHotels([]);
+        setMenus([]);
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         setError(null);
@@ -165,17 +246,11 @@ export default function Home() {
       }
     };
 
-    if (user?.role === "user") {
-      void loadLiveHotels();
-    } else {
-      setHotels([]);
-      setMenus([]);
-      setIsLoading(false);
-    }
+    void loadLiveHotels();
   }, [user?.role, customerLocation]);
 
   const visibleHotels = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+    const query = _searchTerm.trim().toLowerCase();
     if (!query) return hotels;
 
     return hotels.filter((hotel) =>
@@ -184,53 +259,69 @@ export default function Home() {
         .toLowerCase()
         .includes(query)
     );
-  }, [hotels, searchTerm]);
+  }, [hotels, _searchTerm]);
 
-  const visibleItems = useMemo<DisplayMenuItem[]>(() => {
-    const query = searchTerm.trim().toLowerCase();
+  const visibleItems = useMemo(() => {
+    const allItems: DisplayMenuItem[] = menus.flatMap((menu) =>
+      menu.items.map((item) => ({
+        ...item,
+        hotelId: menu.hotelId,
+        hotelName: menu.hotelName,
+        hotelImageKey: menu.hotelImageKey,
+      }))
+    );
 
-    return menus
-      .flatMap((menu) =>
-        menu.items.map((item) => ({
-          ...item,
-          hotelId: menu.hotelId,
-          hotelName: menu.hotelName,
-          hotelImageKey: menu.hotelImageKey,
-        }))
-      )
-      .filter((item) => {
-        const matchesSearch =
-          !query ||
-          `${item.itemName} ${item.hotelName}`.toLowerCase().includes(query);
-        const matchesCategory =
-          selectedCategory === "All" ||
-          item.itemName.toLowerCase().includes(selectedCategory.toLowerCase());
+    let filtered = allItems;
 
-        return matchesSearch && matchesCategory;
-      });
-  }, [menus, searchTerm, selectedCategory]);
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter(
+        (item) => item.itemName.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    const query = _searchTerm.trim().toLowerCase();
+    if (query) {
+      filtered = filtered.filter((item) =>
+        [item.itemName, item.hotelName, item.unitType]
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+      );
+    }
+
+    return filtered;
+  }, [menus, selectedCategory, _searchTerm]);
 
   const handleBecomeVendor = async () => {
+    if (!user) {
+      toast.error("Please log in to apply as a vendor");
+      navigate(APP_ROUTES.PUBLIC.LOGIN);
+      return;
+    }
+
     try {
-      if (!user) {
-        navigate("/login");
+      const response = await checkVendorStatus();
+      const statusData = response.data;
+      if (!statusData || !statusData.hasApplication) {
+        navigate(APP_ROUTES.VENDOR.REGISTER);
         return;
       }
 
-      const response = await checkVendorStatus();
-      const { hasApplication, status } = response.data;
-
-      if (!hasApplication) return navigate("/vendor/VendorRegister");
-      if (status === "pending") return navigate("/vendor/pending");
-      if (status === "rejected") return navigate("/vendor/rejected");
-
+      const { status } = statusData;
       if (status === "approved") {
+        toast.success("Your vendor account is already active.");
         dispatch(updateUser({ role: "vendor" }));
-        navigate("/vendor/dashboard");
+        navigate(APP_ROUTES.VENDOR.DASHBOARD);
+      } else if (status === "pending") {
+        navigate(APP_ROUTES.VENDOR.PENDING);
+      } else if (status === "rejected") {
+        navigate(APP_ROUTES.VENDOR.REJECTED);
+      } else {
+        navigate(APP_ROUTES.VENDOR.REGISTER);
       }
     } catch (requestError) {
       console.error("Failed to check vendor status:", requestError);
-      toast.error("Unable to check vendor status");
+      navigate(APP_ROUTES.VENDOR.REGISTER);
     }
   };
 
@@ -247,7 +338,7 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
+  const _handleLogout = () => {
     setOpen(false);
     toast.custom(
       (currentToast) => (
@@ -389,19 +480,42 @@ export default function Home() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visibleItems.map((item) => (
                 <article key={`${item.hotelId}-${item.itemId}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-                  <div className="relative">
-                    <img src={item.itemImageUrl||getImageUrl(item.hotelImageKey)} onError={(event) => { event.currentTarget.src = getImageUrl(item.hotelImageKey) }} alt={item.itemName} className="h-40 w-full object-cover" />
-                    {item.stockQuantity <= 5 && <span className="absolute left-3 top-3 rounded-full border border-red-400 bg-red-500 px-3 py-1 text-xs text-white">Only {item.stockQuantity} left</span>}
+                  <div
+                    onClick={() => navigate(`/customer/restaurants/${item.hotelId}/menu`)}
+                    className="group relative cursor-pointer overflow-hidden"
+                  >
+                    <img
+                      src={item.itemImageUrl || getImageUrl(item.hotelImageKey)}
+                      onError={(event) => { event.currentTarget.src = getImageUrl(item.hotelImageKey) }}
+                      alt={item.itemName}
+                      className="h-40 w-full object-cover transition duration-300 group-hover:scale-105"
+                    />
+                    {item.stockQuantity <= 5 && (
+                      <span className="absolute left-3 top-3 rounded-full border border-red-400 bg-red-500 px-3 py-1 text-xs font-medium text-white shadow-xs">
+                        Only {item.stockQuantity} left
+                      </span>
+                    )}
                   </div>
                   <div className="p-4">
-                    <h4 className="font-semibold">{item.itemName}</h4>
+                    <h4
+                      onClick={() => navigate(`/customer/restaurants/${item.hotelId}/menu`)}
+                      className="cursor-pointer font-semibold text-gray-900 transition hover:text-green-700"
+                    >
+                      {item.itemName}
+                    </h4>
                     <p className="text-sm text-gray-500">{item.hotelName} · {item.unitType}</p>
                     <div className="mt-4 flex items-center justify-between gap-3">
                       <div>
                         <span className="text-sm text-gray-400 line-through">₹{item.originalPrice}</span>
                         <span className="ml-2 font-bold text-green-800">₹{item.discountedPrice}</span>
                       </div>
-                      <button onClick={() => toast("Cart will be connected in the order-placement step")} className="rounded-full border border-green-700 bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800">Add to cart</button>
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCartFromHome(item)}
+                        className="rounded-full border border-green-700 bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
+                      >
+                        Add to cart
+                      </button>
                     </div>
                   </div>
                 </article>

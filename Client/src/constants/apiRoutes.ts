@@ -34,6 +34,7 @@ export const API_ROUTES = {
   CUSTOMER: {
     LIVE_HOTELS: "/customer/live-hotels",
     LIVE_HOTEL_MENU: (hotelId: string) => `/customer/live-hotels/${hotelId}/menu`,
+   
   },
 
   ADMIN: {
@@ -43,5 +44,11 @@ export const API_ROUTES = {
     VENDOR_REJECT: (vendorId: string) => `/admin/vendors/${vendorId}/reject`,
     USERS: "/admin/users",
     USER_STATUS: (userId: string) => `/admin/users/${userId}/status`,
+  },
+  ORDER:{
+    CREATE_CHECKOUT:"/orders/checkout",
+    GET_ORDER_BY_ID:(orderId:string)=>`/orders/${orderId}`,
+    GET_MY_ORDERS:"/orders/my-orders",
+    VERIFY_PAYMENT:(orderId:string)=>`/orders/${orderId}/verify-payment`
   },
 } as const;

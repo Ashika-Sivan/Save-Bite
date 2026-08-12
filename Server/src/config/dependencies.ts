@@ -20,6 +20,9 @@ import { HotelRepository } from "../repositories/hotel/hotel.repository";
 import { DailyMenuRepository } from "../repositories/dailyMenu/dailyMenu.repository";
 import { DailyMenuService } from "../services/vendor/dailyMenu.service";
 import { DailyMenuController } from "../controllers/dailyMenu.controller";
+import { OrderRepository } from "../repositories/order/order.repository";
+import { OrderService } from "../services/customer/order.service";
+import { OrderController } from "../controllers/order.controller";
 
 const userRepository = new UserRepository();
 const tokenService = new TokenService();
@@ -51,3 +54,9 @@ export const authMiddleware = new AuthMiddleware(tokenService);
 
 //daily menu
 export const dailyMenuController=new DailyMenuController(dailyMenuService)
+
+
+//order
+const orderRepository=new OrderRepository()
+const orderService=new OrderService(orderRepository,dailyMenuRepository)
+export const orderController=new OrderController(orderService)

@@ -97,12 +97,13 @@ export interface IRejectVendorRequestDTO {
   rejectionReason: string;
 }
 
-//response dto
+import { IVendor } from "../interfaces/models/IVendor.model";
 
 export interface IVendorStatusResponseDTO {
   hasApplication:boolean
   status?: "pending" | "approved" | "rejected";
   rejectionReason?: string|null;
+  vendor?: IVendor;
 }
 
 export interface IAdminVendorDocumentListDTO{//url list

@@ -1,5 +1,5 @@
 import Pagination from "../../components/common/Pagination";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Search, ArrowUpRight } from "lucide-react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
@@ -28,29 +28,40 @@ const VendorList = () => {
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
-  const fetchVendors = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const result = await getAllVendors({
-        page,
-        limit: LIMIT,
-        search: search.trim() || undefined,
-        status: tab === "all" ? undefined : tab,
-      });
-      setVendors(result.items);
-      setTotal(result.total);
-      setTotalPages(result.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch vendors");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, tab, search]);
-
   useEffect(() => {
-    fetchVendors();
-  }, [fetchVendors]);
+    let ignore = false;
+    const fetchVendors = async () => {
+      await Promise.resolve();
+      try {
+        setLoading(true);
+        setError("");
+        const result = await getAllVendors({
+          page,
+          limit: LIMIT,
+          search: search.trim() || undefined,
+          status: tab === "all" ? undefined : tab,
+        });
+        if (!ignore) {
+          setVendors(result.items);
+          setTotal(result.total);
+          setTotalPages(result.totalPages);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : "Failed to fetch vendors");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchVendors();
+    return () => {
+      ignore = true;
+    };
+  }, [page, tab, search]);
 
   const handleTabChange = (key: (typeof TABS)[number]["key"]) => {
     setTab(key);

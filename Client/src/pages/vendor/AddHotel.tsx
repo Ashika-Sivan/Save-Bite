@@ -43,12 +43,12 @@ const AddHotel = () => {
 
   useEffect(() => {
     if (!hotelImage) {
-      setImagePreview(null);
+      queueMicrotask(() => setImagePreview(null));
       return;
     }
 
     const previewUrl = URL.createObjectURL(hotelImage);
-    setImagePreview(previewUrl);
+    queueMicrotask(() => setImagePreview(previewUrl));
 
     return () => {
       URL.revokeObjectURL(previewUrl);

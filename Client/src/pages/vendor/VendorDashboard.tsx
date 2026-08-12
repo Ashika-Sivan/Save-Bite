@@ -1,4 +1,6 @@
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   LayoutDashboard,
   Utensils,
@@ -11,13 +13,51 @@ import {
   IndianRupee,
   Star,
 } from "lucide-react";
+import { logout } from "../../services/auth.service";
+import { clearCredentials } from "../../redux/authSlice";
+import { clearCart } from "../../redux/cartSlice";
+import type { AppDispatch } from "../../redux/store";
 
 export default function VendorDashboard() {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Add your logout logic here later
-    navigate("/login");
+    toast((t) => (
+      <div>
+        <p className="font-medium text-gray-900">
+          Are you sure you want to logout?
+        </p>
+
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await logout();
+                dispatch(clearCredentials());
+                dispatch(clearCart());
+                toast.success("Logged out successfully");
+                navigate("/login", { replace: true });
+              } catch (error) {
+                console.error("Logout failed:", error);
+                toast.error("Failed to logout");
+              }
+            }}
+            className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   return (
