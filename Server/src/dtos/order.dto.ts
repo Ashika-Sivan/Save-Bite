@@ -76,3 +76,18 @@ export interface IOrderResponseDTO {
     updatedAt: string
 }
 
+/*
+ * Request payload for redeeming a pickup code.
+ */
+export interface IRedeemPickupCodeDTO {
+    pickupCode: string;
+}
+
+/*
+ * Response payload after successfully redeeming a pickup code.
+ */
+export interface IRedeemPickupCodeResponseDTO {
+    message: string;
+    order: IOrderResponseDTO;
+}
+

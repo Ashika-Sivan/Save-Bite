@@ -20,6 +20,8 @@ import VendorDashboard from "../pages/vendor/VendorDashboard";
 import AddHotel from "../pages/vendor/AddHotel";
 import HotelList from "../pages/vendor/HotelList";
 import TodayMenu from "../pages/vendor/TodayMenu";
+import VendorOrders from "../pages/vendor/VendorOrders";
+import VendorWalletPage from "../pages/vendor/VendorWalletPage";
 import VendorRoute from "./VendorRoute";
 
 import AdminLogin from "../pages/admin/AdminLogin";
@@ -190,6 +192,8 @@ export default function AppRoutes() {
                     <Route path={APP_ROUTES.VENDOR.HOTELS} element={<HotelList />} />
                     <Route path={APP_ROUTES.VENDOR.ADD_HOTEL} element={<AddHotel />} />
                     <Route path={APP_ROUTES.VENDOR.HOTEL_MENU(":hotelId")} element={<TodayMenu />} />
+                    <Route path={APP_ROUTES.VENDOR.ORDERS} element={<VendorOrders />} />
+                    <Route path={APP_ROUTES.VENDOR.WALLET} element={<VendorWalletPage />} />
                 </Route>
 
                 {/* ADMIN PUBLIC ROUTES */}

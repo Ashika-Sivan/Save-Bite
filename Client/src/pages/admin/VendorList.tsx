@@ -15,7 +15,7 @@ const TABS: { key: "all" | VendorStatus; label: string }[] = [
   { key: "rejected", label: "Rejected" },
 ];
 
-const LIMIT = 7;
+const LIMIT = 5;
 
 const VendorList = () => {
   const [vendors, setVendors] = useState<VendorDTO[]>([]);

@@ -21,6 +21,7 @@ import { DailyMenuRepository } from "../repositories/dailyMenu/dailyMenu.reposit
 import { DailyMenuService } from "../services/vendor/dailyMenu.service";
 import { DailyMenuController } from "../controllers/dailyMenu.controller";
 import { OrderRepository } from "../repositories/order/order.repository";
+import { WalletRepository } from "../repositories/wallet/wallet.repository";
 import { OrderService } from "../services/customer/order.service";
 import { OrderController } from "../controllers/order.controller";
 
@@ -52,11 +53,18 @@ export const vendorController = new VendorController(vendorService);
 export const adminController = new AdminController(adminService);
 export const authMiddleware = new AuthMiddleware(tokenService);
 
+import { WalletService } from "../services/vendor/wallet.service";
+import { WalletController } from "../controllers/wallet.controller";
+
 //daily menu
 export const dailyMenuController=new DailyMenuController(dailyMenuService)
 
 
-//order
+//order & wallet
 const orderRepository=new OrderRepository()
-const orderService=new OrderService(orderRepository,dailyMenuRepository)
+const walletRepository=new WalletRepository()
+const walletService=new WalletService(walletRepository,vendorRepository)
+const orderService=new OrderService(orderRepository,dailyMenuRepository,vendorRepository,walletRepository)
+
 export const orderController=new OrderController(orderService)
+export const walletController=new WalletController(walletService)

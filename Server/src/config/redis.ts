@@ -6,7 +6,7 @@ class RedisClient {
 
     constructor() {
         this._client = createClient({
-            url: "redis://localhost:6379",//redis connection when the class is cretaed
+            url: process.env.REDIS_URL //redis connection when the class is cretaed
         })
         this._client.on("error", (err) => {
             Logger.error("Redis client error", err)//to handle the error,what if the redis fail

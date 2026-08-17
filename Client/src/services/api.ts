@@ -6,9 +6,8 @@ import { store } from "../redux/store";
 import { clearCredentials, setAccessToken, setCredentials } from "../redux/authSlice";
 ///import the redux store so we ca acess the access token
 const api=axios.create({
-    baseURL:import.meta.env.VITE_BASE_URL,
-    withCredentials:true//send refresh token cookie
-
+    baseURL: import.meta.env.VITE_BASE_URL || "/api",
+    withCredentials: true
 })
 //REQUEST INTERCEPTOR
 //creating the request interceptor

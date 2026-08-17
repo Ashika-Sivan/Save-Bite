@@ -28,7 +28,8 @@ export const API_ROUTES = {
     GO_LIVE: (menuId: string) => `/vendor/daily-menus/${menuId}/go-live`,
     END_LIVE: (menuId: string) => `/vendor/daily-menus/${menuId}/end-live`,
     UPDATE_DAILY_MENU_ITEM: (menuId: string, itemId: string) => `/vendor/daily-menus/${menuId}/items/${itemId}`,
-    USE_PREVIOUS_MENU:(menuId:string)=>`/vendor/daily-menus/${menuId}/use-previous-menu`
+    USE_PREVIOUS_MENU:(menuId:string)=>`/vendor/daily-menus/${menuId}/use-previous-menu`,
+    WALLET: "/vendor/wallet",
   },
 
   CUSTOMER: {
@@ -49,6 +50,8 @@ export const API_ROUTES = {
     CREATE_CHECKOUT:"/orders/checkout",
     GET_ORDER_BY_ID:(orderId:string)=>`/orders/${orderId}`,
     GET_MY_ORDERS:"/orders/my-orders",
-    VERIFY_PAYMENT:(orderId:string)=>`/orders/${orderId}/verify-payment`
+    VERIFY_PAYMENT:(orderId:string)=>`/orders/${orderId}/verify-payment`,
+    VENDOR_ORDERS: "/orders/vendor-orders",
+    REDEEM_PICKUP_CODE: "/orders/redeem-pickup-code",
   },
 } as const;

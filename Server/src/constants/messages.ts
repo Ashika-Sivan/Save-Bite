@@ -102,6 +102,12 @@ export const ORDER_MESSAGES = {
   UNABLE_TO_PLACE: "Unable to place the order because one or more items have insufficient stock",
   UNABLE_TO_MARK_PAID: "Unable to mark the order as paid",
   INVALID_PAYMENT_INTENT: "Payment Intent ID is required",
+  PICKUP_CODE_REDEEMED: "Pickup code redeemed successfully",
+  INVALID_PICKUP_CODE: "Invalid pickup code. Order not found.",
+  PICKUP_CODE_ALREADY_USED: "Pickup code has already been redeemed.",
+  ORDER_NOT_BELONG_TO_VENDOR: "This order does not belong to your hotel/business.",
+  ORDER_NOT_PAID: "Payment for this order has not been completed.",
+  ORDER_NOT_ELIGIBLE_PICKUP: "Order is not eligible for pickup.",
 } as const;
 
 export const CUSTOMER_MESSAGES = {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authMiddleware, dailyMenuController, vendorController } from "../config/dependencies";
+import { authMiddleware, dailyMenuController, vendorController, walletController } from "../config/dependencies";
 import { ROUTES } from "../constants/routes";
 import { upload } from "../middlewares/upload.middleware";
 import hotelRouter from "./hotel.routes";
@@ -7,6 +7,7 @@ import hotelRouter from "./hotel.routes";
 
 const router = Router();
 router.use("/hotels",hotelRouter)
+router.get(ROUTES.VENDOR.WALLET, authMiddleware.authenticate, authMiddleware.authorize("vendor"), walletController.getVendorWalletSummary.bind(walletController));
 
 router.post(
   ROUTES.VENDOR.REGISTER,

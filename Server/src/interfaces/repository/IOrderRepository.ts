@@ -64,4 +64,7 @@ export interface IOrderRepository {
     pickupCodeExists(pickupCode: string, session?: ClientSession): Promise<boolean>
     markPaymentFailed(paymentIntentId: string): Promise<IOrder | null>;
     markOrderPaid(paymentIntentId: string, data: IMarkOrderPaidData, session?: ClientSession): Promise<IOrder | null>;
+    findByPickupCode(pickupCode: string): Promise<IOrder | null>;
+    markOrderCollected(orderId: string, collectedAt: Date, session?: ClientSession): Promise<IOrder | null>;
+    findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]>;
 }

@@ -1,19 +1,26 @@
 import { Types, ClientSession } from "mongoose";
 import { randomInt } from "crypto";
-import { ICreateCheckoutDTO, ICheckoutResponseDTO, IOrderResponseDTO } from "../../dtos/order.dto";
+import { ICreateCheckoutDTO, ICheckoutResponseDTO, IOrderResponseDTO, IRedeemPickupCodeDTO, IRedeemPickupCodeResponseDTO } from "../../dtos/order.dto";
 import { AppError } from "../../errors/AppError";
 import { StatusCode } from "../../constants/statusCode";
+import { ORDER_MESSAGES } from "../../constants/messages";
 import { IOrder, IOrderItem, OrderStatus, PaymentStatus, SettlementStatus } from "../../interfaces/models/IOrder.model";
 import { IDailyMenuRepository } from "../../interfaces/repository/IDailyMenuRepository";
 import { IOrderRepository } from "../../interfaces/repository/IOrderRepository";
+import { IVendorRepository } from "../../interfaces/repository/IVendorRepository";
+import { IWalletRepository } from "../../interfaces/repository/IWalletRepository";
+import { VendorStatus } from "../../interfaces/models/IVendor.model";
 import { IOrderService } from "../../interfaces/service/order/IOrder.service";
 import stripe from "../../config/stripe";
+import mongoose from "mongoose";
 
 export class OrderService implements IOrderService {
     constructor(
         private readonly _orderRepository: IOrderRepository,
-        private readonly _dailyMenuRepository: IDailyMenuRepository
-    ) {}
+        private readonly _dailyMenuRepository: IDailyMenuRepository,
+        private readonly _vendorRepository?: IVendorRepository,
+        private readonly _walletRepository?: IWalletRepository
+    ) { }
 
      private async generateUniquePickupCode(session?:ClientSession):Promise<string>{
         for(let attempt:number=0;attempt<10;attempt++){
@@ -340,5 +347,177 @@ export class OrderService implements IOrderService {
             await this._orderRepository.markPaymentFailed(paymentIntentId);
     }
 
-   
+    async redeemPickupCode(ownerId: string, dto: IRedeemPickupCodeDTO): Promise<IRedeemPickupCodeResponseDTO> {
+        if (!dto || typeof dto.pickupCode !== "string" || !dto.pickupCode.trim()) {
+            throw new AppError("Pickup code is required", StatusCode.BAD_REQUEST);
+        }
+
+        const normalizedCode = dto.pickupCode.trim();
+
+        if (!this._vendorRepository) {
+            throw new AppError("Vendor repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId);
+        if (!vendor || vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError("Only approved vendors can redeem pickup codes", StatusCode.FORBIDDEN);
+        }
+
+        const order = await this._orderRepository.findByPickupCode(normalizedCode);
+        if (!order) {
+            throw new AppError(ORDER_MESSAGES.INVALID_PICKUP_CODE, StatusCode.NOT_FOUND);
+        }
+
+        if (order.vendorId.toString() !== vendor._id.toString()) {
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_BELONG_TO_VENDOR, StatusCode.FORBIDDEN);
+        }
+
+        if (order.paymentStatus !== PaymentStatus.PAID) {
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_PAID, StatusCode.BAD_REQUEST);
+        }
+
+        if (order.orderStatus === OrderStatus.COLLECTED) {
+            throw new AppError(
+                `Pickup code has already been redeemed${order.collectedAt ? " on " + new Date(order.collectedAt).toLocaleString() : ""}.`,
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        if (order.orderStatus === OrderStatus.EXPIRED || (order.pickupWindow?.endTime && new Date() > new Date(order.pickupWindow.endTime))) {
+            throw new AppError("Order pickup window has expired.", StatusCode.BAD_REQUEST);
+        }
+
+        if (order.orderStatus === OrderStatus.CANCELLED) {
+            throw new AppError("This order was cancelled.", StatusCode.BAD_REQUEST);
+        }
+
+        if (order.orderStatus !== OrderStatus.PLACED) {
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_ELIGIBLE_PICKUP, StatusCode.BAD_REQUEST);
+        }
+
+        let updatedOrder: IOrder | null = null;
+
+        if (this._walletRepository) {
+            let session: ClientSession | null = null;
+            let transactionStarted = false;
+            try {
+                session = await mongoose.startSession();
+                session.startTransaction();
+                transactionStarted = true;
+
+                const alreadySettled = await this._walletRepository.transactionExistsForOrder(order._id, session);
+                if (alreadySettled) {
+                    throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
+                }
+
+                updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
+                if (!updatedOrder) {
+                    throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+                }
+
+                const wallet = await this._walletRepository.getOrCreateWallet(order.vendorId, session);
+                const vendorAmount = order.vendorAmount;
+                const commissionAmount = order.platformCommissionAmount;
+
+                await this._walletRepository.creditVendorWallet(order.vendorId, vendorAmount, commissionAmount, session);
+
+                await this._walletRepository.createTransaction(
+                    {
+                        walletId: wallet._id,
+                        vendorId: order.vendorId,
+                        orderId: order._id,
+                        orderTotal: order.totalAmount,
+                        vendorAmount,
+                        platformCommission: commissionAmount,
+                        description: `Order pickup redemption (90% vendor payout: ₹${vendorAmount}, 10% platform commission: ₹${commissionAmount})`,
+                    },
+                    session
+                );
+
+                await session.commitTransaction();
+                session.endSession();
+            } catch (err: any) {
+                if (session) {
+                    if (transactionStarted) {
+                        try {
+                            await session.abortTransaction();
+                        } catch (_) {}
+                    }
+                    session.endSession();
+                }
+
+                const isReplicaSetError = err?.message?.includes("replica set") || err?.message?.includes("Transaction numbers");
+                if (isReplicaSetError) {
+                    return await this.executeSettlementWithoutTransaction(order);
+                }
+
+                throw err;
+            }
+        } else {
+            updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
+            if (!updatedOrder) {
+                throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+            }
+        }
+
+        return {
+            message: ORDER_MESSAGES.PICKUP_CODE_REDEEMED,
+            order: this.mapOrderToResponse(updatedOrder),
+        };
+    }
+
+    private async executeSettlementWithoutTransaction(order: IOrder): Promise<IRedeemPickupCodeResponseDTO> {
+        if (!this._walletRepository) {
+            throw new AppError("Wallet repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const alreadySettled = await this._walletRepository.transactionExistsForOrder(order._id);
+        if (alreadySettled) {
+            throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
+        }
+
+        const updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
+        if (!updatedOrder) {
+            throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+        }
+
+        const wallet = await this._walletRepository.getOrCreateWallet(order.vendorId);
+        const vendorAmount = order.vendorAmount;
+        const commissionAmount = order.platformCommissionAmount;
+
+        await this._walletRepository.creditVendorWallet(order.vendorId, vendorAmount, commissionAmount);
+
+        await this._walletRepository.createTransaction({
+            walletId: wallet._id,
+            vendorId: order.vendorId,
+            orderId: order._id,
+            orderTotal: order.totalAmount,
+            vendorAmount,
+            platformCommission: commissionAmount,
+            description: `Order pickup redemption (90% vendor payout: ₹${vendorAmount}, 10% platform commission: ₹${commissionAmount})`,
+        });
+
+        return {
+            message: ORDER_MESSAGES.PICKUP_CODE_REDEEMED,
+            order: this.mapOrderToResponse(updatedOrder),
+        };
+    }
+
+    async getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]> {
+        if (!ownerId) {
+            throw new AppError("Vendor not authenticated", StatusCode.UNAUTHORIZED);
+        }
+
+        if (!this._vendorRepository) {
+            throw new AppError("Vendor repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId);
+        if (!vendor) {
+            throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);
+        }
+
+        const orders = await this._orderRepository.findAllByVendorId(vendor._id);
+        return orders.map((order) => this.mapOrderToResponse(order));
+    }
 }

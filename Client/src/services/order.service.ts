@@ -43,6 +43,7 @@ export interface Order{
         startTime: string;
         endTime: string;
     } | null;
+    collectedAt?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -69,3 +70,13 @@ export const verifyPayment=async(orderId:string):Promise<ApiResponse<Order>>=>{
     const response=await api.get<ApiResponse<Order>>(API_ROUTES.ORDER.VERIFY_PAYMENT(orderId))
     return response.data
 }
+
+export const getVendorOrders = async (): Promise<ApiResponse<Order[]>> => {
+    const response = await api.get<ApiResponse<Order[]>>(API_ROUTES.ORDER.VENDOR_ORDERS);
+    return response.data;
+};
+
+export const redeemPickupCode = async (pickupCode: string): Promise<ApiResponse<Order>> => {
+    const response = await api.post<ApiResponse<Order>>(API_ROUTES.ORDER.REDEEM_PICKUP_CODE, { pickupCode });
+    return response.data;
+};

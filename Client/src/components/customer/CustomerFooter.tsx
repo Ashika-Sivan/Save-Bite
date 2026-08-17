@@ -1,4 +1,3 @@
-import React from 'react'
 const CustomerFooter = () => {
     return (
         <footer className="border-t border-gray-200 bg-green-50">

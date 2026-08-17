@@ -187,7 +187,7 @@ const Otp = () => {
             {otp.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => (inputRefs.current[i] = el)}
+                ref={(el) => { inputRefs.current[i] = el; }}
                 value={digit}
                 maxLength={1}
                 inputMode="numeric"

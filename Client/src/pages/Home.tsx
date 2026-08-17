@@ -5,9 +5,8 @@ import toast from "react-hot-toast";
 
 import type { RootState } from "../redux/store";
 import { APP_ROUTES } from "../constants/appRoutes";
-import { clearCredentials, updateUser } from "../redux/authSlice";
+import { updateUser } from "../redux/authSlice";
 import { checkVendorStatus } from "../services/vendor.service";
-import { logout } from "../services/auth.service";
 import {
   getLiveHotelMenu,
   getLiveHotels,
@@ -135,14 +134,13 @@ export default function Home() {
     // navigate("/cart");
   };
 
-  const [_open, setOpen] = useState(false);
   const [hotels, setHotels] = useState<LiveHotel[]>([]);
   const [menus, setMenus] = useState<LiveHotelMenu[]>([]);
   const [_searchTerm, _setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [customerLocation, setCustomerLocation] =
+  const [customerLocation] =
     useState<CustomerLocation | null>(() => {
       const savedLocation = localStorage.getItem(
         "customerLocation"
@@ -153,64 +151,7 @@ export default function Home() {
         : null;
     });
 
-  const [_isGettingLocation, setIsGettingLocation] =
-    useState(false)
 
-
-
-  const _handleUseCurrentLocation = (): void => {
-    if (!navigator.geolocation) {
-      toast.error(
-        "Location is not supported by your browser"
-      );
-      return;
-    }
-
-    setIsGettingLocation(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const location: CustomerLocation = {
-          latitude:
-            position.coords.latitude,
-          longitude:
-            position.coords.longitude,
-        };
-
-        setCustomerLocation(location);
-
-        localStorage.setItem(
-          "customerLocation",
-          JSON.stringify(location)
-        );
-
-        setIsGettingLocation(false);
-
-        toast.success(
-          "Location set successfully"
-        );
-      },
-
-      (locationError) => {
-        console.error(
-          "Unable to get location:",
-          locationError
-        );
-
-        setIsGettingLocation(false);
-
-        toast.error(
-          "Please allow location access"
-        );
-      },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000,
-      }
-    );
-  };
 
   useEffect(() => {
     const loadLiveHotels = async () => {
@@ -325,47 +266,7 @@ export default function Home() {
     }
   };
 
-  const confirmLogout = async (toastId: string) => {
-    toast.dismiss(toastId);
-    try {
-      await logout();
-      dispatch(clearCredentials());
-      toast.success("Logged out successfully");
-      navigate("/", { replace: true });
-    } catch (requestError) {
-      console.error("Logout failed:", requestError);
-      toast.error("Logout failed. Please try again.");
-    }
-  };
 
-  const _handleLogout = () => {
-    setOpen(false);
-    toast.custom(
-      (currentToast) => (
-        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
-          <h3 className="font-semibold text-gray-900">Confirm logout</h3>
-          <p className="mt-1 text-sm text-gray-600">Are you sure you want to log out?</p>
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => toast.dismiss(currentToast.id)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => confirmLogout(currentToast.id)}
-              className="rounded-lg bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900"
-            >
-              Yes, Logout
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: Infinity, position: "top-center" }
-    );
-  };
 
   const scrollToRestaurants = () => {
     document.getElementById("live-restaurants")?.scrollIntoView({ behavior: "smooth" });

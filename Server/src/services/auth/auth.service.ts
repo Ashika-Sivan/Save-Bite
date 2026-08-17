@@ -97,6 +97,7 @@ export class AuthService implements IAuthService {
     const user = await this._userRepository.findByEmail(email);
 
     if (!user) {
+      console.error(`[LOGIN FAIL] No user found with email: "${email}"`);
       throw new AppError(
         AUTH_MESSAGES.INVALID_CREDENTIALS,
         StatusCode.BAD_REQUEST
@@ -104,6 +105,7 @@ export class AuthService implements IAuthService {
     }
 
     if (!user.isAuthenticated) {
+      console.error(`[LOGIN FAIL] User "${email}" is not authenticated (isAuthenticated: false)`);
       throw new AppError(
         AUTH_MESSAGES.VERIFY_EMAIL_FIRST,
         StatusCode.UNAUTHORIZED
@@ -116,6 +118,7 @@ export class AuthService implements IAuthService {
     );
 
     if (!passwordMatch) {
+      console.error(`[LOGIN FAIL] Password mismatch for email: "${email}"`);
       throw new AppError(
         AUTH_MESSAGES.INVALID_CREDENTIALS,
         StatusCode.BAD_REQUEST

@@ -127,4 +127,30 @@ export class OrderController{
             
         }
     }
+
+    async redeemPickupCode(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const ownerId = req.user?.userId;
+            if (!ownerId) {
+                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
+            }
+            const result = await this._orderService.redeemPickupCode(ownerId, req.body);
+            ResponseHelper.success(res, StatusCode.OK, result.message, result.order);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getVendorOrders(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const ownerId = req.user?.userId;
+            if (!ownerId) {
+                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
+            }
+            const orders = await this._orderService.getVendorOrders(ownerId);
+            ResponseHelper.success(res, StatusCode.OK, "Vendor orders fetched successfully", orders);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

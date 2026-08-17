@@ -28,6 +28,7 @@ export const ROUTES = {
     UPDATE_PICKUP_WINDOW: "/daily-menus/:menuId/pickup-window",
     UPDATE_DAILY_MENU_ITEM: "/daily-menus/:menuId/items/:itemId",
     USE_PREVIOUS_MENU: "/daily-menus/:menuId/use-previous-menu",
+    WALLET: "/wallet",
   },
 
   HOTEL: {
@@ -47,6 +48,8 @@ export const ROUTES = {
     MY_ORDERS: "/my-orders",
     VERIFY_PAYMENT: "/:orderId/verify-payment",
     GET_BY_ID: "/:orderId",
+    REDEEM_PICKUP_CODE: "/redeem-pickup-code",
+    VENDOR_ORDERS: "/vendor-orders",
   },
 
   ADMIN: {
