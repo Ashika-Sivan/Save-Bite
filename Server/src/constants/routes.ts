@@ -60,4 +60,11 @@ export const ROUTES = {
     USERS: "/users",
     USER_STATUS: "/users/:userId/status",
   },
+
+  CONCERN: {
+    RAISE: "/orders/:orderId/concern",
+    ADMIN_LIST: "/admin/concerns",
+    ADMIN_APPROVE: "/admin/concerns/:concernId/approve",
+    ADMIN_REJECT: "/admin/concerns/:concernId/reject",
+  },
 } as const;

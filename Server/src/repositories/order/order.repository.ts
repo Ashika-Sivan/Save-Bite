@@ -148,6 +148,18 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
 
     */
 
+    async findById(orderId: string): Promise<IOrder | null> {
+        return await Order.findById(orderId).populate("hotelId", "hotelName");
+    }
+
+    async updateOrderStatus(orderId: string, orderStatus: OrderStatus): Promise<IOrder | null> {
+        return await Order.findByIdAndUpdate(
+            orderId,
+            { $set: { orderStatus } },
+            { new: true }
+        );
+    }
+
     async findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]> {
         return await Order.find({
             vendorId,

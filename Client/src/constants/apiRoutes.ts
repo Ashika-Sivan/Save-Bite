@@ -54,4 +54,11 @@ export const API_ROUTES = {
     VENDOR_ORDERS: "/orders/vendor-orders",
     REDEEM_PICKUP_CODE: "/orders/redeem-pickup-code",
   },
+  CONCERN: {
+    RAISE: (orderId: string) => `/concerns/orders/${orderId}/concern`,
+    ADMIN_LIST: "/concerns/admin/concerns",
+    ADMIN_BY_ID: (concernId: string) => `/concerns/admin/concerns/${concernId}`,
+    ADMIN_APPROVE: (concernId: string) => `/concerns/admin/concerns/${concernId}/approve`,
+    ADMIN_REJECT: (concernId: string) => `/concerns/admin/concerns/${concernId}/reject`,
+  },
 } as const;

@@ -7,6 +7,7 @@ import {
   Star,
   Bell,
   Settings,
+  AlertCircle,
   ShieldCheck,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -26,6 +27,11 @@ const menuItems = [
     label: "Users",
     path: "/admin/userList",
     icon: Users,
+  },
+  {
+    label: "Concerns & Disputes",
+    path: "/admin/concerns",
+    icon: AlertCircle,
   },
   {
     label: "Orders & Escrow",

@@ -40,6 +40,8 @@ import PaymentSuccessPage from "../pages/customer/PaymentSuccessPage";
 import MyOrdersPage from "../pages/customer/MyOrdersPage";
 import CustomerLayout from "../components/layouts/CustomerLayout";
 
+import AdminConcerns from "../pages/admin/AdminConcerns";
+
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -208,6 +210,7 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.ADMIN.USER_LIST} element={<UserList />} />
                         <Route path={APP_ROUTES.ADMIN.VENDOR_LIST} element={<VendorList />} />
                         <Route path={APP_ROUTES.ADMIN.VENDOR_DETAILS(":vendorId")} element={<VendorDetails />} />
+                        <Route path={APP_ROUTES.ADMIN.CONCERNS} element={<AdminConcerns />} />
                     </Route>
                 </Route>
             </Routes>

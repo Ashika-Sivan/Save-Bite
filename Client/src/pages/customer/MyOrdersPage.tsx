@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getMyOrders, type Order } from "../../services/order.service";
+import { raiseOrderConcern } from "../../services/concern.service";
+import toast from "react-hot-toast";
 
 type TabType = "active" | "previous";
 
@@ -9,32 +11,43 @@ const MyOrdersPage = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [activeTab, setActiveTab] = useState<TabType>("active");
 
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                setIsLoading(true);
-                const response = await getMyOrders();
-                setOrders(response.data || []);
-            } catch (err) {
-                const message = err instanceof Error ? err.message : "Failed to load orders";
-                setErrorMessage(message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    // Modal state for Raise Concern
+    const [selectedOrderForConcern, setSelectedOrderForConcern] = useState<Order | null>(null);
+    const [concernReason, setConcernReason] = useState("");
+    const [concernPhoto, setConcernPhoto] = useState<File | null>(null);
+    const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+    const [isSubmittingConcern, setIsSubmittingConcern] = useState(false);
 
+    const fetchOrders = async () => {
+        try {
+            setIsLoading(true);
+            const response = await getMyOrders();
+            setOrders(response.data || []);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to load orders";
+            setErrorMessage(message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         void fetchOrders();
     }, []);
 
     const activeOrders = orders.filter(
-        (order) => order.orderStatus === "placed" || order.orderStatus === "pending_payment"
+        (order) =>
+            order.orderStatus === "placed" ||
+            order.orderStatus === "pending_payment" ||
+            order.orderStatus === "concern_raised"
     );
 
     const previousOrders = orders.filter(
         (order) =>
             order.orderStatus === "collected" ||
             order.orderStatus === "expired" ||
-            order.orderStatus === "cancelled"
+            order.orderStatus === "cancelled" ||
+            order.orderStatus === "resolved"
     );
 
     const currentOrders = activeTab === "active" ? activeOrders : previousOrders;
@@ -46,12 +59,13 @@ const MyOrdersPage = () => {
         const isToday = date.toDateString() === today.toDateString();
 
         const timeStr = new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
             hour: "numeric",
             minute: "2-digit",
             hour12: true,
         }).format(date);
 
-        return isToday ? `Today, ${timeStr}` : `${date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}, ${timeStr}`;
+        return isToday ? `Today, ${timeStr}` : `${date.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}, ${timeStr}`;
     };
 
     const formatPickupTime = (endTimeString?: string): string => {
@@ -61,12 +75,13 @@ const MyOrdersPage = () => {
         const isToday = date.toDateString() === today.toDateString();
 
         const timeStr = new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
             hour: "numeric",
             minute: "2-digit",
             hour12: true,
         }).format(date);
 
-        return isToday ? `Today, ${timeStr}` : `${date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}, ${timeStr}`;
+        return isToday ? `Today, ${timeStr}` : `${date.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}, ${timeStr}`;
     };
 
     const getStatusBadge = (status: string) => {
@@ -75,6 +90,18 @@ const MyOrdersPage = () => {
                 return (
                     <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
                         Ready for Pickup
+                    </span>
+                );
+            case "concern_raised":
+                return (
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                        Concern Under Review ⏳
+                    </span>
+                );
+            case "resolved":
+                return (
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+                        Resolved (Refunded) ✅
                     </span>
                 );
             case "pending_payment":
@@ -107,6 +134,43 @@ const MyOrdersPage = () => {
                         {status}
                     </span>
                 );
+        }
+    };
+
+    const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setConcernPhoto(file);
+            setPhotoPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const handleRaiseConcernSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedOrderForConcern) return;
+        if (!concernReason.trim()) {
+            toast.error("Please describe your concern");
+            return;
+        }
+        if (!concernPhoto) {
+            toast.error("Please upload a photo evidence");
+            return;
+        }
+
+        try {
+            setIsSubmittingConcern(true);
+            await raiseOrderConcern(selectedOrderForConcern.id, concernReason, concernPhoto);
+            toast.success("Concern submitted successfully! Admins will review the EXIF timestamp & evidence.");
+            setSelectedOrderForConcern(null);
+            setConcernReason("");
+            setConcernPhoto(null);
+            setPhotoPreviewUrl(null);
+            await fetchOrders();
+        } catch (err: any) {
+            const msg = err.response?.data?.message || "Failed to submit concern";
+            toast.error(msg);
+        } finally {
+            setIsSubmittingConcern(false);
         }
     };
 
@@ -144,7 +208,7 @@ const MyOrdersPage = () => {
             <div className="mx-auto max-w-4xl">
                 {/* Header Title */}
                 <h1 className="font-serif text-3xl font-bold text-gray-900">My orders</h1>
-                <p className="mt-1 text-sm text-gray-500">Track active pickups and review past orders.</p>
+                <p className="mt-1 text-sm text-gray-500">Track active pickups, review past orders, or raise concerns.</p>
 
                 {/* Navigation Tabs */}
                 <div className="mt-6 flex items-center gap-3">
@@ -183,6 +247,7 @@ const MyOrdersPage = () => {
                     ) : (
                         currentOrders.map((order) => {
                             const shortId = `ORD-${order.id.slice(-5).toUpperCase()}`;
+                            const isEligibleForConcern = order.orderStatus === "placed";
 
                             return (
                                 <div
@@ -232,12 +297,29 @@ const MyOrdersPage = () => {
                                                 ))}
                                             </div>
 
-                                            {/* Total */}
-                                            <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-base">
-                                                <span className="font-medium text-gray-600">Total</span>
-                                                <span className="font-bold text-gray-900">
-                                                    ₹{order.totalAmount.toFixed(2)}
-                                                </span>
+                                            {/* Total & Raise Concern Action */}
+                                            <div className="mt-4 flex flex-wrap items-center justify-between border-t border-gray-100 pt-3 text-base">
+                                                <div>
+                                                    <span className="font-medium text-gray-600">Total: </span>
+                                                    <span className="font-bold text-gray-900">
+                                                        ₹{order.totalAmount.toFixed(2)}
+                                                    </span>
+                                                </div>
+
+                                                {isEligibleForConcern && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedOrderForConcern(order);
+                                                            setConcernReason("");
+                                                            setConcernPhoto(null);
+                                                            setPhotoPreviewUrl(null);
+                                                        }}
+                                                        className="mt-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 md:mt-0"
+                                                    >
+                                                        ⚠️ Raise Concern
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
 
@@ -258,6 +340,83 @@ const MyOrdersPage = () => {
                         })
                     )}
                 </div>
+
+                {/* Raise Concern Modal */}
+                {selectedOrderForConcern && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                        <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                <h3 className="text-xl font-bold text-gray-900">Raise Order Concern</h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedOrderForConcern(null)}
+                                    className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleRaiseConcernSubmit} className="mt-4 space-y-4">
+                                <p className="text-xs text-gray-500">
+                                    Submitting a concern for order <span className="font-semibold text-gray-800">ORD-{selectedOrderForConcern.id.slice(-5).toUpperCase()}</span> ({selectedOrderForConcern.hotelName}). Please upload photo evidence taken during the pickup window.
+                                </p>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Description / Issue Details *
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        required
+                                        value={concernReason}
+                                        onChange={(e) => setConcernReason(e.target.value)}
+                                        placeholder="Describe the issue with your order..."
+                                        className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm focus:border-green-600 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Photo Evidence (EXIF Timestamp Verification) *
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        required
+                                        onChange={handlePhotoSelect}
+                                        className="mt-1 w-full text-xs text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-green-700 hover:file:bg-green-100"
+                                    />
+                                    {photoPreviewUrl && (
+                                        <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200">
+                                            <img
+                                                src={photoPreviewUrl}
+                                                alt="Evidence preview"
+                                                className="h-40 w-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedOrderForConcern(null)}
+                                        className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingConcern}
+                                        className="rounded-full bg-emerald-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+                                    >
+                                        {isSubmittingConcern ? "Submitting..." : "Submit Concern"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

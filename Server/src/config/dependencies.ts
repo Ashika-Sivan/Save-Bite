@@ -66,5 +66,13 @@ const walletRepository=new WalletRepository()
 const walletService=new WalletService(walletRepository,vendorRepository)
 const orderService=new OrderService(orderRepository,dailyMenuRepository,vendorRepository,walletRepository)
 
-export const orderController=new OrderController(orderService)
-export const walletController=new WalletController(walletService)
+import { ConcernRepository } from "../repositories/concern/concern.repository";
+import { ConcernService } from "../services/concern/concern.service";
+import { ConcernController } from "../controllers/concern.controller";
+
+const concernRepository = new ConcernRepository();
+const concernService = new ConcernService(concernRepository, orderRepository);
+
+export const orderController = new OrderController(orderService);
+export const walletController = new WalletController(walletService);
+export const concernController = new ConcernController(concernService);

@@ -18,6 +18,8 @@ export enum OrderStatus {
     COLLECTED = "collected",
     EXPIRED = "expired",
     CANCELLED = "cancelled",
+    CONCERN_RAISED = "concern_raised",
+    RESOLVED = "resolved",
 }
 
 export enum SettlementStatus {

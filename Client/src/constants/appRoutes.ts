@@ -38,5 +38,6 @@ export const APP_ROUTES = {
     USER_LIST: "/admin/userList",
     VENDOR_LIST: "/admin/vendorList",
     VENDOR_DETAILS: (vendorId: string) => `/admin/vendors/${vendorId}`,
+    CONCERNS: "/admin/concerns",
   },
 } as const;

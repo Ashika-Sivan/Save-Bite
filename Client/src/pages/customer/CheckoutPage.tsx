@@ -17,7 +17,9 @@ interface PaymentFormProps {
     currency: string;
 }
 
-const stripePublishableKey: string | undefined = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePublishableKey: string =
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    "pk_test_51U2yeI2Le4E4oyQiw4p4bCrRZozEROyeZyTcA0vsAlvpqt5gJH2GY7tKRYSHom6Fc1R9hPUfruWoYmQ3mdQGWXjU00XCI0ESxB";
 
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 

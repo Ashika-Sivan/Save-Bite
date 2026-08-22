@@ -36,7 +36,7 @@ export interface Order{
     totalAmount:number;
     currency:string;
     paymentStatus:"pending"|"paid"|"failed";
-    orderStatus:"pending_payment"|"placed"|"collected"|"expired"|"cancelled";
+    orderStatus:"pending_payment"|"placed"|"collected"|"expired"|"cancelled"|"concern_raised"|"resolved";
     settlementStatus:"pending"|"released";
     pickupCode:string|null
       pickupWindow: {

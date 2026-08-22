@@ -66,5 +66,7 @@ export interface IOrderRepository {
     markOrderPaid(paymentIntentId: string, data: IMarkOrderPaidData, session?: ClientSession): Promise<IOrder | null>;
     findByPickupCode(pickupCode: string): Promise<IOrder | null>;
     markOrderCollected(orderId: string, collectedAt: Date, session?: ClientSession): Promise<IOrder | null>;
+    findById(orderId: string): Promise<IOrder | null>;
+    updateOrderStatus(orderId: string, orderStatus: OrderStatus): Promise<IOrder | null>;
     findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]>;
 }

@@ -8,6 +8,7 @@ import { errorMiddleware } from "./middlewares/error.middleware"
 import adminRoute from "./routes/admin.routes"
 import customerBrowseRouter from "./routes/customerBrowse.routes"
 import orderRouter from "./routes/order.routes"
+import concernRoutes from "./routes/concern.routes"
 
 
 
@@ -53,6 +54,7 @@ export default class App {
     this.app.use("/api/admin", adminRoute)
     this.app.use("/api/customer", customerBrowseRouter)
     this.app.use("/api/orders", orderRouter)
+    this.app.use("/api/concerns", concernRoutes)
 
   }
 
