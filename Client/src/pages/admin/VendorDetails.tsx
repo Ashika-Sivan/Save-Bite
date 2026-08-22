@@ -6,11 +6,16 @@ import {
   Building2,
   CheckCircle2,
   ExternalLink,
+  Eye,
   FileText,
   Landmark,
   MapPin,
+  RotateCw,
   ShieldCheck,
+  X,
   XCircle,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 
 import {
@@ -69,13 +74,21 @@ const Field = ({ label, value }: { label: string; value?: string }) => (
   </div>
 );
 
-const DocLink = ({ href, label }: { href?: string; label: string }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noreferrer"
+const DocButton = ({
+  onClick,
+  label,
+  disabled,
+}: {
+  onClick: () => void;
+  label: string;
+  disabled?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
     className={`group flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 transition hover:border-emerald-300 hover:bg-emerald-50 ${
-      !href ? "pointer-events-none opacity-50" : ""
+      disabled ? "pointer-events-none opacity-50" : ""
     }`}
   >
     <div className="flex items-center gap-3">
@@ -84,9 +97,162 @@ const DocLink = ({ href, label }: { href?: string; label: string }) => (
       </div>
       <span className="text-sm font-medium text-gray-800">{label}</span>
     </div>
-    <ExternalLink size={16} className="text-emerald-600 transition group-hover:translate-x-0.5" />
-  </a>
+    <div className="flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-2xs group-hover:border-emerald-200">
+      <Eye size={14} />
+      View Certificate
+    </div>
+  </button>
 );
+
+interface FileViewerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  url?: string;
+}
+
+const FileViewerModal = ({ isOpen, onClose, title, url }: FileViewerModalProps) => {
+  const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [isImgLoading, setIsImgLoading] = useState(true);
+  const [isImgError, setIsImgError] = useState(false);
+
+  const [prevUrl, setPrevUrl] = useState(url);
+  if (prevUrl !== url) {
+    setPrevUrl(url);
+    setScale(1);
+    setRotation(0);
+    setIsImgLoading(true);
+    setIsImgError(false);
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !url) return null;
+
+  const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.25, 0.5));
+  const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md transition-opacity">
+      <div className="relative flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-gray-800 bg-gray-900 text-white shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-800 bg-gray-950 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+              <FileText size={18} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-100">{title}</h3>
+              <p className="text-xs text-gray-400">Built-in Certificate Viewer</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-700 hover:text-white"
+            >
+              <ExternalLink size={14} />
+              Open Original
+            </a>
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-800 text-gray-400 transition hover:bg-rose-500/20 hover:text-rose-400"
+              title="Close (Esc)"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Viewport Area */}
+        <div className="relative flex flex-1 items-center justify-center overflow-auto bg-gray-900/50 p-6">
+          {isImgLoading && !isImgError && (
+            <div className="absolute flex flex-col items-center gap-3 text-gray-400">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+              <span className="text-xs font-medium">Loading document preview...</span>
+            </div>
+          )}
+
+          {isImgError ? (
+            <div className="flex flex-col items-center gap-3 p-8 text-center">
+              <p className="text-sm text-gray-400">Unable to display direct image preview.</p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+              >
+                Open document file in new tab
+              </a>
+            </div>
+          ) : (
+            <img
+              src={url}
+              alt={title}
+              onLoad={() => setIsImgLoading(false)}
+              onError={() => {
+                setIsImgLoading(false);
+                setIsImgError(true);
+              }}
+              style={{
+                transform: `scale(${scale}) rotate(${rotation}deg)`,
+                transition: "transform 0.2s ease-out",
+              }}
+              className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+            />
+          )}
+        </div>
+
+        {/* Floating Controls Bar */}
+        <div className="flex items-center justify-between border-t border-gray-800 bg-gray-950 px-6 py-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleZoomOut}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-gray-300 transition hover:bg-gray-700 hover:text-white"
+              title="Zoom Out"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span className="min-w-[50px] text-center font-mono text-xs text-gray-400">
+              {Math.round(scale * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-gray-300 transition hover:bg-gray-700 hover:text-white"
+              title="Zoom In"
+            >
+              <ZoomIn size={16} />
+            </button>
+            <button
+              onClick={handleRotate}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-gray-300 transition hover:bg-gray-700 hover:text-white"
+              title="Rotate 90°"
+            >
+              <RotateCw size={16} />
+            </button>
+          </div>
+
+          <div className="text-xs text-gray-500">
+            Press <kbd className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-[10px] text-gray-300">Esc</kbd> to close viewer
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const VendorDetails = () => {
   const { vendorId } = useParams();
@@ -96,6 +262,17 @@ const VendorDetails = () => {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [activeDoc, setActiveDoc] = useState<{ title: string; url?: string }>({
+    title: "",
+    url: "",
+  });
+
+  const openDocument = (title: string, url?: string) => {
+    setActiveDoc({ title, url });
+    setViewerOpen(true);
+  };
 
 useEffect(() => {
   const fetchVendor = async () => {
@@ -240,12 +417,30 @@ useEffect(() => {
           <Section icon={<FileText size={16} />} title="Documents">
             {documentUrls ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <DocLink href={documentUrls.gstCertificateUrl} label="GST Certificate" />
-                <DocLink href={documentUrls.fssaiCertificateUrl} label="FSSAI Certificate" />
-                <DocLink href={documentUrls.panCardUrl} label="PAN Card" />
-                <DocLink
-                  href={documentUrls.registrationCertificateUrl}
+                <DocButton
+                  onClick={() => openDocument("GST Certificate", documentUrls.gstCertificateUrl)}
+                  label="GST Certificate"
+                  disabled={!documentUrls.gstCertificateUrl}
+                />
+                <DocButton
+                  onClick={() => openDocument("FSSAI Certificate", documentUrls.fssaiCertificateUrl)}
+                  label="FSSAI Certificate"
+                  disabled={!documentUrls.fssaiCertificateUrl}
+                />
+                <DocButton
+                  onClick={() => openDocument("PAN Card", documentUrls.panCardUrl)}
+                  label="PAN Card"
+                  disabled={!documentUrls.panCardUrl}
+                />
+                <DocButton
+                  onClick={() =>
+                    openDocument(
+                      "Registration Certificate",
+                      documentUrls.registrationCertificateUrl
+                    )
+                  }
                   label="Registration Certificate"
+                  disabled={!documentUrls.registrationCertificateUrl}
                 />
               </div>
             ) : (
@@ -296,6 +491,13 @@ useEffect(() => {
           )}
         </div>
       </div>
+
+      <FileViewerModal
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        title={activeDoc.title}
+        url={activeDoc.url}
+      />
     </div>
   );
 };

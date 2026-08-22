@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+ARG VITE_BASE_URL=/api
+ENV VITE_BASE_URL=$VITE_BASE_URL
+ARG VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51U2yeI2Le4E4oyQiw4p4bCrRZozEROyeZyTcA0vsAlvpqt5gJH2GY7tKRYSHom6Fc1R9hPUfruWoYmQ3mdQGWXjU00XCI0ESxB
+ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
+
+COPY . .
+
+RUN rm -rf dist && npm run build
+
+FROM nginx:alpine
+
+COPY --from=0 /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

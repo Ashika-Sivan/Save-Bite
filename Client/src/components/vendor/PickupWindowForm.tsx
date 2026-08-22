@@ -1,5 +1,4 @@
 import {
-    useEffect,
     useState,
     type FormEvent,
 } from "react"
@@ -71,27 +70,24 @@ const PickupWindowForm = ({
     onSubmit,
 }: PickupWindowFormProps) => {
     const [startTime, setStartTime] =
-        useState("")
+        useState(() => toDateTimeLocal(initialStartTime))
 
     const [endTime, setEndTime] =
-        useState("")
+        useState(() => toDateTimeLocal(initialEndTime))
 
-    useEffect(() => {
-        setStartTime(
-            toDateTimeLocal(
-                initialStartTime
-            )
-        )
-
-        setEndTime(
-            toDateTimeLocal(
-                initialEndTime
-            )
-        )
-    }, [
+    const [prevInitial, setPrevInitial] = useState({
         initialStartTime,
         initialEndTime,
-    ])
+    })
+
+    if (
+        prevInitial.initialStartTime !== initialStartTime ||
+        prevInitial.initialEndTime !== initialEndTime
+    ) {
+        setPrevInitial({ initialStartTime, initialEndTime })
+        setStartTime(toDateTimeLocal(initialStartTime))
+        setEndTime(toDateTimeLocal(initialEndTime))
+    }
 
     const endDate = endTime
         ? new Date(endTime)

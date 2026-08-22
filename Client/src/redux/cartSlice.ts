@@ -1,6 +1,4 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-
-
 export interface CartItem{
     itemId:string;
     itemName:string;
@@ -32,13 +30,49 @@ interface CartState{
     items:CartItem[]
 
 }
-const initialState: CartState = {
+
+export const CART_STORAGE_KEY =
+    "savebite_cart"
+
+const emptyCartState: CartState = {
     hotelId: null,
     menuId: null,
     hotelName: null,
     pickupWindow: null,
     items: [],
-};
+}
+
+const loadCartState =
+    (): CartState => {
+        try {
+            const savedCart =
+                localStorage.getItem(
+                    CART_STORAGE_KEY
+                )
+
+            if (!savedCart) {
+                return emptyCartState
+            }
+
+            const parsedCart =
+                JSON.parse(
+                    savedCart
+                ) as CartState
+
+            if (
+                !Array.isArray(
+                    parsedCart.items
+                )
+            ) {
+                return emptyCartState
+            }
+
+            return parsedCart
+        } catch {
+            return emptyCartState
+        }
+    }
+const initialState: CartState = loadCartState()
 
 
 const resetCartState=(state:CartState):void=>{
@@ -90,6 +124,9 @@ const cartSlice=createSlice({
         */
         replaceCart:(state,action:PayloadAction<AddToCartPayload>)=>{//if a customer adding item from other cart
             const newItem=action.payload;
+            if(newItem.availableStock<=0||newItem.quantity<=0){
+                return
+            }
             state.hotelId=newItem.hotelId;
             state.menuId=newItem.menuId;
             state.hotelName=newItem.hotelName;
@@ -102,7 +139,8 @@ const cartSlice=createSlice({
                     originalPrice:newItem.originalPrice,
                     discountedPrice:newItem.discountedPrice,
                     availableStock:newItem.availableStock,
-                    quantity:newItem.quantity
+                    // quantity:newItem.quantity
+                    quantity:Math.min(newItem.quantity,newItem.availableStock)
                 },
             ];
 
@@ -124,6 +162,8 @@ const cartSlice=createSlice({
             if(action.payload.quantity>=1&& action.payload.quantity<=item.availableStock){
                 item.quantity=action.payload.quantity
             }
+            
+
         },
 
         removeFromCart:(state,action:PayloadAction<string>)=>{

@@ -127,6 +127,7 @@ export class AdminService implements IAdminService {
         const limit = Math.max(1, options?.limit || 10);
         const { users, total } = await this._vendorRepository.getAllUsers(options);
         const totalPages = Math.ceil(total / limit);
+        
         return {
             items: users.map(toAdminUserListDTO),
             total,

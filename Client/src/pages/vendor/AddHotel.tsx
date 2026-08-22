@@ -43,12 +43,12 @@ const AddHotel = () => {
 
   useEffect(() => {
     if (!hotelImage) {
-      setImagePreview(null);
+      queueMicrotask(() => setImagePreview(null));
       return;
     }
 
     const previewUrl = URL.createObjectURL(hotelImage);
-    setImagePreview(previewUrl);
+    queueMicrotask(() => setImagePreview(previewUrl));
 
     return () => {
       URL.revokeObjectURL(previewUrl);
@@ -246,6 +246,7 @@ const AddHotel = () => {
                 value={form.address}
                 onChange={handleChange}
                 rows={3}
+                maxLength={200}
                 placeholder="Near Railway Station, Kannur"
                 className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
               />

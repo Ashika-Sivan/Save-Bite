@@ -114,7 +114,6 @@ export class VendorService implements IVendorService {
     }
 
     async getVendorStatus(ownerId: string): Promise<IVendorStatusResponseDTO> {
-    
         const vendor = await this.vendorRepository.findByOwnerId(ownerId);
         if (!vendor) {
             return { hasApplication: false };
@@ -123,6 +122,7 @@ export class VendorService implements IVendorService {
             hasApplication: true,
             status: vendor.status,
             rejectionReason: vendor.rejectionReason,
+            vendor: vendor,
         };
     }
 

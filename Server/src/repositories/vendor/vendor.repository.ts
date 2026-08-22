@@ -121,7 +121,7 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         const search = options?.search?.trim();
         const status = options?.status;
 
-        const filterQuery: Record<string, unknown> = { role: 'user' };
+        const filterQuery: Record<string, unknown> = { role: 'user' , isAuthenticated:true};
 
         if (status && status !== "all") {
             if (status === "active") {
@@ -139,11 +139,13 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         }
 
         const total = await User.countDocuments(filterQuery);
+
         const users = await User.find(filterQuery)
             .select("-password")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
+            
 
         return { users, total };
     }
@@ -152,4 +154,4 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         return await User.findByIdAndUpdate(userId, { isActive }, { new: true }).select("-password")
     }
 
-}
+}

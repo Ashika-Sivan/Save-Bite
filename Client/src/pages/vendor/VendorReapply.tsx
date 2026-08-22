@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
   Store,
@@ -10,7 +10,7 @@ import {
   MapPin,
   ClipboardCheck,
 } from "lucide-react";
-import { reapplyVendor } from "../../services/vendor.service";
+import { reapplyVendor, checkVendorStatus } from "../../services/vendor.service";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../../constants/appRoutes";
 
@@ -25,6 +25,7 @@ export default function VendorReapply() {
   const [step, setStep] = useState(1);
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [_prefilled, setPrefilled] = useState(false);
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -47,6 +48,37 @@ export default function VendorReapply() {
     panCard: null as File | null,
     businessRegistrationCertificate: null as File | null,
   });
+
+  useEffect(() => {
+    const loadPreviousApplication = async () => {
+      try {
+        const response = await checkVendorStatus();
+        console.log("Reapply prefill check:", response);
+        const vendorData = response.data?.vendor;
+        if (vendorData) {
+          setForm((prev) => ({
+            ...prev,
+            vendorName: vendorData.businessInfo?.businessName || "",
+            businessType: vendorData.businessInfo?.businessType || "",
+            place: vendorData.businessInfo?.place || "",
+            address: vendorData.businessInfo?.address || "",
+            latitude: vendorData.businessInfo?.location?.coordinates?.[1] || 0,
+            longitude: vendorData.businessInfo?.location?.coordinates?.[0] || 0,
+            gstNumber: vendorData.verification?.gstNumber || "",
+            panNumber: vendorData.verification?.panNumber || "",
+            fssaiNumber: vendorData.verification?.fssaiNumber || "",
+            ifscCode: vendorData.verification?.ifscCode || "",
+            bankAccountNumber: vendorData.verification?.bankAccountNumber || "",
+          }));
+          setPrefilled(true);
+          toast.success("Previous application details prefilled automatically!");
+        }
+      } catch (err) {
+        console.error("Failed to load previous vendor details", err);
+      }
+    };
+    loadPreviousApplication();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -148,9 +180,10 @@ export default function VendorReapply() {
       await reapplyVendor(formData);
       toast.success("Vendor re-application submitted successfully");
       navigate(APP_ROUTES.VENDOR.PENDING);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      const errMsg = error.response?.data?.message || "Vendor re-application failed";
+      const err = error as { response?: { data?: { message?: string } } };
+      const errMsg = err.response?.data?.message || "Vendor re-application failed";
       toast.error(errMsg);
     } finally {
       setSubmitting(false);
@@ -179,20 +212,18 @@ export default function VendorReapply() {
               <div key={item.id} className="flex flex-1 items-center">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold ${
-                      active || completed
+                    className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold ${active || completed
                         ? "bg-[#2E7C35] text-white"
                         : "border bg-white text-gray-400"
-                    }`}
+                      }`}
                   >
                     {completed ? "✓" : <Icon className="h-4 w-4" />}
                   </div>
 
                   <div>
                     <p
-                      className={`text-sm font-semibold ${
-                        active ? "text-[#2E7C35]" : "text-gray-600"
-                      }`}
+                      className={`text-sm font-semibold ${active ? "text-[#2E7C35]" : "text-gray-600"
+                        }`}
                     >
                       {item.title}
                     </p>

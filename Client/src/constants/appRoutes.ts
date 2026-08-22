@@ -14,10 +14,13 @@ export const APP_ROUTES = {
     HOME: "/home",
     LIVE_MENU: (hotelId: string) => `/customer/restaurants/${hotelId}/menu`,
     CART: "/cart",
+    CHECKOUT:"/checkout",
+    PAYMENT_SUCCESS:"/payment-success",
+    MY_ORDERS: "/orders"
   },
 
   VENDOR: {
-    REGISTER: "/vendor/VendorRegister",
+    REGISTER: "/vendor/register",
     REAPPLY: "/vendor/reapply",
     PENDING: "/vendor/pending",
     REJECTED: "/vendor/rejected",
@@ -25,6 +28,8 @@ export const APP_ROUTES = {
     HOTELS: "/vendor/hotels",
     ADD_HOTEL: "/vendor/hotels/add",
     HOTEL_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/menu`,
+    ORDERS: "/vendor/orders",
+    WALLET: "/vendor/wallet",
   },
 
   ADMIN: {
@@ -33,5 +38,6 @@ export const APP_ROUTES = {
     USER_LIST: "/admin/userList",
     VENDOR_LIST: "/admin/vendorList",
     VENDOR_DETAILS: (vendorId: string) => `/admin/vendors/${vendorId}`,
+    CONCERNS: "/admin/concerns",
   },
 } as const;

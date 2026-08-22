@@ -20,6 +20,10 @@ import { HotelRepository } from "../repositories/hotel/hotel.repository";
 import { DailyMenuRepository } from "../repositories/dailyMenu/dailyMenu.repository";
 import { DailyMenuService } from "../services/vendor/dailyMenu.service";
 import { DailyMenuController } from "../controllers/dailyMenu.controller";
+import { OrderRepository } from "../repositories/order/order.repository";
+import { WalletRepository } from "../repositories/wallet/wallet.repository";
+import { OrderService } from "../services/customer/order.service";
+import { OrderController } from "../controllers/order.controller";
 
 const userRepository = new UserRepository();
 const tokenService = new TokenService();
@@ -49,5 +53,26 @@ export const vendorController = new VendorController(vendorService);
 export const adminController = new AdminController(adminService);
 export const authMiddleware = new AuthMiddleware(tokenService);
 
+import { WalletService } from "../services/vendor/wallet.service";
+import { WalletController } from "../controllers/wallet.controller";
+
 //daily menu
 export const dailyMenuController=new DailyMenuController(dailyMenuService)
+
+
+//order & wallet
+const orderRepository=new OrderRepository()
+const walletRepository=new WalletRepository()
+const walletService=new WalletService(walletRepository,vendorRepository)
+const orderService=new OrderService(orderRepository,dailyMenuRepository,vendorRepository,walletRepository)
+
+import { ConcernRepository } from "../repositories/concern/concern.repository";
+import { ConcernService } from "../services/concern/concern.service";
+import { ConcernController } from "../controllers/concern.controller";
+
+const concernRepository = new ConcernRepository();
+const concernService = new ConcernService(concernRepository, orderRepository);
+
+export const orderController = new OrderController(orderService);
+export const walletController = new WalletController(walletService);
+export const concernController = new ConcernController(concernService);

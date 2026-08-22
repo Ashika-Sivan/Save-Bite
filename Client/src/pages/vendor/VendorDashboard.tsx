@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   LayoutDashboard,
   Utensils,
@@ -11,13 +14,82 @@ import {
   IndianRupee,
   Star,
 } from "lucide-react";
+import { logout } from "../../services/auth.service";
+import { getVendorOrders, type Order } from "../../services/order.service";
+import { getVendorWalletSummary, type WalletData } from "../../services/wallet.service";
+import { clearCredentials } from "../../redux/authSlice";
+import { clearCart } from "../../redux/cartSlice";
+import type { AppDispatch } from "../../redux/store";
+import { APP_ROUTES } from "../../constants/appRoutes";
 
 export default function VendorDashboard() {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const [ordersRes, walletRes] = await Promise.all([
+          getVendorOrders().catch(() => null),
+          getVendorWalletSummary().catch(() => null),
+        ]);
+
+        if (ordersRes?.success && Array.isArray(ordersRes.data)) {
+          setOrders(ordersRes.data);
+        }
+        if (walletRes?.success && walletRes.data?.wallet) {
+          setWallet(walletRes.data.wallet);
+        }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
   const handleLogout = () => {
-    // Add your logout logic here later
-    navigate("/login");
+    toast((t) => (
+      <div>
+        <p className="font-medium text-gray-900">
+          Are you sure you want to logout?
+        </p>
+
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await logout();
+                dispatch(clearCredentials());
+                dispatch(clearCart());
+                toast.success("Logged out successfully");
+                navigate("/login", { replace: true });
+              } catch (error) {
+                console.error("Logout failed:", error);
+                toast.error("Failed to logout");
+              }
+            }}
+            className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -106,43 +178,53 @@ export default function VendorDashboard() {
             </div>
 
             {/* Summary Cards */}
-            <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                  <ShoppingBag size={22} />
-                </div>
+            {(() => {
+              const isToday = (d?: string) => d && new Date(d).toDateString() === new Date().toDateString();
+              const todayOrders = orders.filter((o) => isToday(o.createdAt));
+              const todayNetRevenue = todayOrders
+                .filter((o) => o.orderStatus === "collected")
+                .reduce((sum, o) => sum + o.totalAmount * 0.9, 0);
 
-                <p className="mt-4 text-sm text-gray-500">Today&apos;s Orders</p>
-                <h3 className="mt-1 text-3xl font-bold text-gray-900">0</h3>
-              </div>
+              return (
+                <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                      <ShoppingBag size={22} />
+                    </div>
+                    <p className="mt-4 text-sm text-gray-500">Today&apos;s Orders</p>
+                    <h3 className="mt-1 text-3xl font-bold text-gray-900">{loading ? "..." : todayOrders.length}</h3>
+                  </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                  <IndianRupee size={22} />
-                </div>
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                      <IndianRupee size={22} />
+                    </div>
+                    <p className="mt-4 text-sm text-gray-500">Today&apos;s Revenue (90%)</p>
+                    <h3 className="mt-1 text-3xl font-bold text-gray-900">
+                      {loading ? "..." : `₹${todayNetRevenue.toFixed(2)}`}
+                    </h3>
+                  </div>
 
-                <p className="mt-4 text-sm text-gray-500">Today&apos;s Revenue</p>
-                <h3 className="mt-1 text-3xl font-bold text-gray-900">₹0</h3>
-              </div>
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm cursor-pointer hover:border-green-500 transition" onClick={() => navigate(APP_ROUTES.VENDOR.WALLET)}>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                      <Wallet size={22} />
+                    </div>
+                    <p className="mt-4 text-sm text-gray-500">Wallet Balance</p>
+                    <h3 className="mt-1 text-3xl font-bold text-gray-900">
+                      {loading ? "..." : `₹${wallet?.balance?.toFixed(2) || "0.00"}`}
+                    </h3>
+                  </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                  <Utensils size={22} />
-                </div>
-
-                <p className="mt-4 text-sm text-gray-500">Menu Items</p>
-                <h3 className="mt-1 text-3xl font-bold text-gray-900">0</h3>
-              </div>
-
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                  <Star size={22} />
-                </div>
-
-                <p className="mt-4 text-sm text-gray-500">Rating</p>
-                <h3 className="mt-1 text-3xl font-bold text-gray-900">0.0</h3>
-              </div>
-            </section>
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                      <Star size={22} />
+                    </div>
+                    <p className="mt-4 text-sm text-gray-500">Partner Status</p>
+                    <h3 className="mt-1 text-2xl font-bold text-green-700">Approved</h3>
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* Quick Actions */}
             <section className="mt-10">

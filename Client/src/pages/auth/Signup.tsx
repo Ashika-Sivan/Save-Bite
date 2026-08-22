@@ -1,9 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { signupUser } from "../../services/auth.service";
-import axios from 'axios'
+import { User, Store, ArrowRight, ShieldCheck } from "lucide-react";
+import axios from "axios";
+
+type AuthRole = "customer" | "vendor";
+
 const Signup = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read active role from query param ?role=vendor or default to customer
+  const activeRole: AuthRole = searchParams.get("role") === "vendor" ? "vendor" : "customer";
 
   const [form, setForm] = useState({
     name: "",
@@ -20,6 +28,13 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleRoleChange = (role: AuthRole) => {
+    setSearchParams({ role });
+    setErrors({ name: "", email: "", phone: "", password: "", confirmPassword: "" });
+  };
 
   const validateForm = () => {
     const newErrors = {
@@ -72,7 +87,6 @@ const Signup = () => {
     }
 
     setErrors(newErrors);
-
     return Object.values(newErrors).every((error) => error === "");
   };
 
@@ -81,7 +95,6 @@ const Signup = () => {
       ...form,
       [e.target.name]: e.target.value,
     });
-
     setErrors({
       ...errors,
       [e.target.name]: "",
@@ -89,45 +102,52 @@ const Signup = () => {
   };
 
   const inputClass = (error: string) =>
-    `mt-1 w-full rounded-xl bg-[#fbf8ef] px-4 py-3 outline-none ${
+    `mt-1 w-full rounded-xl bg-[#fbf8ef] px-4 py-3 outline-none transition text-sm ${
       error
         ? "border border-red-500 focus:border-red-600"
         : "border border-gray-300 focus:border-green-700"
     }`;
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  const signupData = {
-    name: form.name.trim(),
-    email: form.email.trim(),
-    password: form.password,
-    phone: form.phone.trim(),
-  };
+    setLoading(true);
 
-  try {
-    await signupUser(signupData);//after signupp then navigatet to the otp page
-    navigate("/otp",{
-      state:{email:signupData.email}
-    })
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const message = error.response?.data?.message;
-      if (message === "Email already exists") {
-        setErrors((prev) => ({ ...prev, email: "Email already exists" }));
-        return;
+    const signupData = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      phone: form.phone.trim(),
+    };
+
+    try {
+      await signupUser(signupData);
+      navigate("/otp", {
+        state: { email: signupData.email, isVendor: activeRole === "vendor" },
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message;
+        if (message === "Email already exists") {
+          setErrors((prev) => ({ ...prev, email: "Email already exists" }));
+          return;
+        }
       }
+      alert("Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    alert("Signup failed. Please try again.");
-    return;
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex bg-[#f8f4ec]">
+      {/* Left Branding Sidebar */}
       <div className="hidden lg:flex w-1/2 bg-green-800 text-white p-10 flex-col justify-between rounded-r-[28px]">
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
             🌱
           </div>
@@ -135,14 +155,27 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </div>
 
         <div>
-          <h2 className="text-5xl font-bold leading-tight">
-            Good food deserves a <br />
-            second chance.
-          </h2>
-          <p className="mt-5 max-w-md text-green-100">
-            Sign up to rescue meals nearby, share your surplus, and watch your
-            impact grow with every bite saved.
-          </p>
+          {activeRole === "vendor" ? (
+            <>
+              <h2 className="text-5xl font-bold leading-tight">
+                Turn surplus food <br /> into steady revenue.
+              </h2>
+              <p className="mt-5 max-w-md text-green-100">
+                Partner with SaveBite to sell excess daily meals, reach local customers, and track your 90% payout earnings directly.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-5xl font-bold leading-tight">
+                Good food deserves a <br />
+                second chance.
+              </h2>
+              <p className="mt-5 max-w-md text-green-100">
+                Sign up to rescue meals nearby, share your surplus, and watch your
+                impact grow with every bite saved.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="flex gap-12">
@@ -152,21 +185,63 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </div>
           <div>
             <h3 className="text-3xl font-bold">340</h3>
-            <p className="text-green-100">neighborhoods</p>
+            <p className="text-green-100">partner restaurants</p>
           </div>
         </div>
       </div>
 
+      {/* Right Form Container */}
       <div className="flex w-full lg:w-1/2 items-center justify-center px-6 py-10">
         <div className="w-full max-w-md rounded-[24px] bg-white p-8 shadow-sm border border-gray-200">
           <h2 className="text-3xl font-bold text-gray-900">
-            Create Your Account
+            {activeRole === "vendor" ? "Register Restaurant 🏪" : "Create Account 🛒"}
           </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {activeRole === "vendor"
+              ? "Register your business account to list surplus food."
+              : "Sign up to discover and rescue delicious food."}
+          </p>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-4" noValidate>
+          {/* Role Switcher Tabs */}
+          <div className="mt-5 grid grid-cols-2 rounded-2xl bg-gray-100 p-1.5 gap-1 border border-gray-200">
+            <button
+              type="button"
+              onClick={() => handleRoleChange("customer")}
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+                activeRole === "customer"
+                  ? "bg-white text-green-800 shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <User size={16} />
+              Customer / Foodie
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleChange("vendor")}
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+                activeRole === "vendor"
+                  ? "bg-green-800 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <Store size={16} />
+              Restaurant Partner
+            </button>
+          </div>
+
+          {activeRole === "vendor" && (
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-xs font-medium text-green-800">
+              <ShieldCheck size={18} className="shrink-0 text-green-800" />
+              <span>Step 1: Create vendor account. Step 2: Submit restaurant business verification.</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
             <div>
-              <label className="block text-sm font-medium text-gray-800">
-                Name
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
+                Full Name
               </label>
               <input
                 name="name"
@@ -175,14 +250,12 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 placeholder="Enter your name"
                 className={inputClass(errors.name)}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
+              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-800">
-                Email
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
+                Email Address
               </label>
               <input
                 name="email"
@@ -192,14 +265,12 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 placeholder="you@example.com"
                 className={inputClass(errors.email)}
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-800">
-                Phone
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
+                Phone Number
               </label>
               <input
                 name="phone"
@@ -209,13 +280,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 maxLength={10}
                 className={inputClass(errors.phone)}
               />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-              )}
+              {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-800">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
                 Password
               </label>
               <input
@@ -227,13 +296,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 placeholder="Enter password"
                 className={inputClass(errors.password)}
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-800">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
                 Confirm Password
               </label>
               <input
@@ -246,25 +313,25 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 className={inputClass(errors.confirmPassword)}
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.confirmPassword}
-                </p>
+                <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
               )}
             </div>
 
             <button
               type="submit"
-              className="mt-4 w-full rounded-xl bg-green-800 py-3 font-semibold text-white hover:bg-green-900 transition"
+              disabled={loading}
+              className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-green-800 py-3 font-semibold text-white hover:bg-green-900 transition disabled:opacity-50"
             >
-              Signup
+              {loading ? "Creating Account..." : activeRole === "vendor" ? "Register Partner Account" : "Sign Up"}
+              <ArrowRight size={16} />
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-xs text-gray-600">
             Already have an account?{" "}
             <span
-              onClick={() => navigate("/login")}
-              className="cursor-pointer font-medium text-green-800 hover:underline"
+              onClick={() => navigate(`/login${activeRole === "vendor" ? "?role=vendor" : ""}`)}
+              className="cursor-pointer font-bold text-green-800 hover:underline"
             >
               Sign in
             </span>

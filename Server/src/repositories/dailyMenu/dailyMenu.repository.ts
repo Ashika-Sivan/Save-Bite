@@ -1,6 +1,6 @@
-import { Types } from "mongoose";
+import { ClientSession, Types ,UpdateQuery} from "mongoose";
 import { IDailyMenu } from "../../interfaces/models/IDailyMenu.model";
-import { IDailyMenuCreateData, IDailyMenuItemCreateData, IDailyMenuRepository, IPickupWindowUpdateData } from "../../interfaces/repository/IDailyMenuRepository";
+import { IDailyMenuCreateData, IDailyMenuItemCreateData, IDailyMenuRepository, IPickupWindowUpdateData, IStockDecrementData } from "../../interfaces/repository/IDailyMenuRepository";
 import { DailyMenu } from "../../models/menu/DailyMenu.model";
 import { BaseRepository } from "../base.repository";
 import { IDailyMenuItemUpdateData } from "../../dtos/dailyMenu.dto";
@@ -115,5 +115,57 @@ export class DailyMenuRepository extends BaseRepository<IDailyMenu>implements ID
             }
         )
     }
+
+    /*
+    it check whether the item is exist
+    isAvailable is true,
+    stock which is greatr or equal to thr requested quantityu
+    */
+async decrementItemStock( menuId: Types.ObjectId, items: IStockDecrementData[], session?: ClientSession): Promise<IDailyMenu | null> {
+    const stockConditions: Record<string, unknown>[] = items.map((item) => ({//stock validations
+        items: {
+            $elemMatch: {
+                _id: item.itemId,
+                isAvailable: true,
+                stockQuantity: {
+                    $gte: item.quantity,
+                },
+            },
+        },
+    }));
+
+    const stockUpdates: Record<string, number> = {};
+    const arrayFilters: Record<string, unknown>[] = [];
+
+    items.forEach((item, index) => {
+        stockUpdates[`items.$[item${index}].stockQuantity`] = -item.quantity;
+
+        arrayFilters.push({
+            [`item${index}._id`]: item.itemId,
+        });
+    });
+
+    const update: UpdateQuery<IDailyMenu> = {
+        $inc: stockUpdates,
+    };
+
+    const options: Record<string, unknown> = {
+        new: true,
+        runValidators: true,
+        arrayFilters,
+    };
+    if (session) {
+        options.session = session;
+    }
+
+    return await DailyMenu.findOneAndUpdate(
+        {
+            _id: menuId,
+            $and: stockConditions,
+        },
+        update,
+        options
+    );
+}
 
 }

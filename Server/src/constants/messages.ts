@@ -1,4 +1,3 @@
-
 export const AUTH_MESSAGES = {
   REGISTER_SUCCESS: "User registered successfully",
   LOGIN_SUCCESS: "User login successful",
@@ -15,29 +14,24 @@ export const AUTH_MESSAGES = {
   REFRESH_TOKEN_MISSING: "Refresh token is missing",
   ACCESS_TOKEN_REFRESHED: "Access token refreshed successfully",
   INVALID_REFRESH_TOKEN: "Invalid or expired refresh token",
-  SOMETHING_WENT_WRONG:"something went wrong",
-  INTERNAL_SERVER_ERROR:"internal server error",
-  INVALID_TOKEN_FORMAT:"invalid token format",
-  ACCESS_DENIED:"Access denied",
-  TOKEN_MISSING:"Token missing",
-  INVALID_OR_EXPIRED_TOKEN:"Invalid or expired token",
-
+  SOMETHING_WENT_WRONG: "Something went wrong",
+  INTERNAL_SERVER_ERROR: "Internal server error",
+  INVALID_TOKEN_FORMAT: "Invalid token format",
+  ACCESS_DENIED: "Access denied",
+  TOKEN_MISSING: "Token missing",
+  INVALID_OR_EXPIRED_TOKEN: "Invalid or expired token",
   OTP_RESENT_SUCCESS: "OTP resend successfully",
   OTP_VERIFIED_SUCCESS: "OTP verified successfully",
-  INVALID_OTP:"Invalid otp",
-  USER_ALREADY_VERIFIED:'user already verified',
-
+  INVALID_OTP: "Invalid OTP",
+  USER_ALREADY_VERIFIED: "User already verified",
   USER_FETCHED_SUCCESS: "User fetched successfully",
   USER_NOT_AUTHENTICATED: "User not authenticated",
-  USER_EXIST:"User already exist",
-  OTP_EXPIRED:"OTP Expired",
-  OTP_NOT_FOUND:'otp not found',
-
+  USER_EXIST: "User already exists",
+  OTP_EXPIRED: "OTP Expired",
+  OTP_NOT_FOUND: "OTP not found",
   EMAIL_ALREADY_EXISTS: "Email already exists",
-   OTP_GENERATED_SUCCESS: "OTP generated successfully",
-
-}
-
+  OTP_GENERATED_SUCCESS: "OTP generated successfully",
+} as const;
 
 export const VENDOR_MESSAGES = {
   APPLICATION_SUBMITTED: "Vendor application submitted successfully",
@@ -49,15 +43,12 @@ export const VENDOR_MESSAGES = {
   REJECTED_SUCCESS: "Vendor rejected successfully",
   STATUS_FETCHED: "Vendor status fetched successfully",
   VENDOR_FETCHED: "Vendor fetched successfully",
-  VENDOR_ALREADY_APPROVED:"vendor already approved",
-  ALL_FILES_REQUIRED:"all files required",
+  VENDOR_ALREADY_APPROVED: "Vendor already approved",
+  ALL_FILES_REQUIRED: "All files are required",
   REAPPLY_SUCCESS: "Vendor re-application submitted successfully",
   NOT_REJECTED: "Only rejected applications can be re-submitted",
   NO_EXISTING_APPLICATION: "No existing vendor application found to re-apply",
-};
-/*
-for admin
-*/
+} as const;
 
 export const ADMIN_MESSAGES = {
   VENDORS_FETCHED: "Vendors fetched successfully",
@@ -66,39 +57,61 @@ export const ADMIN_MESSAGES = {
   VALID_USER_ID_REQUIRED: "Valid user ID is required",
   USER_BLOCKED: "User blocked successfully",
   USER_UNBLOCKED: "User unblocked successfully",
-  REJECTED_VENDOR_CANNOT_APPROVE:"Cannot approve for rejected vendors",
-  VENDOR_APPROVE_FAILED:"vendor message failed",
-  REJECTION_REASON_REQUIRED:"rejection reason required",
-  VENDOR_ALREADY_REJECTED:"Vendor already rejected",
+  REJECTED_VENDOR_CANNOT_APPROVE: "Cannot approve rejected vendors",
+  VENDOR_APPROVE_FAILED: "Vendor message failed",
+  REJECTION_REASON_REQUIRED: "Rejection reason required",
+  VENDOR_ALREADY_REJECTED: "Vendor already rejected",
   APPROVED_VENDOR_CANNOT_REJECT: "Approved vendor cannot be rejected directly",
   USER_NOT_FOUND: "User not found",
   USER_STATUS_UPDATE_FAILED: "Failed to update user status",
   VENDOR_APPLICATION_NOT_FOUND: "Vendor application not found",
-};
-/*
-For hotels
-*/
-export const HOTEL_MESSAGES = {
-    CREATED: "Hotel added successfully",
-    FETCHED: "Hotels fetched successfully",
-    DETAILS_FETCHED: "Hotel details fetched successfully",
-    NOT_FOUND: "Hotel not found",
-    IMAGE_REQUIRED: "Hotel image is required",
-    INVALID_DATA: "Please provide valid hotel information",
-    INVALID_LOCATION: "Please provide valid latitude and longitude",
-    VENDOR_NOT_FOUND: "Vendor account not found",
-    VENDOR_NOT_APPROVED: "Only approved vendors can manage hotels",
-};
-//for menu
-export const DAILY_MENU_MESSAGES = {
-    CREATED: "Daily menu created successfully",
-    ITEM_ADDED: "Menu item added successfully",
-    GO_LIVE_SUCCESS: "Menu is now live",
-    TODAY_MENU_FETCHED: "Today's menu fetched successfully",
-    END_LIVE_SUCCESS:"Menu live session ended successfully",
-    PICKUP_WINDOW_UPDATED:"pickup widnow has been updated successfully",
-    ITEM_UPDATED:"Item updated successfully",
-    IMAGE_REQUIRED:"Food image required",
-    INVALID_ID:"Invalid menu id"
 } as const;
-  
+
+export const HOTEL_MESSAGES = {
+  CREATED: "Hotel added successfully",
+  FETCHED: "Hotels fetched successfully",
+  DETAILS_FETCHED: "Hotel details fetched successfully",
+  NOT_FOUND: "Hotel not found",
+  IMAGE_REQUIRED: "Hotel image is required",
+  INVALID_DATA: "Please provide valid hotel information",
+  INVALID_LOCATION: "Please provide valid latitude and longitude",
+  VENDOR_NOT_FOUND: "Vendor account not found",
+  VENDOR_NOT_APPROVED: "Only approved vendors can manage hotels",
+} as const;
+
+export const DAILY_MENU_MESSAGES = {
+  CREATED: "Daily menu created successfully",
+  ITEM_ADDED: "Menu item added successfully",
+  GO_LIVE_SUCCESS: "Menu is now live",
+  TODAY_MENU_FETCHED: "Today's menu fetched successfully",
+  END_LIVE_SUCCESS: "Menu live session ended successfully",
+  PICKUP_WINDOW_UPDATED: "Pickup window has been updated successfully",
+  ITEM_UPDATED: "Item updated successfully",
+  IMAGE_REQUIRED: "Food image required",
+  INVALID_ID: "Invalid menu id",
+} as const;
+
+export const ORDER_MESSAGES = {
+  CHECKOUT_CREATED: "Checkout created successfully",
+  ORDER_FETCHED: "Order fetched successfully",
+  CUSTOMER_ORDERS_FETCHED: "Customer orders fetched successfully",
+  PAYMENT_VERIFIED: "Payment status verified successfully",
+  PAYMENT_SUCCEEDED: "Payment succeeded",
+  PAYMENT_FAILED: "Payment failed",
+  ORDER_NOT_FOUND: "Order not found",
+  UNABLE_TO_PLACE: "Unable to place the order because one or more items have insufficient stock",
+  UNABLE_TO_MARK_PAID: "Unable to mark the order as paid",
+  INVALID_PAYMENT_INTENT: "Payment Intent ID is required",
+  PICKUP_CODE_REDEEMED: "Pickup code redeemed successfully",
+  INVALID_PICKUP_CODE: "Invalid pickup code. Order not found.",
+  PICKUP_CODE_ALREADY_USED: "Pickup code has already been redeemed.",
+  ORDER_NOT_BELONG_TO_VENDOR: "This order does not belong to your hotel/business.",
+  ORDER_NOT_PAID: "Payment for this order has not been completed.",
+  ORDER_NOT_ELIGIBLE_PICKUP: "Order is not eligible for pickup.",
+} as const;
+
+export const CUSTOMER_MESSAGES = {
+  LIVE_HOTELS_FETCHED: "Live hotels fetched successfully",
+  LIVE_HOTEL_MENU_FETCHED: "Live hotel menu fetched successfully",
+  HOTEL_NOT_LIVE: "This restaurant is not currently accepting orders",
+} as const;

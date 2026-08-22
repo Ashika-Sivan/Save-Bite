@@ -11,7 +11,6 @@ import { IDailyMenu, MenuUnitType } from "../../interfaces/models/IDailyMenu.mod
 import { getSignedS3Url } from "../../utils/getSignedS3Url";
 import { DAILY_MENU_MESSAGES } from "../../constants/messages";
 import { uploadToS3 } from "../../utils/uploadToS3";
-import App from "../../app";
 
 export class DailyMenuService implements IDailyMenuService{
     constructor(

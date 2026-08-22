@@ -1,4 +1,4 @@
-import { NextFunction, response, Response } from "express";
+import { NextFunction, Response } from "express";
 import { IDailyMenuService } from "../interfaces/service/vendor/IDailyMenuService";
 import { AuthRequest } from "../types/authRequest";
 import { AppError } from "../errors/AppError";

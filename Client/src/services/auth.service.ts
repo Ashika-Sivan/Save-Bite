@@ -58,6 +58,11 @@ export const registerVendor = async (data: unknown) => {
     return response.data;
 };
 
+export const getVendorStatus = async () => {
+    const response = await api.get(API_ROUTES.VENDOR.STATUS);
+    return response.data;
+};
+
 export const forgotPassword = async (email: string) => {
     const response = await api.post(API_ROUTES.AUTH.FORGOT_PASSWORD, { email });
     return response.data;
