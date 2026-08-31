@@ -18,6 +18,7 @@ import {
 import { IPasswordHasher } from "../../interfaces/service/auth/IPasswordHasher";
 import { IPasswordResetTokenService } from "../../interfaces/service/auth/IPasswordResetTokenService";
 import { IEmailService } from "../../interfaces/service/auth/IEmailService";
+import { Logger } from "../../utils/logger";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -97,7 +98,7 @@ export class AuthService implements IAuthService {
     const user = await this._userRepository.findByEmail(email);
 
     if (!user) {
-      console.error(`[LOGIN FAIL] No user found with email: "${email}"`);
+      Logger.error(`[LOGIN FAIL] No user found with email: "${email}"`);
       throw new AppError(
         AUTH_MESSAGES.INVALID_CREDENTIALS,
         StatusCode.BAD_REQUEST
@@ -105,7 +106,7 @@ export class AuthService implements IAuthService {
     }
 
     if (!user.isAuthenticated) {
-      console.error(`[LOGIN FAIL] User "${email}" is not authenticated (isAuthenticated: false)`);
+      Logger.error(`[LOGIN FAIL] User "${email}" is not authenticated (isAuthenticated: false)`);
       throw new AppError(
         AUTH_MESSAGES.VERIFY_EMAIL_FIRST,
         StatusCode.UNAUTHORIZED
@@ -117,13 +118,17 @@ export class AuthService implements IAuthService {
       user.password
     );
 
+
     if (!passwordMatch) {
-      console.error(`[LOGIN FAIL] Password mismatch for email: "${email}"`);
+      Logger.error(`[LOGIN FAIL] Password mismatch for email: "${email}"`);
       throw new AppError(
         AUTH_MESSAGES.INVALID_CREDENTIALS,
         StatusCode.BAD_REQUEST
       );
     }
+
+    
+
 
     const payload = {
       userId: user._id.toString(),
@@ -164,9 +169,8 @@ export class AuthService implements IAuthService {
     return await this._userRepository.findById(userId);
   }
 
-  async forgotPassword(
-    data: IForgotPasswordRequestDTO
-  ): Promise<{ message: string }> {
+  async forgotPassword( data: IForgotPasswordRequestDTO): Promise<{ message: string }> {
+   
     const { email } = data;
 
     const user = await this._userRepository.findByEmail(email);
@@ -179,6 +183,8 @@ export class AuthService implements IAuthService {
       user._id.toString()
     );
 
+
+
     await this._emailService.sendResetPasswordEmail(user.email, resetToken);
 
     return {
@@ -186,9 +192,7 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async resetPassword(
-    data: IResetPasswordRequestDTO
-  ): Promise<{ message: string }> {
+  async resetPassword( data: IResetPasswordRequestDTO): Promise<{ message: string }> {
     const { token, newPassword } = data;
 
     const userId = await this._resetTokenService.resolve(token);

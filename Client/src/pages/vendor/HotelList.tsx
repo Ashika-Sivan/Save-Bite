@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import {
-    ArrowLeft,
   Building2,
   ChevronRight,
   Loader2,
@@ -57,18 +56,8 @@ const HotelList = () => {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f8f3] px-4 py-8">
+    <main className="flex-1 p-5 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <button
-            type="button"
-            onClick={() =>
-              navigate("/vendor/dashboard")
-            }
-            className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-green-700 transition hover:text-green-800 hover:underline"
-          >
-            <ArrowLeft size={18} />
-            Back to Dashboard
-        </button>
         <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">

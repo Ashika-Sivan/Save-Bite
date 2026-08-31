@@ -7,11 +7,7 @@ import { IOtpService } from "../interfaces/service/auth/IOtpService";
 class OtpController {
   constructor(private _otpService: IOtpService) {}
 
-  sendOtp = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  sendOtp = async ( req: Request, res: Response,next: NextFunction): Promise<void> => {
     try {
       const { email } = req.body;
 
@@ -23,11 +19,7 @@ class OtpController {
     }
   };
 
-  verifyOtp = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  verifyOtp = async ( req: Request, res: Response,next: NextFunction ): Promise<void> => {
     try {
       await this._otpService.verifyOtp(req.body);
 

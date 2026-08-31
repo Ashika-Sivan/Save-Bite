@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { getMe, refreshAccessToken } from "../services/auth.service";
 import { setAccessToken, setCredentials } from "../redux/authSlice";
@@ -7,10 +7,10 @@ interface Props {
     children: React.ReactNode;//here we are wrap inside the component
 }
 
-
 export default function AuthInitializer({ children }: Props) {
     console.log("AuthInitializer running");
     const dispatch = useDispatch();//to getting the redux dispatchh funtion
+    const [isInitializing, setIsInitializing] = useState(true);
 
     //which run only once when the app star
     useEffect(() => {
@@ -26,16 +26,24 @@ export default function AuthInitializer({ children }: Props) {
                         accessToken,
                     })
                 )
-
             } catch (_error) {
                 console.log('no active session')
-
+            } finally {
+                setIsInitializing(false);
             }
-
         }
         initialAuth();
 
     }, [dispatch])
+
+    if (isInitializing) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#f7f8f3]">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-700 border-t-transparent"></div>
+            </div>
+        );
+    }
+
     return <>{children}</>
 }
 

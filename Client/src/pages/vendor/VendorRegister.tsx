@@ -22,6 +22,7 @@ const steps = [
 import { registerVendor } from "../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../../constants/appRoutes";
+import LocationPicker from "../../components/vendor/LocationPicker";
 
 
 export default function VendorRegister() {
@@ -69,42 +70,15 @@ export default function VendorRegister() {
     });
   };
 
-  const handleCurrentLocation = () => {
-    console.log("Function called");
-
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
-    console.log("Geolocation available");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log("Location success:", position);
-
-        setForm((previous) => ({
-          ...previous,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }));
-
-        alert("Location selected successfully");
-      },
-      (error) => {
-        console.log("Location error:", error);
-
-        if (error.code === error.PERMISSION_DENIED) {
-          alert("Please allow location permission");
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          alert("Your location is unavailable");
-        } else if (error.code === error.TIMEOUT) {
-          alert("Location request timed out");
-        } else {
-          alert("Unable to get your location");
-        }
-      }
-    );
+  const handleLocationSelect = (
+    selectedLatitude: number,
+    selectedLongitude: number
+  ) => {
+    setForm((previous) => ({
+      ...previous,
+      latitude: selectedLatitude,
+      longitude: selectedLongitude,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -279,33 +253,17 @@ export default function VendorRegister() {
                   />
                 </div>
 
-                <div className="md:col-span-2 rounded-2xl border border-dashed bg-green-50 p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                        <MapPin className="h-4 w-4 text-[#2E7C35]" />
-                        Business Location
-                      </p>
+                <div className="md:col-span-2">
+                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <MapPin className="h-4 w-4 text-[#2E7C35]" />
+                    Business Location
+                  </p>
 
-                      {form.latitude && form.longitude ? (
-                        <p className="mt-1 text-xs text-gray-500">
-                          Location selected successfully
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-xs text-gray-500">
-                          Current location not selected
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleCurrentLocation}
-                      className="rounded-full bg-[#2E7C35] px-5 py-2 text-sm font-semibold text-white hover:bg-[#25682c]"
-                    >
-                      Use Current Location
-                    </button>
-                  </div>
+                  <LocationPicker
+                    latitude={form.latitude === 0 ? null : form.latitude}
+                    longitude={form.longitude === 0 ? null : form.longitude}
+                    onLocationSelect={handleLocationSelect}
+                  />
                 </div>
               </div>
             </div>

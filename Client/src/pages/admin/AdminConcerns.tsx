@@ -6,6 +6,11 @@ import {
   type ConcernItem,
 } from "../../services/concern.service";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+  message?: string;
+}
 
 type FilterStatus = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
 
@@ -22,15 +27,19 @@ const AdminConcerns = () => {
       setIsLoading(true);
       const res = await getAdminConcerns(statusFilter);
       setConcerns(res.data?.concerns || []);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to load concerns");
+    } catch (err) {
+      const axiosError = err as AxiosError<ErrorResponse>;
+      toast.error(axiosError.response?.data?.message || "Failed to load concerns");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchConcerns();
+    const loadData = async () => {
+      await fetchConcerns();
+    };
+    loadData();
   }, [statusFilter]);
 
   const handleApprove = async () => {
@@ -42,8 +51,9 @@ const AdminConcerns = () => {
       setSelectedConcern(null);
       setAdminNote("");
       await fetchConcerns();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to approve concern");
+    } catch (err) {
+      const axiosError = err as AxiosError<ErrorResponse>;
+      toast.error(axiosError.response?.data?.message || "Failed to approve concern");
     } finally {
       setIsProcessing(false);
     }
@@ -58,8 +68,9 @@ const AdminConcerns = () => {
       setSelectedConcern(null);
       setAdminNote("");
       await fetchConcerns();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to reject concern");
+    } catch (err) {
+      const axiosError = err as AxiosError<ErrorResponse>;
+      toast.error(axiosError.response?.data?.message || "Failed to reject concern");
     } finally {
       setIsProcessing(false);
     }
@@ -120,7 +131,7 @@ const AdminConcerns = () => {
             </p>
           </div>
 
-          {/* Filter Tabs */}
+        
           <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-sm border border-gray-200">
             {(["ALL", "PENDING", "APPROVED", "REJECTED"] as FilterStatus[]).map((st) => (
               <button
@@ -139,7 +150,7 @@ const AdminConcerns = () => {
           </div>
         </div>
 
-        {/* Content */}
+   
         {isLoading ? (
           <div className="mt-12 flex justify-center">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-700" />
@@ -181,13 +192,13 @@ const AdminConcerns = () => {
                       </span>
                     </div>
 
-                    {/* Customer Info */}
+                   
                     <div className="mb-4">
                       <p className="text-sm font-semibold text-gray-900">{c.customerId?.name || "Unknown Customer"}</p>
                       <p className="text-xs text-gray-500">{c.customerId?.email}</p>
                     </div>
 
-                    {/* Photo Evidence */}
+                 
                     <div className="relative overflow-hidden rounded-2xl bg-gray-50 aspect-video">
                       <img
                         src={photoUrl}
@@ -209,7 +220,7 @@ const AdminConcerns = () => {
                       </a>
                     </div>
 
-                    {/* Timing Details */}
+                    
                     <div className="mt-4 space-y-2 rounded-xl bg-gray-50/80 p-3 text-[11px] text-gray-600 border border-gray-100">
                       <div className="flex justify-between items-start gap-2">
                         <span className="font-medium whitespace-nowrap">Capture Time:</span>
@@ -225,7 +236,7 @@ const AdminConcerns = () => {
                       </div>
                     </div>
 
-                    {/* Reason */}
+                
                     <div className="mt-5">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Concern Details</h4>
                       <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
@@ -233,7 +244,7 @@ const AdminConcerns = () => {
                       </p>
                     </div>
 
-                    {/* Admin Note (if any) */}
+                  
                     {c.adminNote && (
                       <div className="mt-3">
                         <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Admin Note</h4>
@@ -244,7 +255,7 @@ const AdminConcerns = () => {
                     )}
                   </div>
 
-                  {/* Actions */}
+             
                   {c.status === "pending" && (
                     <div className="p-4 pt-0">
                       <button

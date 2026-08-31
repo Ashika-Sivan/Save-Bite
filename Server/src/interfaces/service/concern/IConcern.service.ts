@@ -1,5 +1,5 @@
 import { IConcern } from "../../../interfaces/models/IConcern.model";
-import { RaiseConcernDTO, ReviewConcernDTO } from "../../../dtos/concern.dto";
+import { RaiseConcernDTO } from "../../../dtos/concern.dto";
 
 export interface IConcernService {
   raiseConcern(

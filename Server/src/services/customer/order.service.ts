@@ -395,7 +395,7 @@ export class OrderService implements IOrderService {
             throw new AppError(ORDER_MESSAGES.ORDER_NOT_ELIGIBLE_PICKUP, StatusCode.BAD_REQUEST);
         }
 
-        let updatedOrder: IOrder | null = null;
+        let updatedOrder: IOrder;
 
         if (this._walletRepository) {
             let session: ClientSession | null = null;
@@ -410,10 +410,11 @@ export class OrderService implements IOrderService {
                     throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
                 }
 
-                updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
-                if (!updatedOrder) {
+                const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
+                if (!result) {
                     throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
                 }
+                updatedOrder = result;
 
                 const wallet = await this._walletRepository.getOrCreateWallet(order.vendorId, session);
                 const vendorAmount = order.vendorAmount;
@@ -436,17 +437,20 @@ export class OrderService implements IOrderService {
 
                 await session.commitTransaction();
                 session.endSession();
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (session) {
                     if (transactionStarted) {
                         try {
                             await session.abortTransaction();
-                        } catch (_) {}
+                        } catch {
+                            // ignore
+                        }
                     }
                     session.endSession();
                 }
 
-                const isReplicaSetError = err?.message?.includes("replica set") || err?.message?.includes("Transaction numbers");
+                const errMessage = err instanceof Error ? err.message : String(err);
+                const isReplicaSetError = errMessage.includes("replica set") || errMessage.includes("Transaction numbers");
                 if (isReplicaSetError) {
                     return await this.executeSettlementWithoutTransaction(order);
                 }
@@ -454,10 +458,11 @@ export class OrderService implements IOrderService {
                 throw err;
             }
         } else {
-            updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
-            if (!updatedOrder) {
+            const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
+            if (!result) {
                 throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
             }
+            updatedOrder = result;
         }
 
         return {

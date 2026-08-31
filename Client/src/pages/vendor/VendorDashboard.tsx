@@ -1,41 +1,38 @@
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import {
-  LayoutDashboard,
-  Utensils,
   ShoppingBag,
   Wallet,
   User,
-  LogOut,
   Plus,
   Clock3,
   IndianRupee,
   Star,
+  ChevronDown,
 } from "lucide-react";
-import { logout } from "../../services/auth.service";
 import { getVendorOrders, type Order } from "../../services/order.service";
 import { getVendorWalletSummary, type WalletData } from "../../services/wallet.service";
-import { clearCredentials } from "../../redux/authSlice";
-import { clearCart } from "../../redux/cartSlice";
-import type { AppDispatch } from "../../redux/store";
 import { APP_ROUTES } from "../../constants/appRoutes";
+import { getVendorHotels } from "../../services/hotel.service";
+import type { Hotel } from "../../types/hotel.types";
 
 export default function VendorDashboard() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [ordersRes, walletRes] = await Promise.all([
+        const [ordersRes, walletRes, hotelsRes] = await Promise.all([
           getVendorOrders().catch(() => null),
           getVendorWalletSummary().catch(() => null),
+          getVendorHotels().catch(() => null),
         ]);
 
         if (ordersRes?.success && Array.isArray(ordersRes.data)) {
@@ -43,6 +40,10 @@ export default function VendorDashboard() {
         }
         if (walletRes?.success && walletRes.data?.wallet) {
           setWallet(walletRes.data.wallet);
+        }
+        if (hotelsRes?.success && Array.isArray(hotelsRes.data) && hotelsRes.data.length > 0) {
+          setHotels(hotelsRes.data);
+          setSelectedHotelId(hotelsRes.data[0]._id);
         }
       } catch (err) {
         console.error("Dashboard fetch error:", err);
@@ -54,260 +55,276 @@ export default function VendorDashboard() {
     loadDashboardData();
   }, []);
 
-  const handleLogout = () => {
-    toast((t) => (
-      <div>
-        <p className="font-medium text-gray-900">
-          Are you sure you want to logout?
-        </p>
-
-        <div className="mt-3 flex justify-end gap-2">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-200"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await logout();
-                dispatch(clearCredentials());
-                dispatch(clearCart());
-                toast.success("Logged out successfully");
-                navigate("/login", { replace: true });
-              } catch (error) {
-                console.error("Logout failed:", error);
-                toast.error("Failed to logout");
-              }
-            }}
-            className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-700"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    ));
-  };
-
   return (
-    <div className="min-h-screen bg-[#faf7ef] p-4 md:p-6">
-      <div className="mx-auto flex min-h-[95vh] max-w-7xl flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-5 md:px-8">
-          <div
-            className="flex cursor-pointer items-center gap-3"
-            onClick={() => navigate("/")}
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-5 md:px-8">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Vendor Dashboard
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your hotels, menus, and orders.
+          </p>
+        </div>
+
+        <div className="relative text-right flex items-center gap-4">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2 hover:bg-gray-100 transition border border-gray-200"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-700 text-white">
-              🍃
-            </div>
-
-            <h1 className="text-2xl font-bold text-green-700">SaveBite</h1>
-          </div>
-
-          <div className="text-right">
-            <p className="font-semibold text-gray-800">Green Leaf Restaurant</p>
-            <span className="text-sm font-medium text-green-700">Approved</span>
-          </div>
-        </header>
-
-        <div className="flex flex-1 flex-col md:flex-row">
-          {/* Sidebar */}
-          <aside className="border-b border-gray-200 bg-gray-50 p-4 md:w-64 md:border-b-0 md:border-r">
-            <nav className="space-y-2">
-              <button className="flex w-full items-center gap-3 rounded-xl bg-green-700 px-4 py-3 text-left font-medium text-white">
-                <LayoutDashboard size={20} />
-                Dashboard
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/hotels")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
-              >
-                <Utensils size={20} />
-                Hotel List
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/orders")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
-              >
-                <ShoppingBag size={20} />
-                Orders
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/wallet")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
-              >
-                <Wallet size={20} />
-                Wallet
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/profile")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-700"
-              >
-                <User size={20} />
-                Profile
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-red-500 transition hover:bg-red-50"
-              >
-                <LogOut size={20} />
-                Logout
-              </button>
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6 md:p-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">
-                Welcome back 👋
-              </h2>
-
-              <p className="mt-2 text-gray-500">
-                Here is a quick overview of your business.
+            <div className="text-left hidden sm:block">
+              <p className="font-semibold text-gray-800">
+                {hotels.find((h) => h._id === selectedHotelId)?.hotelName || "Loading..."}
               </p>
+              <span className="text-sm font-medium text-green-700">Approved</span>
             </div>
+            <ChevronDown size={20} className="text-gray-500" />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-10">
+              <div className="p-2">
+                {hotels.map((hotel) => (
+                  <button
+                    key={hotel._id}
+                    onClick={() => {
+                      setSelectedHotelId(hotel._id);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full rounded-lg px-4 py-2 text-left text-sm transition ${
+                      selectedHotelId === hotel._id
+                        ? "bg-green-50 text-green-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {hotel.hotelName}
+                  </button>
+                ))}
+                {hotels.length === 0 && (
+                  <p className="px-4 py-2 text-sm text-gray-500">No hotels found</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
 
-            {/* Summary Cards */}
-            {(() => {
-              const isToday = (d?: string) => d && new Date(d).toDateString() === new Date().toDateString();
-              const todayOrders = orders.filter((o) => isToday(o.createdAt));
-              const todayNetRevenue = todayOrders
-                .filter((o) => o.orderStatus === "collected")
-                .reduce((sum, o) => sum + o.totalAmount * 0.9, 0);
+      <main className="flex-1 p-5 md:p-8">
+        <div>
+          <h3 className="text-3xl font-bold text-gray-900">
+            Welcome back 👋
+          </h3>
 
-              return (
-                <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                      <ShoppingBag size={22} />
-                    </div>
-                    <p className="mt-4 text-sm text-gray-500">Today&apos;s Orders</p>
-                    <h3 className="mt-1 text-3xl font-bold text-gray-900">{loading ? "..." : todayOrders.length}</h3>
+          <p className="mt-2 text-gray-500">
+            Here is a quick overview of your business.
+          </p>
+        </div>
+
+        {/* Summary Cards */}
+        {(() => {
+          const isToday = (d?: string) => d && new Date(d).toDateString() === new Date().toDateString();
+          const filteredOrders = selectedHotelId
+            ? orders.filter((o) => o.hotelId === selectedHotelId)
+            : orders;
+          
+          const todayOrders = filteredOrders.filter((o) => isToday(o.createdAt));
+          const todayNetRevenue = todayOrders
+            .filter((o) => o.orderStatus === "collected")
+            .reduce((sum, o) => sum + o.totalAmount * 0.9, 0);
+
+          return (
+            <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                    <ShoppingBag size={22} />
                   </div>
+                  <span className="text-sm font-medium text-green-700">Orders</span>
+                </div>
+                <p className="mt-4 text-sm text-gray-500">Today&apos;s Orders</p>
+                <h3 className="mt-1 text-3xl font-bold text-gray-900">{loading ? "..." : todayOrders.length}</h3>
+              </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                      <IndianRupee size={22} />
-                    </div>
-                    <p className="mt-4 text-sm text-gray-500">Today&apos;s Revenue (90%)</p>
-                    <h3 className="mt-1 text-3xl font-bold text-gray-900">
-                      {loading ? "..." : `₹${todayNetRevenue.toFixed(2)}`}
-                    </h3>
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                    <IndianRupee size={22} />
                   </div>
+                  <span className="text-sm font-medium text-green-700">Revenue</span>
+                </div>
+                <p className="mt-4 text-sm text-gray-500">Today&apos;s Revenue (90%)</p>
+                <h3 className="mt-1 text-3xl font-bold text-gray-900">
+                  {loading ? "..." : `₹${todayNetRevenue.toFixed(2)}`}
+                </h3>
+              </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm cursor-pointer hover:border-green-500 transition" onClick={() => navigate(APP_ROUTES.VENDOR.WALLET)}>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                      <Wallet size={22} />
-                    </div>
-                    <p className="mt-4 text-sm text-gray-500">Wallet Balance</p>
-                    <h3 className="mt-1 text-3xl font-bold text-gray-900">
-                      {loading ? "..." : `₹${wallet?.balance?.toFixed(2) || "0.00"}`}
-                    </h3>
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm cursor-pointer hover:border-green-500 transition" onClick={() => navigate(APP_ROUTES.VENDOR.WALLET)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <Wallet size={22} />
                   </div>
+                  <span className="text-sm font-medium text-emerald-700">Balance</span>
+                </div>
+                <p className="mt-4 text-sm text-gray-500">Wallet Balance</p>
+                <h3 className="mt-1 text-3xl font-bold text-gray-900">
+                  {loading ? "..." : `₹${wallet?.balance?.toFixed(2) || "0.00"}`}
+                </h3>
+              </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                      <Star size={22} />
-                    </div>
-                    <p className="mt-4 text-sm text-gray-500">Partner Status</p>
-                    <h3 className="mt-1 text-2xl font-bold text-green-700">Approved</h3>
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                    <Star size={22} />
                   </div>
-                </section>
-              );
-            })()}
-
-            {/* Quick Actions */}
-            <section className="mt-10">
-              <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <button
-                  onClick={() => navigate("/vendor/menu/add")}
-                  className="flex items-center gap-4 rounded-2xl border border-gray-200 p-5 text-left transition hover:border-green-600 hover:bg-green-50"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
-                    <Plus size={24} />
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      Add Menu Item
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Add leftover food for sale.
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate("/vendor/orders")}
-                  className="flex items-center gap-4 rounded-2xl border border-gray-200 p-5 text-left transition hover:border-green-600 hover:bg-green-50"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
-                    <Clock3 size={24} />
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      View Orders
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Check new and pending orders.
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate("/vendor/profile")}
-                  className="flex items-center gap-4 rounded-2xl border border-gray-200 p-5 text-left transition hover:border-green-600 hover:bg-green-50"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
-                    <User size={24} />
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      Business Profile
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Update your business details.
-                    </p>
-                  </div>
-                </button>
+                  <span className="text-sm font-medium text-green-700">Status</span>
+                </div>
+                <p className="mt-4 text-sm text-gray-500">Partner Status</p>
+                <h3 className="mt-1 text-2xl font-bold text-green-700">Approved</h3>
               </div>
             </section>
+          );
+        })()}
 
-            {/* Empty Orders Section */}
-            <section className="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center">
-              <ShoppingBag className="mx-auto text-gray-300" size={48} />
+        {/* Quick Actions */}
+        <section className="mt-10">
+          <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
 
-              <h3 className="mt-4 text-lg font-semibold text-gray-800">
-                No orders yet
-              </h3>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <button
+              onClick={() => navigate("/vendor/menu/add")}
+              className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-green-600 hover:bg-green-50"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
+                <Plus size={24} />
+              </div>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Your recent orders will appear here.
-              </p>
-            </section>
-          </main>
-        </div>
+              <div>
+                <h4 className="font-semibold text-gray-900">
+                  Add Menu Item
+                </h4>
+                <p className="mt-1 text-sm text-gray-500">
+                  Add leftover food for sale.
+                </p>
+              </div>
+            </button>
 
-        {/* Footer */}
-        <footer className="border-t border-gray-200 bg-gray-50 px-6 py-5 text-center text-sm text-gray-500 md:px-8">
-          © 2026 <span className="font-semibold text-green-700">SaveBite</span>.
-          All rights reserved.
-        </footer>
-      </div>
+            <button
+              onClick={() => navigate("/vendor/orders")}
+              className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-green-600 hover:bg-green-50"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
+                <Clock3 size={24} />
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">
+                  View Orders
+                </h4>
+                <p className="mt-1 text-sm text-gray-500">
+                  Check new and pending orders.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigate("/vendor/profile")}
+              className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-green-600 hover:bg-green-50"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-700 text-white">
+                <User size={24} />
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900">
+                  Business Profile
+                </h4>
+                <p className="mt-1 text-sm text-gray-500">
+                  Update your business details.
+                </p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* Recent Orders Section */}
+        <section className="mt-10">
+          <h3 className="text-xl font-bold text-gray-900 mb-5">Recent Orders</h3>
+          
+          {(() => {
+            const filteredOrders = selectedHotelId
+              ? orders.filter((o) => o.hotelId === selectedHotelId)
+              : orders;
+            
+            if (filteredOrders.length === 0) {
+              return (
+                <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                  <ShoppingBag className="mx-auto text-gray-300" size={48} />
+                  <h3 className="mt-4 text-lg font-semibold text-gray-800">
+                    No orders yet
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Your recent orders for this location will appear here.
+                  </p>
+                </div>
+              );
+            }
+
+            // Show up to 5 most recent orders
+            const recentOrders = [...filteredOrders]
+              .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+              .slice(0, 5);
+
+            return (
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <table className="w-full text-left text-sm text-gray-600">
+                  <thead className="bg-gray-50 text-gray-700 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">Order ID</th>
+                      <th className="px-6 py-4 font-semibold">Date</th>
+                      <th className="px-6 py-4 font-semibold">Items</th>
+                      <th className="px-6 py-4 font-semibold">Amount</th>
+                      <th className="px-6 py-4 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {recentOrders.map((order) => (
+                      <tr key={order.id} className="hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          #{order.id.slice(-6).toUpperCase()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4">
+                          {order.items.map(i => i.itemName).join(", ")}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
+                          ₹{order.totalAmount.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            order.orderStatus === 'collected' ? 'bg-green-100 text-green-700' :
+                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {order.orderStatus.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-gray-50 px-6 py-5 text-center text-sm text-gray-500">
+        © 2026 <span className="font-semibold text-green-700">SaveBite</span>.
+        All rights reserved.
+      </footer>
     </div>
   );
-};
+}

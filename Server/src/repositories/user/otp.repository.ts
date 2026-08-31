@@ -1,4 +1,5 @@
 import { RedisClientType } from "@redis/client";
+export const OTP_EXPIRY_SECONDS = Number(process.env.OTP_EXPIRY_SECONDS);
 //get otp
 //save otp
 //delete otp
@@ -15,7 +16,7 @@ class OtpRepository{
     }
     async storeOtp(email:string,otp:string){//set
         await this._redisClient.set(`otp:${email}`,otp,{//storing the data in a key value pair
-            EX:60//5 minutes.after 5 min redis automatically remove otp
+             EX:OTP_EXPIRY_SECONDS //5 minutes.after 5 min redis automatically remove otp
         })
     }
     async getOtp(email:string){

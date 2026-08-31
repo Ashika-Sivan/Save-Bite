@@ -14,17 +14,25 @@ const TABS: { key: StatusTab; label: string }[] = [
   { key: "blocked", label: "Blocked" },
 ];
 
-const LIMIT = 7;
+const LIMIT = 2;
 
 const UserList = () => {
   const [users, setUsers] = useState<UserDTO[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tab, setTab] = useState<StatusTab>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -33,7 +41,7 @@ const UserList = () => {
       const result = await getAllUsers({
         page,
         limit: LIMIT,
-        search: search.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         status: tab === "all" ? undefined : tab,
       });
       setUsers(result.items);
@@ -44,10 +52,10 @@ const UserList = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, tab, search]);
+  }, [page, tab, debouncedSearch]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  
     fetchUsers();
   }, [fetchUsers]);
 

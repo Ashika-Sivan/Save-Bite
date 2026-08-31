@@ -27,6 +27,7 @@ export const APP_ROUTES = {
     DASHBOARD: "/vendor/dashboard",
     HOTELS: "/vendor/hotels",
     ADD_HOTEL: "/vendor/hotels/add",
+    HOTEL_BY_ID: (hotelId: string) => `/vendor/hotels/${hotelId}`,
     HOTEL_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/menu`,
     ORDERS: "/vendor/orders",
     WALLET: "/vendor/wallet",

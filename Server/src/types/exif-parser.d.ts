@@ -3,7 +3,7 @@ declare module "exif-parser" {
     DateTimeOriginal?: number;
     CreateDate?: number;
     ModifyDate?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface ExifResult {

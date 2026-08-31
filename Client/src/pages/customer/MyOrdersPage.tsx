@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { getMyOrders, type Order } from "../../services/order.service";
 import { raiseOrderConcern } from "../../services/concern.service";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+
+interface ErrorResponse {
+    message?: string;
+}
 
 type TabType = "active" | "previous";
 
@@ -11,7 +16,7 @@ const MyOrdersPage = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [activeTab, setActiveTab] = useState<TabType>("active");
 
-    // Modal state for Raise Concern
+    //Raise Concern
     const [selectedOrderForConcern, setSelectedOrderForConcern] = useState<Order | null>(null);
     const [concernReason, setConcernReason] = useState("");
     const [concernPhoto, setConcernPhoto] = useState<File | null>(null);
@@ -32,7 +37,10 @@ const MyOrdersPage = () => {
     };
 
     useEffect(() => {
-        void fetchOrders();
+        const loadOrders = async () => {
+            await fetchOrders();
+        };
+        loadOrders();
     }, []);
 
     const activeOrders = orders.filter(
@@ -166,8 +174,9 @@ const MyOrdersPage = () => {
             setConcernPhoto(null);
             setPhotoPreviewUrl(null);
             await fetchOrders();
-        } catch (err: any) {
-            const msg = err.response?.data?.message || "Failed to submit concern";
+        } catch (err) {
+            const axiosError = err as AxiosError<ErrorResponse>;
+            const msg = axiosError.response?.data?.message || "Failed to submit concern";
             toast.error(msg);
         } finally {
             setIsSubmittingConcern(false);
@@ -206,11 +215,11 @@ const MyOrdersPage = () => {
     return (
         <div className="min-h-screen bg-[#faf7ef] px-4 py-10 md:px-8">
             <div className="mx-auto max-w-4xl">
-                {/* Header Title */}
+            
                 <h1 className="font-serif text-3xl font-bold text-gray-900">My orders</h1>
                 <p className="mt-1 text-sm text-gray-500">Track active pickups, review past orders, or raise concerns.</p>
 
-                {/* Navigation Tabs */}
+              
                 <div className="mt-6 flex items-center gap-3">
                     <button
                         type="button"
@@ -236,7 +245,7 @@ const MyOrdersPage = () => {
                     </button>
                 </div>
 
-                {/* Orders List */}
+              
                 <div className="mt-8 space-y-6">
                     {currentOrders.length === 0 ? (
                         <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">

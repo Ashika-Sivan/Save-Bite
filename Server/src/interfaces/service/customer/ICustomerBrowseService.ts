@@ -4,7 +4,8 @@ export interface ILiveHotelBrowseQuery{
     page?:number;
     limit?:number;
     latitude?:number;
-    longitude?:number
+    longitude?:number;
+    search?:string;
 }
 
 export interface ICustomerBrowseService{

@@ -1,3 +1,4 @@
+import { UpdateQuery } from "mongoose";
 import { Concern } from "../../models/concern/concern.model";
 import { IConcern } from "../../interfaces/models/IConcern.model";
 import { IConcernRepository } from "../../interfaces/repository/IConcernRepository";
@@ -27,7 +28,7 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("orderId");
   }
 
-  async findAll(filter: any = {}): Promise<IConcern[]> {
+  async findAll(filter: Record<string, unknown> = {}): Promise<IConcern[]> {
     return await Concern.find(filter)
       .sort({ createdAt: -1 })
       .populate("customerId", "name email phone")
@@ -35,13 +36,8 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("orderId");
   }
 
-  async updateConcernStatus(
-    concernId: string,
-    status: string,
-    adminNote?: string,
-    resolvedAt?: Date
-  ): Promise<IConcern | null> {
-    const updateData: any = { status };
+  async updateConcernStatus(concernId: string,status: string,adminNote?: string, resolvedAt?: Date ): Promise<IConcern | null> {
+    const updateData: UpdateQuery<IConcern> = { status };
     if (adminNote !== undefined) updateData.adminNote = adminNote;
     if (resolvedAt) updateData.resolvedAt = resolvedAt;
 
@@ -50,4 +46,7 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("vendorId", "name email")
       .populate("orderId");
   }
+  
+
+  
 }

@@ -12,6 +12,8 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
     async findByEmail(email:string):Promise<IUser|null>{
         return await User.findOne({email}).select("+password")
         
+
+        
     }
     async updateAuthenticationStatus(email: string, status: boolean): Promise<IUser | null> {
         return await User.findOneAndUpdate(
@@ -34,6 +36,8 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
             }
         )
     }
+
+
 
     
 

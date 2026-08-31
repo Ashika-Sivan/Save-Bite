@@ -2,7 +2,6 @@ import {
     useEffect,
     useState,
     type ChangeEvent,
-    type FormEvent,
 } from "react";
 
 import toast from "react-hot-toast";
@@ -103,10 +102,7 @@ const MenuItemForm = ({
         );
     };
 
-    const handleSubmit = async (
-        event: FormEvent<HTMLFormElement>
-    ) => {
-        event.preventDefault();
+    const handleSubmit = async () => {
 
         const trimmedItemName =
             itemName.trim();
@@ -196,10 +192,7 @@ const MenuItemForm = ({
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-        >
+        <div className="space-y-5">
             <div>
                 <label
                     htmlFor="itemName"
@@ -373,7 +366,8 @@ const MenuItemForm = ({
             </div>
 
             <button
-                type="submit"
+                type="button"
+                onClick={() => handleSubmit()}
                 disabled={isSubmitting}
                 className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -381,7 +375,7 @@ const MenuItemForm = ({
                     ? "Adding item..."
                     : "Add food item"}
             </button>
-        </form>
+        </div>
     );
 };
 

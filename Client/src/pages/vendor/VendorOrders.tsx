@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import {
-  LayoutDashboard,
-  Utensils,
-  ShoppingBag,
-  Wallet,
-  User,
-  LogOut,
   Clock,
   CheckCircle2,
   XCircle,
@@ -18,25 +10,26 @@ import {
   Calendar,
   AlertTriangle,
   Sparkles,
+  ChevronDown,
+  ShoppingBag,
 } from "lucide-react";
 import { getVendorOrders, redeemPickupCode, type Order } from "../../services/order.service";
-import { logout } from "../../services/auth.service";
-import { clearCredentials } from "../../redux/authSlice";
-import { clearCart } from "../../redux/cartSlice";
-import type { AppDispatch } from "../../redux/store";
-import { APP_ROUTES } from "../../constants/appRoutes";
+import { getVendorHotels } from "../../services/hotel.service";
+import type { Hotel } from "../../types/hotel.types";
 
 type StatusFilter = "ALL" | "PLACED" | "COLLECTED" | "EXPIRED_CANCELLED";
 
 export default function VendorOrders() {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   // Modal State for Pickup Code Verification
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -64,15 +57,24 @@ export default function VendorOrders() {
 
   useEffect(() => {
     let isMounted = true;
-    getVendorOrders()
-      .then((response) => {
-        if (isMounted && response.success && Array.isArray(response.data)) {
-          setOrders(response.data);
+    Promise.all([
+      getVendorOrders().catch(() => null),
+      getVendorHotels().catch(() => null)
+    ])
+      .then(([ordersRes, hotelsRes]) => {
+        if (isMounted) {
+          if (ordersRes?.success && Array.isArray(ordersRes?.data)) {
+            setOrders(ordersRes.data);
+          }
+          if (hotelsRes?.success && Array.isArray(hotelsRes?.data) && hotelsRes.data.length > 0) {
+            setHotels(hotelsRes.data);
+            setSelectedHotelId(hotelsRes.data[0]._id);
+          }
         }
       })
       .catch((error: unknown) => {
         if (isMounted) {
-          console.error("Failed to fetch vendor orders:", error);
+          console.error("Failed to fetch data:", error);
           const err = error as { response?: { data?: { message?: string } } };
           toast.error(err?.response?.data?.message || "Failed to load orders");
         }
@@ -86,39 +88,6 @@ export default function VendorOrders() {
       isMounted = false;
     };
   }, []);
-
-  const handleLogout = () => {
-    toast((t) => (
-      <div>
-        <p className="font-medium text-gray-900">Are you sure you want to logout?</p>
-        <div className="mt-3 flex justify-end gap-2">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id);
-              try {
-                await logout();
-                dispatch(clearCredentials());
-                dispatch(clearCart());
-                toast.success("Logged out successfully");
-                navigate("/login", { replace: true });
-              } catch (_error) {
-                toast.error("Failed to logout");
-              }
-            }}
-            className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    ));
-  };
 
   const handleOpenRedeemModal = (order: Order) => {
     setSelectedOrder(order);
@@ -146,7 +115,6 @@ export default function VendorOrders() {
       const res = await redeemPickupCode(pickupCodeInput.trim());
       if (res.success && res.data) {
         toast.success("Pickup code verified! Order marked as collected 🎉");
-        // Update local orders list state
         setOrders((prev) =>
           prev.map((o) => (o.id === res.data.id ? { ...o, ...res.data } : o))
         );
@@ -162,9 +130,8 @@ export default function VendorOrders() {
     }
   };
 
-  // Filter & Search Logic
   const filteredOrders = orders.filter((order) => {
-    // Status Filter
+    if (selectedHotelId && order.hotelId !== selectedHotelId) return false;
     if (activeFilter === "PLACED" && order.orderStatus !== "placed") return false;
     if (activeFilter === "COLLECTED" && order.orderStatus !== "collected") return false;
     if (
@@ -173,145 +140,107 @@ export default function VendorOrders() {
       order.orderStatus !== "cancelled"
     )
       return false;
-
-    // Search Query
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       const matchId = order.id.toLowerCase().includes(q);
       const matchHotel = order.hotelName?.toLowerCase().includes(q);
-      const matchItems = order.items.some((i) => i.itemName.toLowerCase().includes(q));
+      const matchItems = order.items.some((i: { itemName: string }) => i.itemName.toLowerCase().includes(q));
       const matchCode = order.pickupCode?.toLowerCase().includes(q);
       return matchId || matchHotel || matchItems || matchCode;
     }
-
     return true;
   });
 
-  const pendingCount = orders.filter((o) => o.orderStatus === "placed").length;
-  const collectedCount = orders.filter((o) => o.orderStatus === "collected").length;
+  const hotelOrders = selectedHotelId ? orders.filter((o) => o.hotelId === selectedHotelId) : orders;
+  const pendingCount = hotelOrders.filter((o) => o.orderStatus === "placed").length;
+  const collectedCount = hotelOrders.filter((o) => o.orderStatus === "collected").length;
 
   return (
-    <div className="min-h-screen bg-[#faf7ef] p-4 md:p-6">
-      <div className="mx-auto flex min-h-[95vh] max-w-7xl flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-5 md:px-8">
-          <div
-            className="flex cursor-pointer items-center gap-3"
-            onClick={() => navigate("/")}
+    <main className="flex-1 p-5 md:p-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-1">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Customer Orders 📦
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage incoming food orders and verify customer pickup codes upon handover.
+            </p>
+          </div>
+
+          {/* Direct Verify Pickup Code Trigger */}
+          <button
+            onClick={() => {
+              setSelectedOrder(null);
+              setPickupCodeInput("");
+              setVerificationError(null);
+              // Open modal directly for manual code input
+              setSelectedOrder({ id: "manual" } as unknown as Order);
+            }}
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-amber-600 transition"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-700 text-white shadow-md">
-              🍃
-            </div>
-            <h1 className="text-2xl font-bold text-green-700">SaveBite</h1>
-          </div>
+            <KeyRound size={18} />
+            Verify Pickup Code
+          </button>
+        </div>
 
-          <div className="flex items-center gap-4">
+        {/* Action Controls from old header */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => fetchOrders(true)}
+            disabled={refreshing}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            Refresh
+          </button>
+          <div className="relative text-right z-10">
             <button
-              onClick={() => fetchOrders(true)}
-              disabled={refreshing}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 hover:bg-gray-50 transition border border-gray-200 shadow-sm"
             >
-              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-              Refresh
-            </button>
-            <div className="text-right hidden sm:block">
-              <p className="font-semibold text-gray-800">Vendor Management</p>
-              <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                Approved Partner
-              </span>
-            </div>
-          </div>
-        </header>
-
-        <div className="flex flex-1 flex-col md:flex-row">
-          {/* Sidebar */}
-          <aside className="border-b border-gray-200 bg-gray-50 p-4 md:w-64 md:border-b-0 md:border-r">
-            <nav className="space-y-2">
-              <button
-                onClick={() => navigate(APP_ROUTES.VENDOR.DASHBOARD)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition"
-              >
-                <LayoutDashboard size={20} />
-                Dashboard
-              </button>
-
-              <button
-                onClick={() => navigate(APP_ROUTES.VENDOR.HOTELS)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition"
-              >
-                <Utensils size={20} />
-                Hotel List
-              </button>
-
-              <button className="flex w-full items-center gap-3 rounded-xl bg-green-700 px-4 py-3 text-left font-medium text-white shadow-sm">
-                <ShoppingBag size={20} />
-                Orders
-                {pendingCount > 0 && (
-                  <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-gray-900">
-                    {pendingCount}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/wallet")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition"
-              >
-                <Wallet size={20} />
-                Wallet
-              </button>
-
-              <button
-                onClick={() => navigate("/vendor/profile")}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition"
-              >
-                <User size={20} />
-                Profile
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-red-500 hover:bg-red-50 transition"
-              >
-                <LogOut size={20} />
-                Logout
-              </button>
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6 md:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Customer Orders 📦
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Manage incoming food orders and verify customer pickup codes upon handover.
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">
+                  {hotels.find((h) => h._id === selectedHotelId)?.hotelName || "Loading..."}
                 </p>
+                <span className="text-sm font-medium text-green-700">Approved</span>
               </div>
-
-              {/* Direct Verify Pickup Code Trigger */}
-              <button
-                onClick={() => {
-                  setSelectedOrder(null);
-                  setPickupCodeInput("");
-                  setVerificationError(null);
-                  // Open modal directly for manual code input
-                  setSelectedOrder({ id: "manual" } as unknown as Order);
-                }}
-                className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-amber-600 transition"
-              >
-                <KeyRound size={18} />
-                Verify Pickup Code
-              </button>
-            </div>
+              <ChevronDown size={20} className="text-gray-500" />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg">
+                <div className="p-2">
+                  {hotels.map((hotel) => (
+                    <button
+                      key={hotel._id}
+                      onClick={() => {
+                        setSelectedHotelId(hotel._id);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full rounded-lg px-4 py-2 text-left text-sm transition ${
+                        selectedHotelId === hotel._id
+                          ? "bg-green-50 text-green-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {hotel.hotelName}
+                    </button>
+                  ))}
+                  {hotels.length === 0 && (
+                    <p className="px-4 py-2 text-sm text-gray-500">No hotels found</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
             {/* Quick Stat Summary Cards */}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Orders</p>
-                <h4 className="mt-1 text-2xl font-bold text-gray-900">{orders.length}</h4>
+                <h4 className="mt-1 text-2xl font-bold text-gray-900">{hotelOrders.length}</h4>
               </div>
               <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Pending Pickups</p>
@@ -334,7 +263,7 @@ export default function VendorOrders() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  All ({orders.length})
+                  All ({hotelOrders.length})
                 </button>
                 <button
                   onClick={() => setActiveFilter("PLACED")}
@@ -539,8 +468,6 @@ export default function VendorOrders() {
                 ))}
               </div>
             )}
-          </main>
-        </div>
 
         {/* Pickup Code Verification Modal */}
         {selectedOrder && (
@@ -630,11 +557,6 @@ export default function VendorOrders() {
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="border-t border-gray-200 bg-gray-50 px-6 py-5 text-center text-sm text-gray-500 md:px-8">
-          © 2026 <span className="font-semibold text-green-700">SaveBite</span>. All rights reserved.
-        </footer>
-      </div>
-    </div>
+    </main>
   );
 }
