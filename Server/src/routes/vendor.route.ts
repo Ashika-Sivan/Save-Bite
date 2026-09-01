@@ -40,6 +40,8 @@ router.post(
 router.get(ROUTES.VENDOR.STATUS,authMiddleware.authenticate,authMiddleware.authorize("user", "vendor"),vendorController.getVendorStatus.bind(vendorController));
 // when vendor making reg req check:- has already applied, application pending, was it approved, rejected?
 
+router.get("/profile", authMiddleware.authenticate, authMiddleware.authorize("vendor"), vendorController.getVendorProfiles.bind(vendorController));
+
 router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.createMenu.bind(dailyMenuController))
 router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),upload.single('itemImage'),dailyMenuController.addMenuItem.bind(dailyMenuController))
 router.patch(ROUTES.VENDOR.GO_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.goLive.bind(dailyMenuController))

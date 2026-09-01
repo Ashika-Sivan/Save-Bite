@@ -59,6 +59,23 @@ export class VendorController {
         }
     }
 
+    async getVendorProfiles( req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const ownerId = req.user?.userId;
+            if (!ownerId) {
+                throw new AppError(
+                    AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
+                    StatusCode.UNAUTHORIZED
+                );
+            }
+
+            const profiles = await this._vendorService.getVendorProfiles(ownerId);
+            ResponseHelper.success(res, StatusCode.OK, "Vendor profiles fetched successfully", profiles);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async reapplyVendor(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         
         try {

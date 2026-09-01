@@ -69,4 +69,6 @@ export interface IOrderRepository {
     findById(orderId: string): Promise<IOrder | null>;
     updateOrderStatus(orderId: string, orderStatus: OrderStatus): Promise<IOrder | null>;
     findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]>;
+
+
 }

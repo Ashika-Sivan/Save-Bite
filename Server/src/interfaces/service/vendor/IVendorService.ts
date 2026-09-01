@@ -9,6 +9,7 @@ export interface IVendorService {
     ): Promise<IVendor>;
 
     getVendorStatus(ownerId: string): Promise<IVendorStatusResponseDTO>;
+    getVendorProfiles(ownerId: string): Promise<IVendor[]>;
 
     reapplyVendor(
         ownerId: string,

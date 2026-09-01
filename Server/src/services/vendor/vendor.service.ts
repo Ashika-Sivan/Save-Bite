@@ -125,6 +125,9 @@ export class VendorService implements IVendorService {
             vendor: vendor,
         };
     }
+    async getVendorProfiles(ownerId: string): Promise<IVendor[]> {
+        return await this.vendorRepository.findAllByOwnerId(ownerId);
+    }
 
     async reapplyVendor(
         ownerId: string,

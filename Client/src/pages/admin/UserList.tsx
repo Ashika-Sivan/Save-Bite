@@ -55,8 +55,10 @@ const UserList = () => {
   }, [page, tab, debouncedSearch]);
 
   useEffect(() => {
-  
-    fetchUsers();
+    const loadData = async () => {
+      await fetchUsers();
+    };
+    loadData();
   }, [fetchUsers]);
 
   const handleTabChange = (key: StatusTab) => {
@@ -112,12 +114,14 @@ const UserList = () => {
         </span>
       ),
     },
+
     {
       header: "Status",
       render: (user) => (
         <StatusBadge status={user.isActive ? "Active" : "Blocked"} />
       ),
     },
+
     {
       header: "",
       align: "right",

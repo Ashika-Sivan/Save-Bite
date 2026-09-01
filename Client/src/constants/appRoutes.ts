@@ -31,6 +31,7 @@ export const APP_ROUTES = {
     HOTEL_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/menu`,
     ORDERS: "/vendor/orders",
     WALLET: "/vendor/wallet",
+    PROFILE: "/vendor/profile",
   },
 
   ADMIN: {

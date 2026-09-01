@@ -15,3 +15,8 @@ export const reapplyVendor = async (formData: FormData) => {
     const response = await api.post(API_ROUTES.VENDOR.REAPPLY, formData);
     return response.data;
 };
+
+export const getVendorProfiles = async () => {
+    const response = await api.get(API_ROUTES.VENDOR.PROFILE);
+    return response.data;
+};

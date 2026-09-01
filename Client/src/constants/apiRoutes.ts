@@ -18,7 +18,10 @@ export const API_ROUTES = {
   VENDOR: {
     REGISTER: "/vendor/register",
     REAPPLY: "/vendor/reapply",
+    DASHBOARD: "/vendors/dashboard",
+    PROFILE: "/vendor/profile",
     STATUS: "/vendor/status",
+    WALLET: "/vendor/wallet",
     HOTELS: "/vendor/hotels",
     HOTEL_BY_ID: (hotelId: string) => `/vendor/hotels/${hotelId}`,
     GET_TODAY_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/daily-menu/today`,
@@ -29,7 +32,6 @@ export const API_ROUTES = {
     END_LIVE: (menuId: string) => `/vendor/daily-menus/${menuId}/end-live`,
     UPDATE_DAILY_MENU_ITEM: (menuId: string, itemId: string) => `/vendor/daily-menus/${menuId}/items/${itemId}`,
     USE_PREVIOUS_MENU:(menuId:string)=>`/vendor/daily-menus/${menuId}/use-previous-menu`,
-    WALLET: "/vendor/wallet",
   },
 
   CUSTOMER: {

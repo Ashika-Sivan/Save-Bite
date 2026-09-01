@@ -9,7 +9,7 @@ export interface IUser extends Document{
     isAuthenticated:boolean,
     isActive:boolean,
     isAdmin:boolean,
-    
+    totalOrder:number|0,
     role: "user" | "vendor" | "admin";
     createdAt:Date
 
@@ -57,10 +57,6 @@ const userSchema=new Schema<IUser>(
             enum:["user",'vendor','admin'],
             default:'user',
         },
-        failedAttempt:{
-            type:number,
-            default:true
-        }
     },
     {timestamps:true}
 

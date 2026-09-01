@@ -57,6 +57,11 @@ export class OrderService implements IOrderService {
         if (!menu.isLive) {
             throw new AppError("This menu is currently unavailable", StatusCode.BAD_REQUEST);
         }
+        //order per day
+        // const perDayOrder=await this._orderRepository.orderPerDay(customerId)
+        // if(perDayOrder>=2){
+        //     throw new AppError("you are allowed to order only 2 per day")
+        // }
 
         const now: Date = new Date();
         const foodAvailableTime: Date = new Date(menu.pickupWindow.startTime);
@@ -247,11 +252,19 @@ export class OrderService implements IOrderService {
     private mapOrderToResponse(order: IOrder): IOrderResponseDTO {
         const hotelObj = order.hotelId as unknown as { _id: Types.ObjectId; hotelName?: string };
         const hotelName = typeof hotelObj === "object" && hotelObj?.hotelName ? hotelObj.hotelName : "";
+        
+        const vendorObj = order.vendorId as unknown as any;
+        let vendorLocation;
+        if (vendorObj && typeof vendorObj === "object" && vendorObj.businessInfo?.location?.coordinates) {
+            const [lng, lat] = vendorObj.businessInfo.location.coordinates;
+            vendorLocation = { lat, lng };
+        }
 
         return {
             id:order._id.toString(),
             customerId:order.customerId.toString(),
-            vendorId:order.vendorId.toString(),
+            vendorId: (vendorObj?._id ?? order.vendorId).toString(),
+            vendorLocation,
             hotelId: (hotelObj?._id ?? order.hotelId).toString(),
             hotelName,
             menuId:order.menuId.toString(),

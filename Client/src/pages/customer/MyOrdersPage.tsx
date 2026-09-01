@@ -315,20 +315,32 @@ const MyOrdersPage = () => {
                                                     </span>
                                                 </div>
 
-                                                {isEligibleForConcern && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelectedOrderForConcern(order);
-                                                            setConcernReason("");
-                                                            setConcernPhoto(null);
-                                                            setPhotoPreviewUrl(null);
-                                                        }}
-                                                        className="mt-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 md:mt-0"
-                                                    >
-                                                        ⚠️ Raise Concern
-                                                    </button>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {order.vendorLocation && (
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/?api=1&query=${order.vendorLocation.lat},${order.vendorLocation.lng}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-1 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                                                        >
+                                                            <span>📍</span> Track Order
+                                                        </a>
+                                                    )}
+                                                    {isEligibleForConcern && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedOrderForConcern(order);
+                                                                setConcernReason("");
+                                                                setConcernPhoto(null);
+                                                                setPhotoPreviewUrl(null);
+                                                            }}
+                                                            className="rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                                                        >
+                                                            ⚠️ Raise Concern
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

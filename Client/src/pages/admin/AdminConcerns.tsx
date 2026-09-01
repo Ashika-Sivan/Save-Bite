@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getAdminConcerns,
   approveAdminConcern,
@@ -22,7 +22,7 @@ const AdminConcerns = () => {
   const [adminNote, setAdminNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchConcerns = async () => {
+  const fetchConcerns = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await getAdminConcerns(statusFilter);
@@ -33,14 +33,14 @@ const AdminConcerns = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     const loadData = async () => {
       await fetchConcerns();
     };
     loadData();
-  }, [statusFilter]);
+  }, [fetchConcerns]);
 
   const handleApprove = async () => {
     if (!selectedConcern) return;

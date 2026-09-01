@@ -24,6 +24,7 @@ import TodayMenu from "../pages/vendor/TodayMenu";
 import VendorOrders from "../pages/vendor/VendorOrders";
 import VendorWalletPage from "../pages/vendor/VendorWalletPage";
 import VendorHotelDetails from "../pages/vendor/VendorHotelDetails";
+import VendorProfile from "../pages/vendor/VendorProfile";
 import VendorRoute from "./VendorRoute";
 import VendorLayout from "../components/vendor/VendorLayout";
 
@@ -201,6 +202,7 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.VENDOR.HOTEL_MENU(":hotelId")} element={<TodayMenu />} />
                         <Route path={APP_ROUTES.VENDOR.ORDERS} element={<VendorOrders />} />
                         <Route path={APP_ROUTES.VENDOR.WALLET} element={<VendorWalletPage />} />
+                        <Route path={APP_ROUTES.VENDOR.PROFILE} element={<VendorProfile />} />
                     </Route>
                 </Route>
 

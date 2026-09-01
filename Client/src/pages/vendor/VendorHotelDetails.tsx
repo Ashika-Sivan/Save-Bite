@@ -185,6 +185,14 @@ const VendorHotelDetails = () => {
                         <p className="text-lg font-bold text-gray-900">{item.stockQuantity}</p>
                       </div>
                     </div>
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => navigate(`/vendor/hotels/${hotel._id}/menu`)}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg border border-green-700 py-2 text-sm font-semibold text-green-700 hover:bg-green-50 transition"
+                      >
+                        Edit Item
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

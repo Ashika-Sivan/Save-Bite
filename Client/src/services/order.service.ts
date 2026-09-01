@@ -29,6 +29,10 @@ export interface Order{
     id:string;
     customerId:string;
     vendorId:string;
+    vendorLocation?: {
+        lat: number;
+        lng: number;
+    };
     hotelId:string;
     hotelName?:string;
     menuId:string;
