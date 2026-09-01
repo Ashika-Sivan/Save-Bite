@@ -152,7 +152,7 @@ const AddHotel = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8f3] px-4 py-8">
+    <main className="flex-1 p-5 md:p-8">
       <div className="mx-auto max-w-4xl">
         <button
           type="button"

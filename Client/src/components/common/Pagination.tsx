@@ -27,7 +27,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const startItem = (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
 
-  // Generate page numbers array with smart ellipsis logic
+  
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5;

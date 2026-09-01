@@ -20,6 +20,7 @@ const LIMIT = 5;
 const VendorList = () => {
   const [vendors, setVendors] = useState<VendorDTO[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +28,13 @@ const VendorList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     let ignore = false;
@@ -38,7 +46,7 @@ const VendorList = () => {
         const result = await getAllVendors({
           page,
           limit: LIMIT,
-          search: search.trim() || undefined,
+          search: debouncedSearch.trim() || undefined,
           status: tab === "all" ? undefined : tab,
         });
         if (!ignore) {
@@ -61,7 +69,7 @@ const VendorList = () => {
     return () => {
       ignore = true;
     };
-  }, [page, tab, search]);
+  }, [page, tab, debouncedSearch]);
 
   const handleTabChange = (key: (typeof TABS)[number]["key"]) => {
     setTab(key);

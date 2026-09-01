@@ -187,13 +187,25 @@ const PaymentSuccessPage = () => {
                     Total paid: ₹{order.totalAmount}
                 </p>
 
-                <button
-                    type="button"
-                    onClick={() => navigate("/")}
-                    className="mt-7 rounded-full bg-green-700 px-7 py-3 font-semibold text-white hover:bg-green-800"
-                >
-                    Return home
-                </button>
+                <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+                    {order.vendorLocation && (
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${order.vendorLocation.lat},${order.vendorLocation.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 rounded-full bg-blue-50 px-7 py-3 font-semibold text-blue-700 hover:bg-blue-100"
+                        >
+                            <span>📍</span> Track Order
+                        </a>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="rounded-full bg-green-700 px-7 py-3 font-semibold text-white hover:bg-green-800"
+                    >
+                        Return home
+                    </button>
+                </div>
             </div>
         </div>
     );

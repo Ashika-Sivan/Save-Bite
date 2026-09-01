@@ -35,6 +35,8 @@ const hotelRepository=new HotelRepository()
 const dailyMenuRepository=new DailyMenuRepository()
 const passwordHasher = new BcryptPasswordHasher();
 const resetTokenService = new RedisPasswordResetTokenService();
+const orderRepository = new OrderRepository();
+const walletRepository = new WalletRepository();
 
 const authService = new AuthService(
   userRepository,
@@ -46,7 +48,7 @@ const authService = new AuthService(
 );
 const vendorService = new VendorService(vendorRepository)
 const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository)
-const adminService = new AdminService(vendorRepository, userRepository);
+const adminService = new AdminService(vendorRepository, userRepository, orderRepository);
 
 export const authController = new AuthController(authService);
 export const vendorController = new VendorController(vendorService);
@@ -61,8 +63,6 @@ export const dailyMenuController=new DailyMenuController(dailyMenuService)
 
 
 //order & wallet
-const orderRepository=new OrderRepository()
-const walletRepository=new WalletRepository()
 const walletService=new WalletService(walletRepository,vendorRepository)
 const orderService=new OrderService(orderRepository,dailyMenuRepository,vendorRepository,walletRepository)
 

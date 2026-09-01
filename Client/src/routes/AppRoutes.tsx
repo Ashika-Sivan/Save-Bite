@@ -8,6 +8,7 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 
 import Home from "../pages/Home";
+import NotFound from "../pages/NotFound";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
@@ -22,7 +23,10 @@ import HotelList from "../pages/vendor/HotelList";
 import TodayMenu from "../pages/vendor/TodayMenu";
 import VendorOrders from "../pages/vendor/VendorOrders";
 import VendorWalletPage from "../pages/vendor/VendorWalletPage";
+import VendorHotelDetails from "../pages/vendor/VendorHotelDetails";
+import VendorProfile from "../pages/vendor/VendorProfile";
 import VendorRoute from "./VendorRoute";
+import VendorLayout from "../components/vendor/VendorLayout";
 
 import AdminLogin from "../pages/admin/AdminLogin";
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -190,12 +194,16 @@ export default function AppRoutes() {
 
                 {/* APPROVED VENDOR ROUTES */}
                 <Route element={<VendorRoute />}>
-                    <Route path={APP_ROUTES.VENDOR.DASHBOARD} element={<VendorDashboard />} />
-                    <Route path={APP_ROUTES.VENDOR.HOTELS} element={<HotelList />} />
-                    <Route path={APP_ROUTES.VENDOR.ADD_HOTEL} element={<AddHotel />} />
-                    <Route path={APP_ROUTES.VENDOR.HOTEL_MENU(":hotelId")} element={<TodayMenu />} />
-                    <Route path={APP_ROUTES.VENDOR.ORDERS} element={<VendorOrders />} />
-                    <Route path={APP_ROUTES.VENDOR.WALLET} element={<VendorWalletPage />} />
+                    <Route element={<VendorLayout />}>
+                        <Route path={APP_ROUTES.VENDOR.DASHBOARD} element={<VendorDashboard />} />
+                        <Route path={APP_ROUTES.VENDOR.HOTELS} element={<HotelList />} />
+                        <Route path={APP_ROUTES.VENDOR.ADD_HOTEL} element={<AddHotel />} />
+                        <Route path={APP_ROUTES.VENDOR.HOTEL_BY_ID(":hotelId")} element={<VendorHotelDetails />} />
+                        <Route path={APP_ROUTES.VENDOR.HOTEL_MENU(":hotelId")} element={<TodayMenu />} />
+                        <Route path={APP_ROUTES.VENDOR.ORDERS} element={<VendorOrders />} />
+                        <Route path={APP_ROUTES.VENDOR.WALLET} element={<VendorWalletPage />} />
+                        <Route path={APP_ROUTES.VENDOR.PROFILE} element={<VendorProfile />} />
+                    </Route>
                 </Route>
 
                 {/* ADMIN PUBLIC ROUTES */}
@@ -213,6 +221,9 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.ADMIN.CONCERNS} element={<AdminConcerns />} />
                     </Route>
                 </Route>
+
+                {/* CATCH-ALL 404 ROUTE */}
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
     );

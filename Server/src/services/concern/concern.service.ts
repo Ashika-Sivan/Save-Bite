@@ -10,6 +10,7 @@ import { StatusCode } from "../../constants/statusCode";
 import { extractAndValidateExifTimestamp } from "../../utils/exifParser";
 import { uploadToS3 } from "../../utils/uploadToS3";
 import { getPresignedImageUrl } from "../../utils/getSignedUrl";
+import stripe from "../../config/stripe";
 
 export class ConcernService implements IConcernService {
   constructor(
@@ -17,10 +18,8 @@ export class ConcernService implements IConcernService {
     private _orderRepository: IOrderRepository
   ) {}
 
-  async raiseConcern(
-    data: RaiseConcernDTO,
-    file: Express.Multer.File
-  ): Promise<IConcern> {
+  async raiseConcern(data: RaiseConcernDTO, file: Express.Multer.File): Promise<IConcern> {
+    
     const { orderId, customerId, reason } = data;
 
     const order = await this._orderRepository.findById(orderId);
@@ -81,7 +80,7 @@ export class ConcernService implements IConcernService {
   }
 
   async getAllConcerns(filterStatus?: string): Promise<IConcern[]> {
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     if (filterStatus && filterStatus !== "ALL") {
       filter.status = filterStatus.toLowerCase();
     }
@@ -89,11 +88,12 @@ export class ConcernService implements IConcernService {
 
     return await Promise.all(
       concerns.map(async (c) => {
-        const doc: any = typeof (c as any).toObject === "function" ? (c as any).toObject() : c;
+        const cUnknown = c as unknown as { toObject?: () => IConcern; photoUrl?: string };
+        const doc = (typeof cUnknown.toObject === "function" ? cUnknown.toObject() : cUnknown) as IConcern & { photoUrl?: string };
         if (doc.photoUrl) {
           doc.photoUrl = await getPresignedImageUrl(doc.photoUrl);
         }
-        return doc;
+        return doc as IConcern;
       })
     );
   }
@@ -101,11 +101,12 @@ export class ConcernService implements IConcernService {
   async getConcernById(concernId: string): Promise<IConcern | null> {
     const concern = await this._concernRepository.findById(concernId);
     if (!concern) return null;
-    const doc: any = typeof (concern as any).toObject === "function" ? (concern as any).toObject() : concern;
+    const concernUnknown = concern as unknown as { toObject?: () => IConcern; photoUrl?: string };
+    const doc = (typeof concernUnknown.toObject === "function" ? concernUnknown.toObject() : concernUnknown) as IConcern & { photoUrl?: string };
     if (doc.photoUrl) {
       doc.photoUrl = await getPresignedImageUrl(doc.photoUrl);
     }
-    return doc;
+    return doc as IConcern;
   }
 
   async approveConcern(concernId: string, adminNote?: string): Promise<IConcern> {
@@ -116,6 +117,23 @@ export class ConcernService implements IConcernService {
 
     if (concern.status !== ConcernStatus.PENDING) {
       throw new AppError(`Concern is already ${concern.status}`, StatusCode.BAD_REQUEST);
+    }
+
+    const orderIdStr = concern.orderId._id ? concern.orderId._id.toString() : concern.orderId.toString();
+    const order = await this._orderRepository.findById(orderIdStr);
+
+    if (!order) {
+      throw new AppError("Associated order not found", StatusCode.NOT_FOUND);
+    }
+
+    if (order.stripePaymentIntentId) {
+      try {
+        await stripe.refunds.create({
+          payment_intent: order.stripePaymentIntentId,
+        });
+      } catch (error: unknown) {
+        throw new AppError(`Stripe refund failed: ${error instanceof Error ? error.message : "Unknown error"}`, StatusCode.INTERNAL_SERVER_ERROR);
+      }
     }
 
     const updatedConcern = await this._concernRepository.updateConcernStatus(
@@ -129,7 +147,6 @@ export class ConcernService implements IConcernService {
       throw new AppError("Failed to update concern status", StatusCode.INTERNAL_SERVER_ERROR);
     }
 
-    const orderIdStr = concern.orderId._id ? concern.orderId._id.toString() : concern.orderId.toString();
     await this._orderRepository.updateOrderStatus(orderIdStr, OrderStatus.RESOLVED);
 
     return updatedConcern;

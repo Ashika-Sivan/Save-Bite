@@ -28,6 +28,9 @@ export class CustomerBrowseController{
                     req.query.longitude
                 );
             }
+            if (typeof req.query.search === 'string') {
+                query.search = req.query.search;
+            }
             const result=await this._customerBrowseService.getLiveHotels(query);
             ResponseHelper.success(res,StatusCode.OK,CUSTOMER_MESSAGES.LIVE_HOTELS_FETCHED,result)
             

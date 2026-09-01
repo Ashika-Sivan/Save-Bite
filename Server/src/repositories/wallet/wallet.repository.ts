@@ -91,6 +91,6 @@ export class WalletRepository extends BaseRepository<IVendorWallet> implements I
     async transactionExistsForOrder(orderId: Types.ObjectId, session?: ClientSession): Promise<boolean> {
         const query = WalletTransaction.exists({ orderId });
         const existing = session ? await query.session(session) : await query;
-        return existing !== null;
+        return existing !== null;//check if a ledger recod already exist for order.
     }
 }

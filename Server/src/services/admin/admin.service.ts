@@ -17,11 +17,15 @@ import {
 import { IAdminUserListDTO } from "../../dtos/user.dto";
 import { toAdminUserListDTO } from "../../mappers/user.mapper";
 import { IPaginatedResult, IPaginationOptions } from "../../types/pagination.types";
+import { User } from "../../models/user/user.model";
+import { Order } from "../../models/order/order.model";
+import { IOrderRepository } from "../../interfaces/repository/IOrderRepository";
 
 export class AdminService implements IAdminService {
     constructor(
         private _vendorRepository: IVendorRepository,
-        private _userRepository: IUserRepository
+        private _userRepository: IUserRepository,
+        private _orderRespository:IOrderRepository
     ) { }
 
     async getAllVendors(options?: IPaginationOptions): Promise<IPaginatedResult<IAdminVendorListDTO>> {
@@ -125,9 +129,8 @@ export class AdminService implements IAdminService {
     async getAllUsers(options?: IPaginationOptions): Promise<IPaginatedResult<IAdminUserListDTO>> {
         const page = Math.max(1, options?.page || 1);
         const limit = Math.max(1, options?.limit || 10);
-        const { users, total } = await this._vendorRepository.getAllUsers(options);
+        const { users, total } = await this._userRepository.getAllUsers(options);
         const totalPages = Math.ceil(total / limit);
-        
         return {
             items: users.map(toAdminUserListDTO),
             total,
@@ -147,7 +150,7 @@ export class AdminService implements IAdminService {
             );
         }
 
-        const updatedUser = await this._vendorRepository.updateUserStatus(
+        const updatedUser = await this._userRepository.updateUserStatus(
             userId,
             !user.isActive
         );

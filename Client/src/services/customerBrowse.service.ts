@@ -73,11 +73,11 @@ export interface LiveHotelQuery {
     limit?: number;
     latitude?: number;
     longitude?: number;
+    search?: string;
 }
 
-export const getLiveHotels = async (
-    query: LiveHotelQuery = {}
-): Promise<
+export const getLiveHotels = async ( query: LiveHotelQuery = {}): 
+Promise<
     ApiResponse<{
         hotels: LiveHotel[];
         pagination: Pagination;

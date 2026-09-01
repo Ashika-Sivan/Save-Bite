@@ -136,7 +136,8 @@ export default function Home() {
 
   const [hotels, setHotels] = useState<LiveHotel[]>([]);
   const [menus, setMenus] = useState<LiveHotelMenu[]>([]);
-  const [_searchTerm, _setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +155,13 @@ export default function Home() {
 
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
     const loadLiveHotels = async () => {
       await Promise.resolve();
       if (user?.role !== "user") {
@@ -166,7 +174,7 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
 
-        const response = await getLiveHotels({ page: 1, limit: 50, latitude: customerLocation?.latitude, longitude: customerLocation?.longitude });
+        const response = await getLiveHotels({ page: 1, limit: 50, latitude: customerLocation?.latitude, longitude: customerLocation?.longitude, search: debouncedSearchTerm });
         const liveHotels = response.data.hotels;
         setHotels(liveHotels);
 
@@ -188,10 +196,10 @@ export default function Home() {
     };
 
     void loadLiveHotels();
-  }, [user?.role, customerLocation]);
+  }, [user?.role, customerLocation, debouncedSearchTerm]);
 
   const visibleHotels = useMemo(() => {
-    const query = _searchTerm.trim().toLowerCase();
+    const query = searchTerm.trim().toLowerCase();
     if (!query) return hotels;
 
     return hotels.filter((hotel) =>
@@ -200,7 +208,7 @@ export default function Home() {
         .toLowerCase()
         .includes(query)
     );
-  }, [hotels, _searchTerm]);
+  }, [hotels, searchTerm]);
 
   const visibleItems = useMemo(() => {
     const allItems: DisplayMenuItem[] = menus.flatMap((menu) =>
@@ -220,7 +228,7 @@ export default function Home() {
       );
     }
 
-    const query = _searchTerm.trim().toLowerCase();
+    const query = searchTerm.trim().toLowerCase();
     if (query) {
       filtered = filtered.filter((item) =>
         [item.itemName, item.hotelName, item.unitType]
@@ -231,7 +239,7 @@ export default function Home() {
     }
 
     return filtered;
-  }, [menus, selectedCategory, _searchTerm]);
+  }, [menus, selectedCategory, searchTerm]);
 
   const handleBecomeVendor = async () => {
     if (!user) {
@@ -315,7 +323,23 @@ export default function Home() {
           </section>
 
           <section className="mx-auto mt-10 max-w-6xl px-5">
-            <h3 className="mb-4 font-semibold">What are you craving?</h3>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="font-semibold">What are you craving?</h3>
+              <div className="relative w-full sm:w-72">
+                <input
+                  type="text"
+                  placeholder="Search restaurants or food..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-full border border-gray-300 py-2 pl-4 pr-10 text-sm focus:border-green-700 focus:outline-none focus:ring-1 focus:ring-green-700"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {categories.map((category) => (
                 <button

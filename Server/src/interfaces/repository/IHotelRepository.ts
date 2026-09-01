@@ -7,6 +7,7 @@ export interface ILiveHotelQuery{
     cutOffThreshold:Date;
     latitude?:number;
     longitude?:number;
+    search?:string;
     skip:number;
     limit:number;
 }

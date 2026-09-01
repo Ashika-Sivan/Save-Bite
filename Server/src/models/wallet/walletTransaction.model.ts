@@ -70,9 +70,7 @@ const walletTransactionSchema = new Schema<IWalletTransaction>(
     }
 );
 
-/*
- * Customer vendor earnings history query.
- */
+
 walletTransactionSchema.index({
     vendorId: 1,
     createdAt: -1,

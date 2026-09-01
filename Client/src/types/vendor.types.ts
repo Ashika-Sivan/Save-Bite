@@ -3,6 +3,7 @@ export interface VendorDetailsType {
 
   businessInfo: {
     businessName: string;
+    businessImageKey?: string;
     businessType: string;
     place: string;
     address: string;

@@ -8,7 +8,6 @@ import type {
   UserQueryParams,
 } from "../types/admin.types";
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
 
 type AdminLoginData = {
   email: string;
@@ -20,9 +19,7 @@ export const adminLogin = async (data: AdminLoginData) => {
   return response.data;
 };
 
-// ─── Vendor helpers ───────────────────────────────────────────────────────────
 
-/** Map a single raw vendor record coming from the API into a VendorDTO. */
 const toVendorDTO = (raw: Record<string, unknown>): VendorDTO => ({
   id: raw._id as string ?? raw.id as string,
   ownerName: raw.ownerName as string ?? "",
@@ -36,7 +33,7 @@ const toVendorDTO = (raw: Record<string, unknown>): VendorDTO => ({
   revenue: raw.revenue as number | undefined,
 });
 
-// ─── Vendor service functions ─────────────────────────────────────────────────
+
 
 export const getAllVendors = async (
   params?: VendorQueryParams
@@ -70,7 +67,7 @@ export const rejectVendor = async (vendorId: string, reason: string) => {
 };
 
 
-/** Map a single raw user record coming from the API into a UserDTO. */
+
 const toUserDTO = (raw: Record<string, unknown>): UserDTO => ({
   id: raw._id as string ?? raw.id as string,
   name: raw.name as string ?? "",

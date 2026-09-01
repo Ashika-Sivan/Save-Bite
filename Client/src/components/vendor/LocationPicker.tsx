@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import {
     useEffect,
     useState,
+    useRef
 } from "react";
 import toast from "react-hot-toast";
 
@@ -113,6 +114,40 @@ const LocationPicker = ({
             ? [latitude, longitude]
             : null;
 
+    const skipNextSearchRef = useRef(false);
+
+    useEffect(() => {
+        if (skipNextSearchRef.current) {
+            skipNextSearchRef.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            const query = searchQuery.trim();
+            
+            if (query.length < 3) {
+                setSearchResults([]);
+                return;
+            }
+
+            const autoSearch = async () => {
+                try {
+                    setIsSearching(true);
+                    const results = await searchLocations(query);
+                    setSearchResults(results);
+                } catch (error) {
+                    console.error("Auto search failed:", error);
+                } finally {
+                    setIsSearching(false);
+                }
+            };
+
+            void autoSearch();
+        }, 600); // 600ms debounce
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     /*
      * This function is used by:
      * 1. Current-location selection
@@ -161,56 +196,7 @@ const LocationPicker = ({
         }
     };
 
-const handleSearch = async (): Promise<void> => {
-    const query = searchQuery.trim();
-
-    if (!query) {
-        toast.error("Please enter a place to search");
-        return;
-    }
-
-    try {
-        setIsSearching(true);
-        setSearchResults([]);
-
-        const results = await searchLocations(query);
-
-        if (results.length === 0) {
-            toast.error("No matching location was found");
-            return;
-        }
-
-        // Display all matching results
-        setSearchResults(results);
-
-        // Automatically select the first matching result
-        const firstResult = results[0];
-
-        const selectedLatitude = Number(firstResult.lat);
-        const selectedLongitude = Number(firstResult.lon);
-
-        if (
-            !Number.isFinite(selectedLatitude) ||
-            !Number.isFinite(selectedLongitude)
-        ) {
-            toast.error("Invalid location coordinates");
-            return;
-        }
-
-        await selectLocation(
-            selectedLatitude,
-            selectedLongitude,
-            firstResult.display_name
-        );
-
-        setSearchQuery(firstResult.display_name);
-    } catch {
-        toast.error("Unable to search locations");
-    } finally {
-        setIsSearching(false);
-    }
-};
-
+// handleSearch was removed in favor of auto-suggest
     const handleSearchResultSelect = (
         result: LocationSearchResult
     ) => {
@@ -233,6 +219,7 @@ const handleSearch = async (): Promise<void> => {
             result.display_name
         );
 
+        skipNextSearchRef.current = true;
         setSearchQuery(result.display_name);
         setSearchResults([]);
     };
@@ -290,34 +277,22 @@ const handleSearch = async (): Promise<void> => {
     return (
         <div className="space-y-3">
             {/* Place search */}
-          <div className="flex gap-2">
-    <input
-        type="text"
-        value={searchQuery}
-        onChange={(event) =>
-            setSearchQuery(event.target.value)
-        }
-        onKeyDown={(event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                void handleSearch();
-            }
-        }}
-        placeholder="Search place, hospital, area or pincode"
-        className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-green-600"
-    />
-
-    <button
-        type="button"
-        onClick={() => void handleSearch()}
-        disabled={isSearching}
-        className="rounded-lg bg-green-700 px-5 py-2 font-semibold text-white disabled:opacity-60"
-    >
-        {isSearching
-            ? "Searching..."
-            : "Search"}
-    </button>
-</div>
+            <div className="relative">
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) =>
+                        setSearchQuery(event.target.value)
+                    }
+                    placeholder="Search place, hospital, area or pincode (auto-suggests as you type)"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition shadow-sm pr-10"
+                />
+                {isSearching && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-700 border-t-transparent"></div>
+                    </div>
+                )}
+            </div>
 
             {/* Search result list */}
             {searchResults.length > 0 && (

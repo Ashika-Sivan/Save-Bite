@@ -9,7 +9,8 @@ export class ConcernController {
   async raiseConcern(req: Request, res: Response): Promise<void> {
     const orderId = req.params.orderId as string;
     const { reason } = req.body;
-    const customerId = (req as any).user.userId || (req as any).user.id;
+    const user = (req as unknown as { user: { userId?: string; id?: string } }).user;
+    const customerId = (user?.userId || user?.id) as string;
 
     if (!req.file) {
       throw new AppError("Photo evidence is required to raise a concern", StatusCode.BAD_REQUEST);
@@ -39,6 +40,7 @@ export class ConcernController {
 
   async getAllConcerns(req: Request, res: Response): Promise<void> {
     const { status } = req.query;
+  
     const concerns = await this._concernService.getAllConcerns(status as string);
 
     res.status(StatusCode.OK).json({

@@ -38,7 +38,7 @@ export class WalletService implements IWalletService {
                 id: t._id.toString(),
                 walletId: t.walletId.toString(),
                 vendorId: t.vendorId.toString(),
-                orderId: t.orderId ? (t.orderId as any)._id?.toString() || t.orderId.toString() : "",
+                orderId: t.orderId ? (t.orderId as unknown as { _id?: { toString(): string } })._id?.toString() || t.orderId.toString() : "",
                 type: t.type,
                 orderTotal: t.orderTotal,
                 vendorAmount: t.vendorAmount,

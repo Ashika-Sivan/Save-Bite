@@ -6,6 +6,7 @@
 //partial <IUser> means all fields become optional
 
 import { IUser } from "../../models/user/user.model"
+import { IPaginationOptions } from "../../types/pagination.types"
 
 export interface IUserRepository{//user repo aayittolla any repository must have this methods
     findByEmail(email:string):Promise<IUser|null>;//give me an email i will search for a user.reason used promise is db took time a lot.returns:IUser means user found
@@ -14,5 +15,7 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     findById(userId:string):Promise<IUser|null>
     updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>
     updateRole(userId:string,role:"vendor"):Promise<IUser|null>
+    getAllUsers(options?: IPaginationOptions): Promise<{ users: IUser[]; total: number }>;
+    updateUserStatus(userId: string, isActive: boolean): Promise<IUser | null>;
 
 }

@@ -36,6 +36,7 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
         longitude,
         skip,
         limit,
+        search,
     } = query;
 
     const hasLocation =
@@ -43,12 +44,10 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
         longitude !== undefined;
 
     const pipeline: PipelineStage[] = [];
+   
 
-    /*
-     * $geoNear must be the first aggregation stage.
-     * It calculates the distance between the customer
-     * and each hotel.
-     */
+    
+   
     if (hasLocation) {
         pipeline.push({
             $geoNear: {
@@ -74,9 +73,7 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
         });
     }
 
-    /*
-     * Join each hotel with today's live daily menu.
-     */
+
     pipeline.push({
         $lookup: {
             from: "dailymenus",
@@ -167,6 +164,7 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
                         _id: 1,
                         pickupWindow: 1,
                         availableItemCount: 1,
+                        items: 1,
                     },
                 },
                 {
@@ -184,6 +182,21 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
         $unwind: "$liveMenu",
     });
 
+    if (search) {
+        const regexSearch = { $regex: search, $options: "i" };
+        pipeline.push({
+            $match: {
+                $or: [
+                    { hotelName: regexSearch },
+                    { businessType: regexSearch },
+                    { place: regexSearch },
+                    { address: regexSearch },
+                    { "liveMenu.items.itemName": regexSearch }
+                ]
+            }
+        });
+    }
+
     if (!hasLocation) {
         pipeline.push({
             $sort: {
@@ -192,10 +205,7 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
         });
     }
 
-    /*
-     * Return the requested page and total count
-     * from the same database query.
-     */
+    
     pipeline.push({
         $facet: {
             hotels: [

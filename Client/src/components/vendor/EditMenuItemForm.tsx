@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
 import type { DailyMenuItem,MenuUnitType,UpdateDailyMenuItemData } from "../../services/menu.service";
 
 interface EditMenuItemFormProps {
@@ -45,10 +44,7 @@ const EditMenuItemForm = ({
         setIsAvailable(item.isAvailable);
     }
 
-    const handleSubmit = async (
-        event: FormEvent<HTMLFormElement>
-    ) => {
-        event.preventDefault();
+    const handleSubmit = async () => {
 
         await onSubmit({
             itemName: itemName.trim(),
@@ -61,10 +57,7 @@ const EditMenuItemForm = ({
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="space-y-4 rounded-xl border border-gray-200 bg-white p-5"
-        >
+        <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-gray-900">
                 Edit menu item
             </h3>
@@ -177,7 +170,8 @@ const EditMenuItemForm = ({
 
             <div className="flex gap-3">
                 <button
-                    type="submit"
+                    type="button"
+                    onClick={() => handleSubmit()}
                     disabled={isSubmitting}
                     className="rounded-lg bg-green-700 px-4 py-2 font-semibold text-white disabled:opacity-60"
                 >
@@ -195,7 +189,7 @@ const EditMenuItemForm = ({
                     Cancel
                 </button>
             </div>
-        </form>
+        </div>
     );
 };
 

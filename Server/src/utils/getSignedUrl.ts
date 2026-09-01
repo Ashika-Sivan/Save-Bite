@@ -1,6 +1,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import s3Client from "../config/s3";
+import { Logger } from "./logger";
 
 export const getPresignedImageUrl = async (keyOrUrl: string): Promise<string> => {
   if (!keyOrUrl) return "";
@@ -22,7 +23,7 @@ export const getPresignedImageUrl = async (keyOrUrl: string): Promise<string> =>
     // Generate pre-signed URL valid for 7 days:
     return await getSignedUrl(s3Client, command, { expiresIn: 604800 });
   } catch (error) {
-    console.error("Failed to generate presigned S3 URL:", error);
+    Logger.error("Failed to generate presigned S3 URL:", error);
     return keyOrUrl;
   }
 };

@@ -4,5 +4,5 @@ export interface IAdminUserListDTO{
     email:string;
     role:string;
     isActive:boolean;
-    createdAt:Date
+    createdAt:Date;
 }

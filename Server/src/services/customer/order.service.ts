@@ -57,6 +57,11 @@ export class OrderService implements IOrderService {
         if (!menu.isLive) {
             throw new AppError("This menu is currently unavailable", StatusCode.BAD_REQUEST);
         }
+        //order per day
+        // const perDayOrder=await this._orderRepository.orderPerDay(customerId)
+        // if(perDayOrder>=2){
+        //     throw new AppError("you are allowed to order only 2 per day")
+        // }
 
         const now: Date = new Date();
         const foodAvailableTime: Date = new Date(menu.pickupWindow.startTime);
@@ -247,11 +252,19 @@ export class OrderService implements IOrderService {
     private mapOrderToResponse(order: IOrder): IOrderResponseDTO {
         const hotelObj = order.hotelId as unknown as { _id: Types.ObjectId; hotelName?: string };
         const hotelName = typeof hotelObj === "object" && hotelObj?.hotelName ? hotelObj.hotelName : "";
+        
+        const vendorObj = order.vendorId as unknown as any;
+        let vendorLocation;
+        if (vendorObj && typeof vendorObj === "object" && vendorObj.businessInfo?.location?.coordinates) {
+            const [lng, lat] = vendorObj.businessInfo.location.coordinates;
+            vendorLocation = { lat, lng };
+        }
 
         return {
             id:order._id.toString(),
             customerId:order.customerId.toString(),
-            vendorId:order.vendorId.toString(),
+            vendorId: (vendorObj?._id ?? order.vendorId).toString(),
+            vendorLocation,
             hotelId: (hotelObj?._id ?? order.hotelId).toString(),
             hotelName,
             menuId:order.menuId.toString(),
@@ -395,7 +408,7 @@ export class OrderService implements IOrderService {
             throw new AppError(ORDER_MESSAGES.ORDER_NOT_ELIGIBLE_PICKUP, StatusCode.BAD_REQUEST);
         }
 
-        let updatedOrder: IOrder | null = null;
+        let updatedOrder: IOrder;
 
         if (this._walletRepository) {
             let session: ClientSession | null = null;
@@ -410,10 +423,11 @@ export class OrderService implements IOrderService {
                     throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
                 }
 
-                updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
-                if (!updatedOrder) {
+                const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
+                if (!result) {
                     throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
                 }
+                updatedOrder = result;
 
                 const wallet = await this._walletRepository.getOrCreateWallet(order.vendorId, session);
                 const vendorAmount = order.vendorAmount;
@@ -436,17 +450,20 @@ export class OrderService implements IOrderService {
 
                 await session.commitTransaction();
                 session.endSession();
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (session) {
                     if (transactionStarted) {
                         try {
                             await session.abortTransaction();
-                        } catch (_) {}
+                        } catch {
+                            // ignore
+                        }
                     }
                     session.endSession();
                 }
 
-                const isReplicaSetError = err?.message?.includes("replica set") || err?.message?.includes("Transaction numbers");
+                const errMessage = err instanceof Error ? err.message : String(err);
+                const isReplicaSetError = errMessage.includes("replica set") || errMessage.includes("Transaction numbers");
                 if (isReplicaSetError) {
                     return await this.executeSettlementWithoutTransaction(order);
                 }
@@ -454,10 +471,11 @@ export class OrderService implements IOrderService {
                 throw err;
             }
         } else {
-            updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
-            if (!updatedOrder) {
+            const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
+            if (!result) {
                 throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
             }
+            updatedOrder = result;
         }
 
         return {

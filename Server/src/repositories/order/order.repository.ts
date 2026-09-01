@@ -37,7 +37,7 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         return await Order.findOne({
             _id: new Types.ObjectId(orderId),
             customerId,
-        }).populate("hotelId", "hotelName")
+        }).populate("hotelId", "hotelName").populate("vendorId", "businessInfo.location businessInfo.address")
     }
 
     async findAllByCustomerId(customerId: Types.ObjectId): Promise<IOrder[]> {
@@ -46,6 +46,7 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
             paymentStatus: { $ne: PaymentStatus.PENDING },
         })
             .populate("hotelId", "hotelName")
+            .populate("vendorId", "businessInfo.location businessInfo.address")
             .sort({ createdAt: -1 })
     }
 
@@ -165,7 +166,16 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
             vendorId,
             paymentStatus: { $ne: PaymentStatus.PENDING },
         })
-        .populate("hotelId", "hotelName")
-        .sort({ createdAt: -1 });
+            .populate("hotelId", "hotelName")
+            .sort({ createdAt: -1 });
     }
+
+
+
+
+
+
+
+
+
 }

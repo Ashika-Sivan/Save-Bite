@@ -285,7 +285,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
 
     if (isLoading) {
         return (
-            <main className="flex min-h-screen items-center justify-center bg-[#f7f8f3]">
+            <main className="flex flex-1 items-center justify-center">
                 <Loader2
                     size={34}
                     className="animate-spin text-green-700"
@@ -314,7 +314,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
     }
 
     return (
-        <main className="min-h-screen bg-[#f7f8f3] px-4 py-8">
+        <main className="flex-1 p-5 md:p-8">
             <div className="mx-auto max-w-5xl">
                 <button
                     type="button"

@@ -46,7 +46,7 @@ export class CustomerBrowseService implements ICustomerBrowseService{
         );
           const skip = (page - 1) * limit;
           const result=await this._hotelRepository.findLiveHotels({
-            startOfDay,endOfDay,cutOffThreshold,latitude:query.latitude,longitude:query.longitude,skip,limit
+            startOfDay,endOfDay,cutOffThreshold,latitude:query.latitude,longitude:query.longitude,search:query.search,skip,limit
           })
 
         const hotels:ILiveHotelResponseDTO[]=result.hotels.map((hotel)=>{
