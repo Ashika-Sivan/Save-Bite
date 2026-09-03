@@ -13,5 +13,6 @@ export interface IAdminService {
     rejectVendor(vendorId: string, reason: string): Promise<IVendor>;
     getAllUsers(options?: IPaginationOptions): Promise<IPaginatedResult<IAdminUserListDTO>>;
     toggleUserStatus(userId: string): Promise<IAdminUserListDTO>;
+    toggleVendorStatus(vendorId: string): Promise<IAdminVendorListDTO>;
     getVendorById(vendorId: string): Promise<IAdminVendorDocumentListDTO>;
 }

@@ -1,127 +1,129 @@
-import mongoose,{Schema, Types} from "mongoose"
-import { IVendor,VendorStatus} from "../../interfaces/models/IVendor.model";
+import mongoose, { Schema, Types } from "mongoose"
+import { IVendor, VendorStatus } from "../../interfaces/models/IVendor.model";
 
 export interface IPopulatedVendorOwner {
-  _id: Types.ObjectId;
-  name: string;
-  email: string;
-  phone?: string;
+    _id: Types.ObjectId;
+    name: string;
+    email: string;
+    phone?: string;
 }
 
 export interface IVendorWithOwner
-  extends Omit<IVendor, "ownerId"> {
-  ownerId: IPopulatedVendorOwner|null;
+    extends Omit<IVendor, "ownerId"> {
+    ownerId: IPopulatedVendorOwner | null;
+    revenue?:number;
 }
 
 
-const vendorSchema=new Schema<IVendor>(
+const vendorSchema = new Schema<IVendor>(
     {
-        ownerId:{
-            type:Schema.Types.ObjectId,
-            ref:"User",
-            required:true,
-            unique:true
+        ownerId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            unique: true
 
         },
 
-        businessInfo:{
-            businessName:{
-                type:String,
-                required:true
+        businessInfo: {
+            businessName: {
+                type: String,
+                required: true
             },
-            businessImageKey:{
-                type:String,
+            businessImageKey: {
+                type: String,
             },
-            businessType:{
-                type:String,
-                required:true
+            businessType: {
+                type: String,
+                required: true
             },
-            place:{
-                type:String,
-                required:true,
+            place: {
+                type: String,
+                required: true,
             },
-            address:{
-                type:String,
-                required:true
+            address: {
+                type: String,
+                required: true
             },
-            location:{
-                type:{
-                    type:String,
-                    enum:["Point"],
-                    default:"Point",
+            location: {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                    default: "Point",
                 },
-                coordinates:{
-                    type:[Number],
-                    required:true
+                coordinates: {
+                    type: [Number],
+                    required: true
                 },
 
             },
         },
-        verification:{
-            gstNumber:{
-                type:String,
-                required:true
+        verification: {
+            gstNumber: {
+                type: String,
+                required: true
             },
-            panNumber:{
-                type:String,
-                required:true
+            panNumber: {
+                type: String,
+                required: true
             },
-            ifscCode:{
-                type:String,
-                required:true
+            ifscCode: {
+                type: String,
+                required: true
             },
-            bankAccountNumber:{
-                type:String,
-                required:true
+            bankAccountNumber: {
+                type: String,
+                required: true
             },
-            fssaiNumber:{
-                type:String,
-                required:true
+            fssaiNumber: {
+                type: String,
+                required: true
             },
 
         },
-        documents:{
-            gstCertificateKey:{
-                type:String,
-                 required:true
+        documents: {
+            gstCertificateKey: {
+                type: String,
+                required: true
             },
-            fssaiCertificateKey:{
-                type:String,
-                required:true
+            fssaiCertificateKey: {
+                type: String,
+                required: true
             },
-            panCardKey:{
-                type:String,
-                required:true
+            panCardKey: {
+                type: String,
+                required: true
             },
-            businessRegistrationCertificateKey:{
-                type:String,
-                required:true
+            businessRegistrationCertificateKey: {
+                type: String,
+                required: true
             },
         },
 
-        status:{
-            type:String,
-            enum:Object.values(VendorStatus),
-            default:VendorStatus.PENDING
+        status: {
+            type: String,
+            enum: Object.values(VendorStatus),
+            default: VendorStatus.PENDING
         },
-        rejectionReason:{
-            type:String,
-            default:null
+        rejectionReason: {
+            type: String,
+            default: null
         },
-        isLive:{
-            type:Boolean,
-            default:false,
+        
+        isLive: {
+            type: Boolean,
+            default: false,
         }
     },
     {
-        timestamps:true
+        timestamps: true
     }
 );
 vendorSchema.index({
-    "businessInfo.location":"2dsphere",
+    "businessInfo.location": "2dsphere",
 });
 
-export const Vendor=mongoose.model<IVendor>(
+export const Vendor = mongoose.model<IVendor>(
     "vendor",
     vendorSchema
 

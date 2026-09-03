@@ -3,6 +3,8 @@ export interface IPaginationOptions {
   limit?: number;
   search?: string;
   status?: string;
+  totalRevenue?:number|0
+  totalCount?:number|0
 }
 
 export interface IPaginatedResult<T> {
@@ -11,4 +13,6 @@ export interface IPaginatedResult<T> {
   page: number;
   limit: number;
   totalPages: number;
+  totalRevenue?:number|0
+  totalCount?:number|0
 }

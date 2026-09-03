@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import {
   Clock,
@@ -12,12 +12,29 @@ import {
   Sparkles,
   ChevronDown,
   ShoppingBag,
+  IndianRupee,
+  TrendingUp,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { getVendorOrders, redeemPickupCode, type Order } from "../../services/order.service";
 import { getVendorHotels } from "../../services/hotel.service";
 import type { Hotel } from "../../types/hotel.types";
+import Pagination from "../../components/common/Pagination";
 
 type StatusFilter = "ALL" | "PLACED" | "COLLECTED" | "EXPIRED_CANCELLED";
+
+const formatOrderId = (id: string) => {
+  if (id === "manual") return "MANUAL";
+  return `#${id.slice(-6).toUpperCase()}`;
+};
 
 export default function VendorOrders() {
 
@@ -30,6 +47,9 @@ export default function VendorOrders() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const limit = 5;
 
   // Modal State for Pickup Code Verification
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -155,6 +175,54 @@ export default function VendorOrders() {
   const pendingCount = hotelOrders.filter((o) => o.orderStatus === "placed").length;
   const collectedCount = hotelOrders.filter((o) => o.orderStatus === "collected").length;
 
+  // Analytics Calculations
+  const totalRevenue = useMemo(() => {
+    return hotelOrders
+      .filter((o) => o.orderStatus === "collected")
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+  }, [hotelOrders]);
+
+  const averageOrderValue = collectedCount > 0 ? (totalRevenue / collectedCount).toFixed(2) : "0.00";
+
+  // Trend Data for the last 7 days
+  const trendData = useMemo(() => {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateString = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      
+      const startOfDay = new Date(d.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(d.setHours(23, 59, 59, 999));
+
+      const dailyOrders = hotelOrders.filter(o => {
+        if (!o.createdAt) return false;
+        const orderDate = new Date(o.createdAt);
+        return orderDate >= startOfDay && orderDate <= endOfDay;
+      });
+
+      const dailyRevenue = dailyOrders
+        .filter(o => o.orderStatus === "collected")
+        .reduce((sum, o) => sum + o.totalAmount, 0);
+
+      data.push({
+        date: dateString,
+        orders: dailyOrders.length,
+        revenue: dailyRevenue
+      });
+    }
+    return data;
+  }, [hotelOrders]);
+
+  useEffect(() => {
+    // eslint-disable-next-line
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, selectedHotelId]);
+
+  const total = filteredOrders.length;
+  const totalPages = Math.ceil(total / limit);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * limit, currentPage * limit);
+
   return (
     <main className="flex-1 p-5 md:p-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
@@ -236,19 +304,73 @@ export default function VendorOrders() {
         </div>
       </div>
 
-            {/* Quick Stat Summary Cards */}
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Orders</p>
-                <h4 className="mt-1 text-2xl font-bold text-gray-900">{hotelOrders.length}</h4>
+            {/* Advanced Analytics & Quick Stats */}
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Stats Column */}
+              <div className="flex flex-col gap-4">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Orders</p>
+                    <h4 className="mt-1 text-2xl font-bold text-gray-900">{hotelOrders.length}</h4>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                    <ShoppingBag size={20} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Total Revenue</p>
+                    <h4 className="mt-1 text-2xl font-bold text-emerald-900 flex items-center">
+                      <IndianRupee size={20} className="mr-0.5" />
+                      {totalRevenue.toFixed(2)}
+                    </h4>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <TrendingUp size={20} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Pending</p>
+                    <h4 className="mt-1 text-xl font-bold text-amber-900">{pendingCount}</h4>
+                  </div>
+                  <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Avg Value</p>
+                    <h4 className="mt-1 text-xl font-bold text-blue-900">₹{averageOrderValue}</h4>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Pending Pickups</p>
-                <h4 className="mt-1 text-2xl font-bold text-amber-900">{pendingCount}</h4>
-              </div>
-              <div className="rounded-2xl border border-green-200 bg-green-50/50 p-4 shadow-sm col-span-2 sm:col-span-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-green-700">Completed Pickups</p>
-                <h4 className="mt-1 text-2xl font-bold text-green-900">{collectedCount}</h4>
+
+              {/* Chart Column */}
+              <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">7-Day Order Trend</h3>
+                  <span className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
+                    Volume & Revenue
+                  </span>
+                </div>
+                <div className="h-48 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#047857" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#047857" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0fdf4" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                      />
+                      <Area yAxisId="right" type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#047857" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                      <Area yAxisId="left" type="monotone" dataKey="orders" name="Orders" stroke="#f59e0b" strokeWidth={2} fill="none" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
@@ -333,7 +455,7 @@ export default function VendorOrders() {
               </div>
             ) : (
               <div className="mt-6 space-y-6">
-                {filteredOrders.map((order) => (
+                {paginatedOrders.map((order) => (
                   <div
                     key={order.id}
                     className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
@@ -342,8 +464,8 @@ export default function VendorOrders() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 bg-gray-50/80 px-6 py-4 gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-gray-500 uppercase">Order ID:</span>
-                          <span className="font-mono text-sm font-bold text-gray-900">{order.id}</span>
+                          <span className="text-xs font-mono font-bold text-gray-500 uppercase">Order:</span>
+                          <span className="font-mono text-sm font-bold text-gray-900">{formatOrderId(order.id)}</span>
                         </div>
                         {order.hotelName && (
                           <p className="text-xs font-semibold text-green-700 mt-0.5">{order.hotelName}</p>
@@ -446,13 +568,23 @@ export default function VendorOrders() {
                           {/* Action Button */}
                           <div className="mt-4 pt-3 border-t border-gray-200">
                             {order.orderStatus === "placed" ? (
-                              <button
-                                onClick={() => handleOpenRedeemModal(order)}
-                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-green-800 transition"
-                              >
-                                <KeyRound size={16} />
-                                Verify Pickup Code
-                              </button>
+                              (() => {
+                                const isExpired = order.pickupWindow ? new Date(order.pickupWindow.endTime) < new Date() : false;
+                                return (
+                                  <button
+                                    onClick={() => handleOpenRedeemModal(order)}
+                                    disabled={isExpired}
+                                    className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${
+                                      isExpired
+                                        ? "bg-gray-400 cursor-not-allowed opacity-80"
+                                        : "bg-green-700 hover:bg-green-800"
+                                    }`}
+                                  >
+                                    {isExpired ? <XCircle size={16} /> : <KeyRound size={16} />}
+                                    {isExpired ? "Pickup Window Expired" : "Verify Pickup Code"}
+                                  </button>
+                                );
+                              })()
                             ) : (
                               <div className="text-center text-xs font-medium text-gray-400 py-1.5 bg-gray-100 rounded-lg">
                                 {order.orderStatus === "collected"
@@ -466,6 +598,16 @@ export default function VendorOrders() {
                     </div>
                   </div>
                 ))}
+                
+                {total > limit && (
+                  <Pagination
+                    page={currentPage}
+                    limit={limit}
+                    total={total}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
               </div>
             )}
 
@@ -495,8 +637,8 @@ export default function VendorOrders() {
                 {selectedOrder.id !== "manual" && (
                   <div className="mb-4 rounded-xl bg-gray-50 p-3 text-xs border border-gray-200 flex justify-between items-center">
                     <div>
-                      <span className="text-gray-500 font-mono">Order ID: </span>
-                      <span className="font-bold text-gray-900">{selectedOrder.id}</span>
+                      <span className="text-gray-500 font-mono">Order: </span>
+                      <span className="font-bold text-gray-900">{formatOrderId(selectedOrder.id)}</span>
                     </div>
                     <span className="font-bold text-green-700 text-sm">₹{selectedOrder.totalAmount}</span>
                   </div>

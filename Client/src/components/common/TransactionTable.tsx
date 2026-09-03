@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowUpRight, CheckCircle2, Receipt } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowUpRight, CheckCircle2, Receipt, Search } from "lucide-react";
 import { type WalletTransactionData } from "../../services/wallet.service";
 import DataTable, { type TableColumn } from "./DataTable";
 import Pagination from "./Pagination";
@@ -16,12 +16,26 @@ export default function TransactionTable({
   subtitle = "Detailed audit trail of all settlement credits and payouts.",
 }: TransactionTableProps) {
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const limit = 10;
-  const total = transactions.length;
+  
+  // Filter transactions based on search query
+  const filteredTransactions = useMemo(() => {
+    if (!searchQuery.trim()) return transactions;
+    const query = searchQuery.toLowerCase();
+    return transactions.filter(
+      (tx) =>
+        tx.description?.toLowerCase().includes(query) ||
+        tx.orderId?.toLowerCase().includes(query) ||
+        tx.status?.toLowerCase().includes(query)
+    );
+  }, [transactions, searchQuery]);
+
+  const total = filteredTransactions.length;
   const totalPages = Math.ceil(total / limit);
   
   // Client-side pagination logic
-  const paginatedTransactions = transactions.slice((page - 1) * limit, page * limit);
+  const paginatedTransactions = filteredTransactions.slice((page - 1) * limit, page * limit);
 
   const columns: TableColumn<WalletTransactionData>[] = [
     {
@@ -34,7 +48,7 @@ export default function TransactionTable({
           <div>
             <p className="font-semibold text-gray-900">{tx.description}</p>
             {tx.orderId && (
-              <p className="text-xs font-mono text-gray-400">Order ID: {tx.orderId}</p>
+              <p className="text-xs font-mono text-gray-400">Order #: {tx.orderId.slice(-6).toUpperCase()}</p>
             )}
           </div>
         </div>
@@ -69,14 +83,29 @@ export default function TransactionTable({
 
   return (
     <div className="mt-10">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="text-xl font-bold text-gray-900">{title}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
         </div>
-        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-          {total} Transactions
-        </span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search transactions..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1); // Reset page on search
+              }}
+              className="w-full sm:w-64 rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+            />
+          </div>
+          <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-2 rounded-xl border border-gray-200 whitespace-nowrap">
+            {total} Transactions
+          </span>
+        </div>
       </div>
 
       {transactions.length === 0 ? (
@@ -88,6 +117,16 @@ export default function TransactionTable({
           <p className="mt-2 text-sm text-gray-500">
             When customers pickup food and you verify their pickup code, payouts
             will appear here automatically.
+          </p>
+        </div>
+      ) : filteredTransactions.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-gray-300 bg-gray-50/50 p-12 text-center">
+          <Search className="mx-auto text-gray-300" size={56} />
+          <h4 className="mt-4 text-lg font-bold text-gray-800">
+            No matching transactions found
+          </h4>
+          <p className="mt-2 text-sm text-gray-500">
+            Try adjusting your search query.
           </p>
         </div>
       ) : (

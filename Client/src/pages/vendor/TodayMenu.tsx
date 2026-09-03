@@ -10,7 +10,9 @@ import {
     ArrowLeft,
     Loader2,
     Power,
-    Copy
+    Copy,
+    Plus,
+    X
 } from "lucide-react";
 import { usePreviousMenu as applyPreviousMenuApi } from "../../services/menu.service";
 
@@ -87,6 +89,8 @@ const TodayMenu = () => {
 
     const [isAddingItem, setIsAddingItem] =
         useState(false);
+    
+    const [showAddModal, setShowAddModal] = useState(false);
 
     const [
         isUpdatingWindow,
@@ -187,6 +191,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                 );
 
             setMenu(response.data);
+            setShowAddModal(false);
             toast.success(response.message);
         } catch (error) {
             toast.error(
@@ -460,105 +465,27 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                             )}
                         </section>
 
-                        <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-bold text-gray-900">
-                                Add food item
-                            </h2>
-
-                            <p className="mt-1 text-sm text-gray-500">
-                                Add today&apos;s available
-                                leftover food and stock.
-                            </p>
-
-                            {menu &&
-    !menu.isLive &&
-    menu.items.length === 0 && (
-        <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-4">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
-                    <h3 className="font-semibold text-gray-900">
-                        Reuse your previous menu
-                    </h3>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Copy names, images and prices
-                        from this hotel&apos;s latest
-                        menu. Today&apos;s stock will
-                        start at zero.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={() =>
-                        void handleUsePreviousMenu()
-                    }
-                    disabled={
-                        isUsingPreviousMenu
-                    }
-                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-green-700 bg-white px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {isUsingPreviousMenu ? (
-                        <Loader2
-                            size={18}
-                            className="animate-spin"
-                        />
-                    ) : (
-                        <Copy size={18} />
-                    )}
-
-                    {isUsingPreviousMenu
-                        ? "Copying..."
-                        : "Use Previous Menu"}
-                </button>
-            </div>
-        </div>
-    )}
-
-                            <div className="mt-5">
-                                <MenuItemForm
-                                    isSubmitting={
-                                        isAddingItem
-                                    }
-                                    onSubmit={
-                                        handleAddItem
-                                    }
-                                />
-                            </div>
-                        </section>
-
                         <section className="mt-6">
-                            <div className="mb-4 flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-gray-900">
-                                    Food items
-                                </h2>
-
-                                <span className="text-sm text-gray-500">
-                                    {menu.items.length}{" "}
-                                    item
-                                    {menu.items.length ===
-                                    1
-                                        ? ""
-                                        : "s"}
-                                </span>
-                            </div>
-
-                            {editingItem && (
-                                <div className="mb-5">
-                                    <EditMenuItemForm
-                                        item={editingItem}
-                                        isSubmitting={
-                                            isUpdatingItem
-                                        }
-                                        onSubmit={
-                                            handleUpdateMenuItem
-                                        }
-                                        onCancel={() =>
-                                            setEditingItem(null)
-                                        }
-                                    />
+                            <div className="mb-6 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        Food items
+                                    </h2>
+                                    <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
+                                        {menu.items.length}{" "}
+                                        item{menu.items.length === 1 ? "" : "s"}
+                                    </span>
                                 </div>
-                            )}
+                                {menu && !menu.isLive && (
+                                    <button
+                                        onClick={() => setShowAddModal(true)}
+                                        className="flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-800 shadow-sm"
+                                    >
+                                        <Plus size={16} />
+                                        Add Food Item
+                                    </button>
+                                )}
+                            </div>
 
                             {menu.items.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
@@ -587,6 +514,78 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                     </>
                 )}
             </div>
+
+            {/* Modals placed outside main container for proper fixed positioning */}
+            {showAddModal && menu && !menu.isLive && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-900/60 p-4 pt-[10vh] pb-[10vh] backdrop-blur-sm">
+                    <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-xl max-h-full overflow-y-auto">
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-gray-50/95 p-6 backdrop-blur-sm">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Add New Food Item</h3>
+                                <p className="mt-1 text-sm text-gray-500">Add today&apos;s available leftover food and stock.</p>
+                            </div>
+                            <button 
+                                onClick={() => setShowAddModal(false)}
+                                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            {menu.items.length === 0 && (
+                                <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-4">
+                                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900">Reuse your previous menu</h4>
+                                            <p className="mt-1 text-xs text-gray-600">Copy names, images and prices from this hotel&apos;s latest menu. Today&apos;s stock will start at zero.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => void handleUsePreviousMenu()}
+                                            disabled={isUsingPreviousMenu}
+                                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-green-700 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {isUsingPreviousMenu ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />}
+                                            {isUsingPreviousMenu ? "Copying..." : "Use Previous Menu"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            <MenuItemForm
+                                isSubmitting={isAddingItem}
+                                onSubmit={handleAddItem}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-900/60 p-4 pt-[10vh] pb-[10vh] backdrop-blur-sm">
+                    <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-xl max-h-full overflow-y-auto">
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-gray-50/95 p-6 backdrop-blur-sm">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Edit Food Item</h3>
+                                <p className="mt-1 text-sm text-gray-500">Update stock and availability.</p>
+                            </div>
+                            <button 
+                                onClick={() => setEditingItem(null)}
+                                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-600"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <EditMenuItemForm
+                                item={editingItem}
+                                isSubmitting={isUpdatingItem}
+                                onSubmit={handleUpdateMenuItem}
+                                onCancel={() => setEditingItem(null)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 };

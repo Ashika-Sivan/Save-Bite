@@ -57,11 +57,7 @@ export class OrderService implements IOrderService {
         if (!menu.isLive) {
             throw new AppError("This menu is currently unavailable", StatusCode.BAD_REQUEST);
         }
-        //order per day
-        // const perDayOrder=await this._orderRepository.orderPerDay(customerId)
-        // if(perDayOrder>=2){
-        //     throw new AppError("you are allowed to order only 2 per day")
-        // }
+       
 
         const now: Date = new Date();
         const foodAvailableTime: Date = new Date(menu.pickupWindow.startTime);
@@ -296,7 +292,7 @@ export class OrderService implements IOrderService {
        }
     }
 
-    async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
+    async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {//function actevely talk stripe to check
     if (!paymentIntentId) {
         throw new AppError("Payment Intent ID is required", StatusCode.BAD_REQUEST);
     }

@@ -1,0 +1,14 @@
+{
+  "name": "save-bite-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix Client install && npm --prefix Server install",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "npm --prefix Client run dev",
+    "dev:server": "npm --prefix Server run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

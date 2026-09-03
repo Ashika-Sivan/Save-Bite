@@ -4,6 +4,7 @@ export enum VendorStatus {
   PENDING = "pending",
   APPROVED = "approved",
   REJECTED = "rejected",
+  SUSPENDED = "suspended",
 }
 
 export interface IVendor {
@@ -39,6 +40,7 @@ export interface IVendor {
   };
 
   status: VendorStatus;
+  revenue?: number;
   rejectionReason?: string | null;
   isLive: boolean;
   createdAt:Date;

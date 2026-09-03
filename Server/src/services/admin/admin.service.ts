@@ -17,8 +17,6 @@ import {
 import { IAdminUserListDTO } from "../../dtos/user.dto";
 import { toAdminUserListDTO } from "../../mappers/user.mapper";
 import { IPaginatedResult, IPaginationOptions } from "../../types/pagination.types";
-import { User } from "../../models/user/user.model";
-import { Order } from "../../models/order/order.model";
 import { IOrderRepository } from "../../interfaces/repository/IOrderRepository";
 
 export class AdminService implements IAdminService {
@@ -33,6 +31,7 @@ export class AdminService implements IAdminService {
         const limit = Math.max(1, options?.limit || 10);
         const { vendors, total } = await this._vendorRepository.findAllWithOwner(options);
         const totalPages = Math.ceil(total / limit);
+       
         return {
             items: vendors.map(toAdminVendorListDTO),
             total,
@@ -163,6 +162,51 @@ export class AdminService implements IAdminService {
         }
 
         return toAdminUserListDTO(updatedUser)
+    }
+
+    async toggleVendorStatus(vendorId: string): Promise<IAdminVendorListDTO> {
+        const existingVendor = await this._vendorRepository.findByIdWithOwner(vendorId);
+        if (!existingVendor) {
+            throw new AppError(
+                VENDOR_MESSAGES.VENDOR_NOT_FOUND,
+                StatusCode.NOT_FOUND
+            );
+        }
+
+        if (existingVendor.status === VendorStatus.PENDING || existingVendor.status === VendorStatus.REJECTED) {
+            throw new AppError(
+                "Cannot suspend a pending or rejected vendor.",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const newStatus = existingVendor.status === VendorStatus.APPROVED ? VendorStatus.SUSPENDED : VendorStatus.APPROVED;
+        
+        const vendor = await this._vendorRepository.toggleVendorStatus(vendorId, newStatus);
+        if (!vendor) {
+            throw new AppError(
+                "Failed to update vendor status",
+                StatusCode.INTERNAL_SERVER_ERROR
+            );
+        }
+
+        // We also need to block/unblock the user account so they can't login if suspended
+        if (existingVendor.ownerId && existingVendor.ownerId._id) {
+            await this._userRepository.updateUserStatus(
+                existingVendor.ownerId._id.toString(),
+                newStatus === VendorStatus.APPROVED
+            );
+        }
+
+        const updatedVendorWithPopulatedOwner = await this._vendorRepository.findByIdWithOwner(vendorId);
+        if (!updatedVendorWithPopulatedOwner) {
+            throw new AppError(
+                "Vendor not found after update",
+                StatusCode.NOT_FOUND
+            );
+        }
+
+        return toAdminVendorListDTO(updatedVendorWithPopulatedOwner);
     }
 
     async getVendorById(
