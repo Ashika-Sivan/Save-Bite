@@ -222,7 +222,7 @@ export default function AppRoutes() {
                     </Route>
                 </Route>
 
-                {/* CATCH-ALL 404 ROUTE */}
+                
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>

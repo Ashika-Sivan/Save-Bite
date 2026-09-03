@@ -45,6 +45,7 @@ export const API_ROUTES = {
     VENDOR_BY_ID: (vendorId: string) => `/admin/vendors/${vendorId}`,
     VENDOR_APPROVE: (vendorId: string) => `/admin/vendors/${vendorId}/approve`,
     VENDOR_REJECT: (vendorId: string) => `/admin/vendors/${vendorId}/reject`,
+    VENDOR_STATUS: (vendorId: string) => `/admin/vendors/${vendorId}/status`,
     USERS: "/admin/users",
     USER_STATUS: (userId: string) => `/admin/users/${userId}/status`,
   },

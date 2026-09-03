@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
+    "start": "doppler run -- node dist/server.js",
+    "dev": "doppler run -- nodemon src/server.ts",
     "lint": "eslint src"
   },
   "keywords": [],

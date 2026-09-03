@@ -54,9 +54,10 @@ export const ROUTES = {
 
   ADMIN: {
     VENDORS: "/vendors",
+    VENDOR_BY_ID: "/vendors/:vendorId",
     VENDOR_APPROVE: "/vendors/:vendorId/approve",
     VENDOR_REJECT: "/vendors/:vendorId/reject",
-    VENDOR_BY_ID: "/vendors/:vendorId",
+    VENDOR_STATUS: "/vendors/:vendorId/status",
     USERS: "/users",
     USER_STATUS: "/users/:userId/status",
   },

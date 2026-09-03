@@ -86,12 +86,15 @@ export class AdminController {
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
+      const {users}=req.params
+
 
       const result = await this._adminService.getAllUsers({
         page,
         limit,
         search,
         status,
+        
       });
 
       ResponseHelper.success(
@@ -99,6 +102,8 @@ export class AdminController {
         StatusCode.OK,
         ADMIN_MESSAGES.USERS_FETCHED,
         result,
+        
+        
       );
     } catch (error) {
       next(error);
@@ -124,6 +129,31 @@ export class AdminController {
           ? ADMIN_MESSAGES.USER_UNBLOCKED
           : ADMIN_MESSAGES.USER_BLOCKED,
         updatedUser,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async toggleVendorStatus( req: Request, res: Response, next: NextFunction,): Promise<void> {
+    try {
+      const { vendorId } = req.params;
+      if (!vendorId || Array.isArray(vendorId)) {
+        throw new AppError(
+          ADMIN_MESSAGES.VENDOR_ID_REQUIRED,
+          StatusCode.BAD_REQUEST,
+        );
+      }
+
+      const updatedVendor = await this._adminService.toggleVendorStatus(vendorId);
+
+      ResponseHelper.success(
+        res,
+        StatusCode.OK,
+        updatedVendor.status === "approved"
+          ? "Vendor unblocked successfully"
+          : "Vendor blocked successfully",
+        updatedVendor,
       );
     } catch (error) {
       next(error);

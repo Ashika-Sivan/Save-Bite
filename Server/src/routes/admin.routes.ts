@@ -40,6 +40,13 @@ router.patch(
   adminController.toggleUserStatus.bind(adminController)
 );
 
+router.patch(
+  ROUTES.ADMIN.VENDOR_STATUS,
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  adminController.toggleVendorStatus.bind(adminController)
+);
+
 router.get(
   ROUTES.ADMIN.VENDOR_BY_ID,
   authMiddleware.authenticate,

@@ -56,7 +56,7 @@ export interface IAdminVendorListDTO {
   businessName: string;
   businessType: string;
   place: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "suspended";
   isLive: boolean;
   createdAt: Date;
 }
@@ -87,7 +87,7 @@ export interface IAdminVendorDetailsDTO {
   verification: IVerificationDTO;
   documents: IDocumentsDTO;
 
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "suspended";
   rejectionReason?: string;
   isLive: boolean;
   createdAt: Date;
@@ -101,7 +101,7 @@ import { IVendor } from "../interfaces/models/IVendor.model";
 
 export interface IVendorStatusResponseDTO {
   hasApplication:boolean
-  status?: "pending" | "approved" | "rejected";
+  status?: "pending" | "approved" | "rejected" | "suspended";
   rejectionReason?: string|null;
   vendor?: IVendor;
 }

@@ -5,6 +5,7 @@
 // <IUser> means all fields required
 //partial <IUser> means all fields become optional
 
+import { Types } from "mongoose";
 import { IUser } from "../../models/user/user.model"
 import { IPaginationOptions } from "../../types/pagination.types"
 

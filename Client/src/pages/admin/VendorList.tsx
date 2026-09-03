@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { Search, ArrowUpRight } from "lucide-react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
-import { getAllVendors } from "../../services/admin.service";
+import { getAllVendors, toggleVendorStatus } from "../../services/admin.service";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import type { VendorDTO, VendorStatus } from "../../types/admin.types";
 
 const TABS: { key: "all" | VendorStatus; label: string }[] = [
@@ -85,6 +86,52 @@ const VendorList = () => {
     navigate(`/admin/vendors/${vendorId}`);
   };
 
+  const handleBlockToggle = (vendor: VendorDTO) => {
+    const action = vendor.status === "approved" ? "block" : "unblock";
+    
+    toast.custom(
+      (currentToast) => (
+        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
+          <h3 className="font-semibold text-gray-900 capitalize">
+            {action} Vendor?
+          </h3>
+          <p className="mt-2 text-sm text-gray-600">
+            Are you sure you want to {action} {vendor.businessName}?
+          </p>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(currentToast.id)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                toast.dismiss(currentToast.id);
+                try {
+                  const updatedVendor = await toggleVendorStatus(vendor.id);
+                  setVendors((prev) =>
+                    prev.map((v) => (v.id === updatedVendor.id ? updatedVendor : v))
+                  );
+                  toast.success(`Vendor ${action}ed successfully`);
+                } catch (err) {
+                  console.error(err);
+                  toast.error(`Failed to ${action} vendor`);
+                }
+              }}
+              className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+            >
+              {action.charAt(0).toUpperCase() + action.slice(1)}
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity, position: "top-center" }
+    );
+  };
+
   const columns: TableColumn<VendorDTO>[] = [
     {
       header: "Business",
@@ -116,12 +163,27 @@ const VendorList = () => {
       header: "",
       align: "right",
       render: (v) => (
-        <button
-          onClick={() => handleReview(v.id)}
-          className="inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline"
-        >
-          Review <ArrowUpRight size={14} />
-        </button>
+        <div className="flex items-center justify-end gap-3">
+          {(v.status === "approved" || v.status === "suspended") && (
+            <button
+              type="button"
+              onClick={() => handleBlockToggle(v)}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                v.status === "approved"
+                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                  : "bg-green-50 text-green-700 hover:bg-green-100"
+              }`}
+            >
+              {v.status === "approved" ? "Block" : "Unblock"}
+            </button>
+          )}
+          <button
+            onClick={() => handleReview(v.id)}
+            className="inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline"
+          >
+            Review <ArrowUpRight size={14} />
+          </button>
+        </div>
       ),
     },
   ];

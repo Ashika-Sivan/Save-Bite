@@ -2,6 +2,8 @@ import { IUser, User } from "../../models/user/user.model";
 import { IPaginationOptions } from "../../types/pagination.types";
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
 import { BaseRepository } from "../base.repository";
+import { Order } from "../../models/order/order.model";
+import { Types } from "mongoose";
 //this file is responsible for talking to mongodb
 // only db operations go here
 
@@ -68,6 +70,10 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
         }
 
         const total = await User.countDocuments(filterQuery);
+
+       
+
+        const totalOrder=await Order.countDocuments()
 
         const users = await User.find(filterQuery)
             .select("-password")

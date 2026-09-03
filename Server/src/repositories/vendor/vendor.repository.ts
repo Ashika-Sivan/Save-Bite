@@ -8,6 +8,9 @@ import { Logger } from "../../utils/logger";
 import { IUser, User } from "../../models/user/user.model";
 import { BaseRepository } from "../base.repository";
 import { IPaginationOptions } from "../../types/pagination.types";
+import { Order } from "../../models/order/order.model";
+import { PaymentStatus } from "../../interfaces/models/IOrder.model";
+import { Types } from "mongoose";
 
 export class VendorRepository extends BaseRepository<IVendor> implements IVendorRepository {
     constructor() {
@@ -32,6 +35,8 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         const search = options?.search?.trim();
         const status = options?.status;
 
+        
+
         const filterQuery: Record<string, unknown> = {};
 
         if (status && status !== "all") {
@@ -55,6 +60,10 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
             ];
         }
 
+        
+       
+
+
         const total = await Vendor.countDocuments(filterQuery);
         const vendors = await Vendor.find(filterQuery)
             .populate<{ ownerId: IPopulatedVendorOwner }>(
@@ -64,6 +73,7 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
+        
 
         return { vendors, total };
     }
@@ -110,6 +120,14 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         )
     }
 
+    async toggleVendorStatus(vendorId: string, status: VendorStatus): Promise<IVendor | null> {
+        return await Vendor.findByIdAndUpdate(
+            vendorId,
+            { status, isLive: status === VendorStatus.APPROVED },
+            { new: true }
+        )
+    }
+
     async findByIdWithOwner(vendorId: string): Promise<IVendorWithOwner | null> {
         const vendor = await Vendor.findById(vendorId).populate<{ ownerId: IPopulatedVendorOwner }>(
             "ownerId",
@@ -118,6 +136,14 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
         return vendor
     }
 
+   async totalRevenue(vendorId:string):Promise<number>{
+        let totalRevenue=0
+        const orders=await Order.find({vendorId:vendorId,paymentStatus:PaymentStatus.PAID})
+        for(let order of orders){
+            totalRevenue+=order.vendorAmount
+        }
+        return totalRevenue
 
+   }
 
 }

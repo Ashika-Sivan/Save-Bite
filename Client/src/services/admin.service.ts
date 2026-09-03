@@ -66,6 +66,12 @@ export const rejectVendor = async (vendorId: string, reason: string) => {
   return response.data;
 };
 
+export const toggleVendorStatus = async (vendorId: string): Promise<VendorDTO> => {
+  const response = await api.patch(API_ROUTES.ADMIN.VENDOR_STATUS(vendorId));
+  const raw = response.data?.data ?? response.data;
+  return toVendorDTO(raw);
+};
+
 
 
 const toUserDTO = (raw: Record<string, unknown>): UserDTO => ({

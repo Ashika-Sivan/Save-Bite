@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
 import { getAllUsers, toggleUserStatus } from "../../services/admin.service";
+import toast from "react-hot-toast";
 import type { UserDTO } from "../../types/admin.types";
 
 type StatusTab = "all" | "active" | "blocked";
@@ -71,15 +72,50 @@ const UserList = () => {
     setPage(1);
   };
 
-  const handleBlockToggle = async (user: UserDTO) => {
-    try {
-      const updatedUser = await toggleUserStatus(user.id);
-      setUsers((prev) =>
-        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-      );
-    } catch (err) {
-      console.log(err);
-    }
+  const handleBlockToggle = (user: UserDTO) => {
+    const action = user.isActive ? "block" : "unblock";
+    
+    toast.custom(
+      (currentToast) => (
+        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
+          <h3 className="font-semibold text-gray-900 capitalize">
+            {action} User?
+          </h3>
+          <p className="mt-2 text-sm text-gray-600">
+            Are you sure you want to {action} {user.name}?
+          </p>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(currentToast.id)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                toast.dismiss(currentToast.id);
+                try {
+                  const updatedUser = await toggleUserStatus(user.id);
+                  setUsers((prev) =>
+                    prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+                  );
+                  toast.success(`User ${action}ed successfully`);
+                } catch (err) {
+                  console.log(err);
+                  toast.error(`Failed to ${action} user`);
+                }
+              }}
+              className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+            >
+              {action.charAt(0).toUpperCase() + action.slice(1)}
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity, position: "top-center" }
+    );
   };
 
   const columns: TableColumn<UserDTO>[] = [
