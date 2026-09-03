@@ -215,6 +215,7 @@ export default function VendorOrders() {
   }, [hotelOrders]);
 
   useEffect(() => {
+    // eslint-disable-next-line
     setCurrentPage(1);
   }, [activeFilter, searchQuery, selectedHotelId]);
 
