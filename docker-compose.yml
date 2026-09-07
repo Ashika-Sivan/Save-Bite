@@ -14,6 +14,10 @@ services:
       dockerfile: Dockerfile
     image: savebite-server:latest
     container_name: savebite-backend
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
     ports:
       - "5000:5000"
     depends_on:
@@ -37,10 +41,29 @@ services:
     networks:
       - savebite-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - savebite-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3005:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - savebite-network
+
 networks:
   savebite-network:
     driver: bridge
-
 
 
 
