@@ -18,5 +18,5 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     updateRole(userId:string,role:"vendor"):Promise<IUser|null>
     getAllUsers(options?: IPaginationOptions): Promise<{ users: IUser[]; total: number }>;
     updateUserStatus(userId: string, isActive: boolean): Promise<IUser | null>;
-
+    findUsersWithinRadius(longitude: number, latitude: number, maxDistanceInMeters: number): Promise<IUser[]>;
 }

@@ -6,6 +6,8 @@ import { redisClient } from "./config/redis";
 import { Logger } from "./utils/logger";
 
 
+import { initSocket } from "./config/socket";
+
 const appInstance = new App();
 
 class ServerApp {
@@ -14,8 +16,10 @@ class ServerApp {
 
     constructor() {
         this._server = createServer(appInstance.app);
-        this._db = new connectDB()
-
+        this._db = new connectDB();
+        
+        // Initialize Socket.io
+        initSocket(this._server);
     }
 
     public async start() {

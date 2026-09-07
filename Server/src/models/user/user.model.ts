@@ -11,6 +11,10 @@ export interface IUser extends Document{
     isAdmin:boolean,
     totalOrder:number|0,
     role: "user" | "vendor" | "admin";
+    location?: {
+        type: "Point";
+        coordinates: [number, number]; // [longitude, latitude]
+    };
     createdAt:Date
 
 }
@@ -57,9 +61,22 @@ const userSchema=new Schema<IUser>(
             enum:["user",'vendor','admin'],
             default:'user',
         },
+        location:{
+            type:{
+                type:String,
+                enum:["Point"],
+                default:"Point"
+            },
+            coordinates:{
+                type:[Number],
+                required: false // Optional initially until they share it
+            }
+        }
     },
     {timestamps:true}
 
 )
 
 export const User=mongoose.model<IUser>("User",userSchema)
+
+User.collection.createIndex({ location: "2dsphere" });

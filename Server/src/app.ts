@@ -9,7 +9,7 @@ import adminRoute from "./routes/admin.routes"
 import customerBrowseRouter from "./routes/customerBrowse.routes"
 import orderRouter from "./routes/order.routes"
 import concernRoutes from "./routes/concern.routes"
-
+import { metricsEndpoint, metricsMiddleware } from "./utils/metrics"
 
 
 
@@ -45,7 +45,8 @@ export default class App {
     this.app.use(express.json())
     this.app.use(cookieParser());
 
-
+    // Add Prometheus API tracking middleware
+    this.app.use(metricsMiddleware);
   }
   private routes(): void {
     this.app.use('/api/auth', authRoutes)
@@ -55,6 +56,9 @@ export default class App {
     this.app.use("/api/customer", customerBrowseRouter)
     this.app.use("/api/orders", orderRouter)
     this.app.use("/api/concerns", concernRoutes)
+    
+    // Prometheus metrics route
+    this.app.get("/metrics", metricsEndpoint)
 
   }
 

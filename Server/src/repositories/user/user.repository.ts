@@ -90,6 +90,19 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
         return await User.findByIdAndUpdate(userId, { isActive }, { new: true }).select("-password")
     }
 
+    async findUsersWithinRadius(longitude: number, latitude: number, maxDistanceInMeters: number): Promise<IUser[]> {
+        return await User.find({
+            location: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [longitude, latitude]
+                    },
+                    $maxDistance: maxDistanceInMeters
+                }
+            }
+        }).select("_id"); // We mostly just need the ID to match with socket tracking
+    }
 }
 
 
