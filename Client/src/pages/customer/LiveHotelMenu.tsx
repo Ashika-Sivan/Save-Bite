@@ -39,6 +39,8 @@ import {
     getLiveHotelMenu,
 } from "../../services/customerBrowse.service"
 
+import { getHotelReviews, submitReview, type ReviewItem, type RatingStats } from "../../services/review.service"
+
 const fallbackRestaurantImage =
     "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000"
 
@@ -87,6 +89,25 @@ const LiveHotelMenuPage = () => {
     const [quantities, setQuantities] =
         useState<Record<string, number>>({})
 
+    const [reviewsData, setReviewsData] =
+        useState<{ reviews: ReviewItem[]; stats: RatingStats } | null>(null)
+
+    // Direct Hotel Review Modal State
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+    const [reviewRating, setReviewRating] = useState(5)
+    const [reviewComment, setReviewComment] = useState("")
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+
+    const fetchReviews = async () => {
+        if (!hotelId) return;
+        try {
+            const revRes = await getHotelReviews(hotelId)
+            setReviewsData(revRes)
+        } catch (rErr) {
+            console.error("Failed to load reviews:", rErr)
+        }
+    }
+
     useEffect(() => {
         const fetchMenu =
             async (): Promise<void> => {
@@ -109,6 +130,14 @@ const LiveHotelMenuPage = () => {
                         )
 
                     setMenu(response.data)
+
+                    // Fetch reviews
+                    try {
+                        const revRes = await getHotelReviews(hotelId)
+                        setReviewsData(revRes)
+                    } catch (rErr) {
+                        console.error("Failed to load reviews:", rErr)
+                    }
                 } catch (requestError) {
                     console.error(
                         "Failed to fetch menu:",
@@ -125,6 +154,33 @@ const LiveHotelMenuPage = () => {
 
         void fetchMenu()
     }, [hotelId])
+
+    const handleDirectReviewSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!hotelId) return;
+        if (!reviewComment.trim()) {
+            toast.error("Please enter a review comment");
+            return;
+        }
+
+        try {
+            setIsSubmittingReview(true);
+            await submitReview({
+                hotelId,
+                rating: reviewRating,
+                comment: reviewComment.trim(),
+            });
+            toast.success("Thank you! Your review for this hotel has been published.");
+            setIsReviewModalOpen(false);
+            setReviewComment("");
+            setReviewRating(5);
+            await fetchReviews();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to submit review");
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
 
     const formatTime = (
         value: string
@@ -374,6 +430,15 @@ const LiveHotelMenuPage = () => {
                                 {menu.hotelName}
                             </h1>
 
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-gray-900 shadow-sm">
+                                    ⭐ {reviewsData?.stats?.averageRating ? reviewsData.stats.averageRating.toFixed(1) : "New"}
+                                </span>
+                                <span className="text-xs text-green-100 font-medium">
+                                    {reviewsData?.stats?.totalReviews ? `(${reviewsData.stats.totalReviews} customer reviews)` : "(No reviews yet)"}
+                                </span>
+                            </div>
+
                             <p className="mt-2 text-green-100">
                                 {menu.address}
                             </p>
@@ -618,6 +683,149 @@ const LiveHotelMenuPage = () => {
                         </div>
                     )}
                 </section>
+
+                {/* Customer Reviews Section */}
+                <section className="mt-10 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-5">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">Customer Reviews & Ratings</h2>
+                            <p className="mt-1 text-xs text-gray-500">Real feedback from verified food pickup orders</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setReviewRating(5);
+                                    setReviewComment("");
+                                    setIsReviewModalOpen(true);
+                                }}
+                                className="flex items-center gap-1.5 rounded-full bg-green-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-green-800 active:scale-95"
+                            >
+                                <span>⭐</span> Write a Review
+                            </button>
+                            {reviewsData?.stats && (
+                                <div className="flex items-center gap-3 rounded-2xl bg-amber-50 px-4 py-2 border border-amber-200">
+                                    <span className="text-xl font-black text-amber-700">{reviewsData.stats.averageRating || 0}</span>
+                                    <div>
+                                        <div className="flex text-amber-500 text-xs">
+                                            {"⭐".repeat(Math.round(reviewsData.stats.averageRating || 5))}
+                                        </div>
+                                        <p className="text-[10px] text-gray-600 font-medium">{reviewsData.stats.totalReviews} Reviews</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {!reviewsData?.reviews || reviewsData.reviews.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-gray-500">
+                            No customer reviews published yet for this hotel. Be the first to order and share your experience!
+                        </div>
+                    ) : (
+                        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {reviewsData.reviews.map((rev) => (
+                                <div key={rev._id} className="rounded-2xl border border-gray-100 bg-[#faf7f2] p-4 shadow-sm flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-700 text-xs font-bold text-white uppercase">
+                                                    {rev.userName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-gray-900">{rev.userName}</h4>
+                                                    <div className="flex text-xs text-amber-500">
+                                                        {"⭐".repeat(rev.rating)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span className="text-[11px] text-gray-400">
+                                                {new Date(rev.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                            </span>
+                                        </div>
+                                        <p className="mt-3 text-xs leading-relaxed text-gray-700">
+                                            "{rev.comment}"
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* Direct Hotel Review Modal */}
+                {isReviewModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                        <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Write a Review</h3>
+                                    <p className="text-xs text-gray-500">{menu.hotelName}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsReviewModalOpen(false)}
+                                    className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleDirectReviewSubmit} className="mt-4 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Your Rating *
+                                    </label>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setReviewRating(star)}
+                                                className="text-3xl transition transform hover:scale-110 focus:outline-none"
+                                            >
+                                                {star <= reviewRating ? "⭐" : "☆"}
+                                            </button>
+                                        ))}
+                                        <span className="ml-2 text-sm font-semibold text-gray-700">
+                                            {reviewRating}/5 Stars
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Your Review Comment *
+                                    </label>
+                                    <textarea
+                                        rows={4}
+                                        required
+                                        value={reviewComment}
+                                        onChange={(e) => setReviewComment(e.target.value)}
+                                        placeholder="Share your experience with this restaurant's food quality, service, and pickup experience..."
+                                        className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm focus:border-green-600 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsReviewModalOpen(false)}
+                                        className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="rounded-full bg-green-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:opacity-50"
+                                    >
+                                        {isSubmittingReview ? "Publishing..." : "Publish Review"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

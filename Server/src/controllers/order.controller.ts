@@ -153,4 +153,13 @@ export class OrderController{
             next(error);
         }
     }
+
+    async triggerAutoRefunds(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const refundedCount = await this._orderService.processAutoRefunds();
+            ResponseHelper.success(res, StatusCode.OK, `Auto refunds triggered successfully. Processed ${refundedCount} refunds.`);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

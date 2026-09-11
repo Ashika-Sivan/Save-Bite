@@ -103,3 +103,18 @@ export const toggleUserStatus = async (userId: string): Promise<UserDTO> => {
   const raw = response.data?.data ?? response.data;
   return toUserDTO(raw);
 };
+
+export const getAdminDashboardOverview = async () => {
+  const response = await api.get(API_ROUTES.ADMIN.DASHBOARD_OVERVIEW);
+  return response.data?.data ?? response.data;
+};
+
+export const getAdminRevenueChart = async () => {
+  const response = await api.get(API_ROUTES.ADMIN.DASHBOARD_REVENUE);
+  return response.data?.data ?? response.data;
+};
+
+export const getAdminOrders = async (params?: { page?: number; limit?: number; status?: string }) => {
+  const response = await api.get(API_ROUTES.ADMIN.ORDERS, { params });
+  return response.data?.data ?? response.data;
+};

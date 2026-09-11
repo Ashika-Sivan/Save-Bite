@@ -4,8 +4,10 @@ import { useDispatch } from "react-redux";
 import { Eye, EyeOff, User, Store, ArrowRight, ShieldCheck } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import type { CredentialResponse } from "@react-oauth/google";
 
-import { login, getVendorStatus } from "../../services/auth.service";
+import { login, googleLogin, getVendorStatus } from "../../services/auth.service";
 import { setCredentials } from "../../redux/authSlice";
 import { APP_ROUTES } from "../../constants/appRoutes";
 
@@ -91,6 +93,11 @@ export default function Login() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Request Notification permission on user interaction
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     setLoading(true);
 
     try {
@@ -151,6 +158,57 @@ export default function Login() {
       setErrors((prev) => ({
         ...prev,
         general: "Something went wrong. Please try again.",
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google authentication failed.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await googleLogin(credentialResponse.credential);
+      const { user, accessToken } = response.data || response;
+
+      if (!user || !accessToken) {
+        throw new Error("Unable to login with Google.");
+      }
+
+      dispatch(
+        setCredentials({
+          user,
+          accessToken,
+        })
+      );
+      toast.success("Login successful!");
+
+      if (activeRole === "vendor" || user.role === "vendor") {
+        try {
+          const statusRes = await getVendorStatus();
+          if (statusRes.data.hasApplication) {
+            const status = statusRes.data.status;
+            if (status === "approved") navigate(APP_ROUTES.VENDOR.DASHBOARD, { replace: true });
+            else if (status === "pending") navigate(APP_ROUTES.VENDOR.PENDING, { replace: true });
+            else if (status === "rejected") navigate(APP_ROUTES.VENDOR.REJECTED, { replace: true });
+            else navigate(APP_ROUTES.VENDOR.DASHBOARD, { replace: true });
+          } else {
+            navigate(APP_ROUTES.VENDOR.REGISTER, { replace: true });
+          }
+        } catch {
+          navigate(APP_ROUTES.VENDOR.REGISTER, { replace: true });
+        }
+      } else {
+        navigate("/home", { replace: true });
+      }
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        general: error.response?.data?.message || error.message || "Google Login failed.",
       }));
     } finally {
       setLoading(false);
@@ -306,7 +364,28 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-500">
+        <div className="relative flex items-center py-2">
+          <div className="flex-grow border-t border-gray-200"></div>
+          <span className="flex-shrink-0 px-4 text-xs font-medium text-gray-400">OR</span>
+          <div className="flex-grow border-t border-gray-200"></div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              toast.error("Google Login Failed");
+            }}
+            useOneTap
+            shape="rectangular"
+            theme="outline"
+            text="continue_with"
+            size="large"
+            width="100%"
+          />
+        </div>
+
+        <p className="text-center text-xs text-gray-500 mt-4">
           Don't have an account?{" "}
           <Link
             to={`/signup${activeRole === "vendor" ? "?role=vendor" : ""}`}

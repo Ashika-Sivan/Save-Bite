@@ -15,4 +15,7 @@ export interface IAdminService {
     toggleUserStatus(userId: string): Promise<IAdminUserListDTO>;
     toggleVendorStatus(vendorId: string): Promise<IAdminVendorListDTO>;
     getVendorById(vendorId: string): Promise<IAdminVendorDocumentListDTO>;
+    getDashboardOverview(): Promise<any>;
+    getRevenueChartData(): Promise<any>;
+    getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<any>>;
 }

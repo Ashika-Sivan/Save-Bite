@@ -9,4 +9,5 @@ export interface IOrderService{
     handlePaymentFailed(paymentIntentId: string): Promise<void>;
     redeemPickupCode(ownerId: string, dto: IRedeemPickupCodeDTO): Promise<IRedeemPickupCodeResponseDTO>;
     getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]>;
+    processAutoRefunds(): Promise<number>;
 }

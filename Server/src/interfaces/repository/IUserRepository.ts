@@ -19,4 +19,7 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     getAllUsers(options?: IPaginationOptions): Promise<{ users: IUser[]; total: number }>;
     updateUserStatus(userId: string, isActive: boolean): Promise<IUser | null>;
     findUsersWithinRadius(longitude: number, latitude: number, maxDistanceInMeters: number): Promise<IUser[]>;
+    countUsers(): Promise<number>;
+    countBlockedUsers(): Promise<number>;
+    getRecentUsers(limit: number): Promise<IUser[]>;
 }
