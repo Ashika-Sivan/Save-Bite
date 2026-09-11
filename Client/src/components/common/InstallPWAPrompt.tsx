@@ -9,13 +9,13 @@ interface BeforeInstallPromptEvent extends Event {
 export default function InstallPWAPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  });
 
   useEffect(() => {
-    const checkStandalone = window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-
-    setIsStandalone(checkStandalone);
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
