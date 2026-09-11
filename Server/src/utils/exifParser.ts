@@ -1,12 +1,15 @@
-
+//allow the backend to read exif metadata from an image
 import exifParser from "exif-parser";
 import { Logger } from "./logger";
 
-export interface ExifValidationResult {
+export interface ExifValidationResult {//funcion return (shape)
   photoCapturedAt: Date | null;
   isTimestampValid: boolean | null;
 }
-
+/*
+this is actually create a function which extract the timestamp and also the validation
+imageBuffer is actually the uploaded image,so uploaded file rep as buffer :-uploadPhoto=>backend(binary data (recieve))=>buffer
+*/
 export function extractAndValidateExifTimestamp(
   imageBuffer: Buffer,
   pickupWindowStart: Date,
@@ -27,7 +30,7 @@ export function extractAndValidateExifTimestamp(
     }
 
 
-    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;//19,800,000 milliseconds
     const rawUtcMs = timestampInSeconds * 1000;
     const photoCapturedAt = new Date(rawUtcMs - IST_OFFSET_MS);
 

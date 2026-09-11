@@ -47,7 +47,7 @@ const authService = new AuthService(
   emailService
 );
 const vendorService = new VendorService(vendorRepository)
-const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository)
+const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository,userRepository)
 const adminService = new AdminService(vendorRepository, userRepository, orderRepository);
 
 export const authController = new AuthController(authService);

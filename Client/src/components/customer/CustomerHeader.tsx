@@ -22,6 +22,7 @@ import {
 import {
     logout,
 } from "../../services/auth.service";
+import BellNotification from "./BellNotification";
 interface CustomerLocation {
     latitude: number;
     longitude: number;
@@ -216,6 +217,8 @@ const CustomerHeader = () => {
                                     </span>
                                 )}
                             </button>
+
+                            <BellNotification />
                         </>
                     )}
 

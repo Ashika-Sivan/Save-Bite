@@ -12,12 +12,14 @@ import { getSignedS3Url } from "../../utils/getSignedS3Url";
 import { DAILY_MENU_MESSAGES } from "../../constants/messages";
 import { uploadToS3 } from "../../utils/uploadToS3";
 
+import { IUserRepository } from "../../interfaces/repository/IUserRepository";
+
 export class DailyMenuService implements IDailyMenuService{
     constructor(
         private readonly _dailyMenuRepository:IDailyMenuRepository,
         private readonly _hotelRepository:IHotelRepository,
-        private readonly _vendorRepository:IVendorRepository
-
+        private readonly _vendorRepository:IVendorRepository,
+        private readonly _userRepository:IUserRepository
     ){}
 
    async createMenu(ownerId: string, hotelId: string, data: ICreateDailyMenuDTO): Promise<IDailyMenuResponseDTO> {
@@ -379,6 +381,32 @@ async goLive(ownerId: string,menuId: string): Promise<IDailyMenuResponseDTO> {
         );
     }
 
+    // --- Send Live Notifications via Socket.io ---
+    try {
+        const [longitude, latitude] = hotel.location.coordinates;
+        // Find users within 5km (5000 meters)
+        const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
+        
+        const { getIO, getUserSocketId } = await import("../../config/socket");
+        const io = getIO();
+
+        for (const user of nearbyUsers) {
+            const socketId = await getUserSocketId(user._id.toString());
+            if (socketId) {
+                // Emit notification directly to the connected user
+                io.to(socketId).emit("business_live", {
+                    title: "New Surplus Food Alert! 🍽️",
+                    body: `${hotel.hotelName} just went live with surplus food near you!`,
+                    link: `/customer/restaurants/${hotel._id}/menu`,
+                    hotelId: hotel._id,
+                    vendorId: vendor._id
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Failed to send live notifications:", err);
+    }
+
     return await this.toResponseDTO(
         updatedMenu
     );
@@ -438,6 +466,31 @@ async goLive(ownerId: string,menuId: string): Promise<IDailyMenuResponseDTO> {
         if(!updatedMenu){
             throw new AppError("unble to end menu live status",StatusCode.NOT_FOUND)
         }
+
+        // --- Send Live Ended Notifications via Socket.io ---
+        try {
+            const hotel = await this._hotelRepository.findByIdAndVendorId(menu.hotelId.toString(), vendor._id.toString());
+            if (hotel && hotel.location && hotel.location.coordinates) {
+                const [longitude, latitude] = hotel.location.coordinates;
+                const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
+                
+                const { getIO, getUserSocketId } = await import("../../config/socket");
+                const io = getIO();
+
+                for (const user of nearbyUsers) {
+                    const socketId = await getUserSocketId(user._id.toString());
+                    if (socketId) {
+                        io.to(socketId).emit("business_live_ended", {
+                            hotelId: hotel._id,
+                            vendorId: vendor._id
+                        });
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Failed to send live ended notifications:", err);
+        }
+
         return this.toResponseDTO(updatedMenu)
     }
 

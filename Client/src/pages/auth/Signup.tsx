@@ -3,11 +3,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { signupUser } from "../../services/auth.service";
 import { User, Store, ArrowRight, ShieldCheck } from "lucide-react";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import type { CredentialResponse } from "@react-oauth/google";
+import { googleLogin, getVendorStatus } from "../../services/auth.service";
+import { setCredentials } from "../../redux/authSlice";
+import { APP_ROUTES } from "../../constants/appRoutes";
 
 type AuthRole = "customer" | "vendor";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read active role from query param ?role=vendor or default to customer
@@ -135,6 +143,57 @@ const Signup = () => {
         }
       }
       alert("Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google authentication failed.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await googleLogin(credentialResponse.credential);
+      const { user, accessToken } = response.data || response;
+
+      if (!user || !accessToken) {
+        throw new Error("Unable to login with Google.");
+      }
+
+      dispatch(
+        setCredentials({
+          user,
+          accessToken,
+        })
+      );
+      toast.success("Signup/Login successful!");
+
+      if (activeRole === "vendor" || user.role === "vendor") {
+        try {
+          const statusRes = await getVendorStatus();
+          if (statusRes.data.hasApplication) {
+            const status = statusRes.data.status;
+            if (status === "approved") navigate(APP_ROUTES.VENDOR.DASHBOARD, { replace: true });
+            else if (status === "pending") navigate(APP_ROUTES.VENDOR.PENDING, { replace: true });
+            else if (status === "rejected") navigate(APP_ROUTES.VENDOR.REJECTED, { replace: true });
+            else navigate(APP_ROUTES.VENDOR.DASHBOARD, { replace: true });
+          } else {
+            navigate(APP_ROUTES.VENDOR.REGISTER, { replace: true });
+          }
+        } catch {
+          navigate(APP_ROUTES.VENDOR.REGISTER, { replace: true });
+        }
+      } else {
+        navigate("/home", { replace: true });
+      }
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        email: error.response?.data?.message || error.message || "Google Signup failed.",
+      }));
     } finally {
       setLoading(false);
     }
@@ -326,6 +385,27 @@ const Signup = () => {
               <ArrowRight size={16} />
             </button>
           </form>
+
+          <div className="relative flex items-center py-2 mt-4">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink-0 px-4 text-xs font-medium text-gray-400">OR</span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          <div className="flex justify-center mt-2">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                toast.error("Google Signup Failed");
+              }}
+              useOneTap
+              shape="rectangular"
+              theme="outline"
+              text="signup_with"
+              size="large"
+              width="100%"
+            />
+          </div>
 
           <p className="mt-6 text-center text-xs text-gray-600">
             Already have an account?{" "}

@@ -41,5 +41,10 @@ export const APP_ROUTES = {
     VENDOR_LIST: "/admin/vendorList",
     VENDOR_DETAILS: (vendorId: string) => `/admin/vendors/${vendorId}`,
     CONCERNS: "/admin/concerns",
+    ORDERS: "/admin/orders",
+    NOTIFICATIONS: "/admin/notifications",
+    REVIEWS: "/admin/reviews",
+    TRANSACTIONS: "/admin/transactions",
+    SETTINGS: "/admin/settings",
   },
 } as const;

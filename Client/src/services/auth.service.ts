@@ -38,6 +38,11 @@ export const login = async (loginData: { email: string; password: string }) => {
     return response.data;
 };
 
+export const googleLogin = async (idToken: string) => {
+    const response = await api.post(API_ROUTES.AUTH.GOOGLE_LOGIN, { idToken });
+    return response.data;
+};
+
 export const logout = async () => {
     const response = await api.post(API_ROUTES.AUTH.LOGOUT);
     return response.data;

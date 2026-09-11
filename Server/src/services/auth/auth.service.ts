@@ -1,3 +1,4 @@
+import { OAuth2Client } from "google-auth-library";
 import { IAuthService } from "../../interfaces/service/auth/IAuthService";
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
 import { IUser } from "../../models/user/user.model";
@@ -113,6 +114,14 @@ export class AuthService implements IAuthService {
       );
     }
 
+    if (!user.password) {
+      Logger.error(`[LOGIN FAIL] User "${email}" has no password (Google Auth)`);
+      throw new AppError(
+        AUTH_MESSAGES.INVALID_CREDENTIALS,
+        StatusCode.BAD_REQUEST
+      );
+    }
+
     const passwordMatch = await this._passwordHasher.compare(
       password,
       user.password
@@ -144,6 +153,56 @@ export class AuthService implements IAuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async googleLogin(idToken: string): Promise<ILoginServiceResult> {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      
+      if (!payload || !payload.email) {
+        throw new AppError("Invalid Google token payload", StatusCode.BAD_REQUEST);
+      }
+
+      const { email, name, sub: googleId } = payload;
+      let user = await this._userRepository.findByEmail(email);
+
+      if (!user) {
+        user = await this._userRepository.create({
+          name: name || "Google User",
+          email,
+          authProvider: "google",
+          isAuthenticated: true,
+        });
+      }
+
+      if (!user.isActive) {
+        throw new AppError(AUTH_MESSAGES.ACCESS_DENIED, StatusCode.FORBIDDEN);
+      }
+
+      const tokenPayload = {
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      };
+
+      const accessToken = this._tokenService.generateAccessToken(tokenPayload);
+      const refreshToken = this._tokenService.generateRefreshToken(tokenPayload);
+
+      return {
+        user,
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      Logger.error("Google Auth Error:", error);
+      throw new AppError("Google Authentication Failed", StatusCode.UNAUTHORIZED);
+    }
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {

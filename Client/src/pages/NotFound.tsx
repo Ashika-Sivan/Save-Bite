@@ -2,8 +2,22 @@ import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../constants/appRoutes";
 import { AlertCircle, Home } from "lucide-react";
 
+import { useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
+
 export default function NotFound() {
     const navigate = useNavigate();
+    const user = useSelector((state: RootState) => state.auth.user);
+
+    const handleReturnHome = () => {
+        if (user?.role === "admin") {
+            navigate(APP_ROUTES.ADMIN.DASHBOARD);
+        } else if (user?.role === "vendor") {
+            navigate(APP_ROUTES.VENDOR.DASHBOARD);
+        } else {
+            navigate(APP_ROUTES.PUBLIC.HOME);
+        }
+    };
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-[#f7f8f3] px-4 text-center">
@@ -25,11 +39,11 @@ export default function NotFound() {
 
             <button
                 type="button"
-                onClick={() => navigate(APP_ROUTES.PUBLIC.HOME)}
+                onClick={handleReturnHome}
                 className="mt-8 flex items-center gap-2 rounded-full bg-green-700 px-8 py-3.5 font-bold text-white shadow-md transition-transform hover:-translate-y-1 hover:bg-green-800 hover:shadow-lg"
             >
                 <Home size={20} />
-                Return to Home
+                Return to Dashboard
             </button>
         </div>
     );

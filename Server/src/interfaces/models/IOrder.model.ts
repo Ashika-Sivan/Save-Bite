@@ -20,6 +20,7 @@ export enum OrderStatus {
     CANCELLED = "cancelled",
     CONCERN_RAISED = "concern_raised",
     RESOLVED = "resolved",
+    AUTO_REFUNDED = "auto_refunded",
 }
 
 export enum SettlementStatus {

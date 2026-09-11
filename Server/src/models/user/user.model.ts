@@ -1,10 +1,23 @@
 import mongoose,{Document,Schema} from "mongoose";
 
+const pointSchema = new Schema({
+    type: {
+        type: String,
+        enum: ['Point'],
+        required: true
+    },
+    coordinates: {
+        type: [Number],
+        required: true
+    }
+}, { _id: false });
+
 export interface IUser extends Document{
     name:string,
     email:string,
     phone?:string,
-    password:string,
+    password?:string, // Optional for Google Auth
+    authProvider?: "local" | "google",
     isBusinessOwner:boolean,
     isAuthenticated:boolean,
     isActive:boolean,
@@ -34,8 +47,12 @@ const userSchema=new Schema<IUser>(
         },
         password:{
             type:String,
-            required:true
-
+            required: function() { return this.authProvider === 'local' || !this.authProvider; }
+        },
+        authProvider: {
+            type: String,
+            enum: ['local', 'google'],
+            default: 'local'
         },
         phone:{
             type:String
@@ -61,16 +78,9 @@ const userSchema=new Schema<IUser>(
             enum:["user",'vendor','admin'],
             default:'user',
         },
-        location:{
-            type:{
-                type:String,
-                enum:["Point"],
-                default:"Point"
-            },
-            coordinates:{
-                type:[Number],
-                required: false // Optional initially until they share it
-            }
+        location: {
+            type: pointSchema,
+            required: false
         }
     },
     {timestamps:true}
