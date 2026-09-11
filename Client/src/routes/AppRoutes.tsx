@@ -45,12 +45,17 @@ import MyOrdersPage from "../pages/customer/MyOrdersPage";
 import CustomerLayout from "../components/layouts/CustomerLayout";
 
 import AdminConcerns from "../pages/admin/AdminConcerns";
+import AdminOrders from "../pages/admin/AdminOrders";
+import AdminNotifications from "../pages/admin/AdminNotifications";
+import AdminReviews from "../pages/admin/AdminReviews";
+import AdminTransactions from "../pages/admin/AdminTransactions";
+import AdminSettings from "../pages/admin/AdminSettings";
 
 export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
-                {/* CUSTOMER ROUTES */}
+
                 <Route element={<CustomerLayout />}>
                     <Route path={APP_ROUTES.PUBLIC.HOME} element={<Home />} />
 
@@ -219,10 +224,15 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.ADMIN.VENDOR_LIST} element={<VendorList />} />
                         <Route path={APP_ROUTES.ADMIN.VENDOR_DETAILS(":vendorId")} element={<VendorDetails />} />
                         <Route path={APP_ROUTES.ADMIN.CONCERNS} element={<AdminConcerns />} />
+                        <Route path={APP_ROUTES.ADMIN.ORDERS} element={<AdminOrders />} />
+                        <Route path={APP_ROUTES.ADMIN.NOTIFICATIONS} element={<AdminNotifications />} />
+                        <Route path={APP_ROUTES.ADMIN.REVIEWS} element={<AdminReviews />} />
+                        <Route path={APP_ROUTES.ADMIN.TRANSACTIONS} element={<AdminTransactions />} />
+                        <Route path={APP_ROUTES.ADMIN.SETTINGS} element={<AdminSettings />} />
                     </Route>
                 </Route>
 
-                
+
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>

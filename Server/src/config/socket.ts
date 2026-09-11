@@ -1,10 +1,9 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
+import { User } from "../models/user/user.model";
 import { Logger } from "../utils/logger";
-
-// We use an in-memory map to store the mapping between userId and socketId
-const userSocketMap = new Map<string, string>();
+import { redisClient } from "./redis";
 
 let io: Server;
 
@@ -24,25 +23,46 @@ export const initSocket = (httpServer: HttpServer) => {
                 return next(new Error("Authentication error: Token missing"));
             }
 
-            const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as { id: string, role: string };
-            socket.data.userId = decoded.id;
+            const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as { userId: string, role: string };
+            socket.data.userId = decoded.userId;
             socket.data.role = decoded.role;
+            socket.data.latitude = socket.handshake.auth.latitude;
+            socket.data.longitude = socket.handshake.auth.longitude;
             next();
         } catch (error) {
             return next(new Error("Authentication error: Invalid token"));
         }
     });
 
-    io.on("connection", (socket: Socket) => {
+    io.on("connection", async (socket: Socket) => {
         const userId = socket.data.userId;
         Logger.info(`User connected to socket: ${userId} with socketId: ${socket.id}`);
         
-        // Store the mapping
-        userSocketMap.set(userId, socket.id);
+        try {
+            // Store the mapping in Redis for 24 hours
+            await redisClient.getClient().setEx(`socket:${userId}`, 86400, socket.id);
+            
+            // Update user location if provided
+            if (socket.data.latitude !== undefined && socket.data.longitude !== undefined) {
+                await User.findByIdAndUpdate(userId, {
+                    location: {
+                        type: "Point",
+                        coordinates: [Number(socket.data.longitude), Number(socket.data.latitude)]
+                    }
+                });
+                Logger.info(`Updated location for user ${userId}`);
+            }
+        } catch (err) {
+            Logger.error("Error setting socket data:", err);
+        }
 
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
             Logger.info(`User disconnected from socket: ${userId}`);
-            userSocketMap.delete(userId);
+            try {
+                await redisClient.getClient().del(`socket:${userId}`);
+            } catch (err) {
+                Logger.error("Redis Error deleting socket:", err);
+            }
         });
     });
 
@@ -56,7 +76,13 @@ export const getIO = () => {
     return io;
 };
 
-// Helper to get socket ID for a specific user
-export const getUserSocketId = (userId: string): string | undefined => {
-    return userSocketMap.get(userId);
+// Helper to get socket ID for a specific user from Redis
+export const getUserSocketId = async (userId: string): Promise<string | undefined> => {
+    try {
+        const socketId = await redisClient.getClient().get(`socket:${userId}`);
+        return socketId || undefined;
+    } catch (err) {
+        Logger.error("Redis Error getting socket:", err);
+        return undefined;
+    }
 };

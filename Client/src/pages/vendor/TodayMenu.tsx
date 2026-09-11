@@ -12,9 +12,12 @@ import {
     Power,
     Copy,
     Plus,
-    X
+    X,
+    UtensilsCrossed
 } from "lucide-react";
 import { usePreviousMenu as applyPreviousMenuApi } from "../../services/menu.service";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { EmptyState } from "../../components/common/EmptyState";
 
 import PickupWindowForm from
     "../../components/vendor/PickupWindowForm";
@@ -290,12 +293,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
 
     if (isLoading) {
         return (
-            <main className="flex flex-1 items-center justify-center">
-                <Loader2
-                    size={34}
-                    className="animate-spin text-green-700"
-                />
-            </main>
+            <LoadingSpinner message="Loading today's menu..." fullScreen />
         );
     }
 
@@ -488,9 +486,11 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                             </div>
 
                             {menu.items.length === 0 ? (
-                                <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
-                                    No food items added yet.
-                                </div>
+                                <EmptyState 
+                                    icon={<UtensilsCrossed className="h-10 w-10" />}
+                                    title="No food items yet"
+                                    description="Start adding leftover food and stock to your menu for today."
+                                />
                             ) : (
                                 <div className="grid gap-5 md:grid-cols-2">
                                     {menu.items.map(

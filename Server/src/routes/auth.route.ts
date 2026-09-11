@@ -25,6 +25,11 @@ router.post(
 );
 
 router.post(
+  ROUTES.AUTH.GOOGLE,
+  authController.googleLogin.bind(authController)
+);
+
+router.post(
   ROUTES.AUTH.LOGOUT,
   authController.logout.bind(authController)
 );

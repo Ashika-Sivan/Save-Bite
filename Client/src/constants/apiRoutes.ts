@@ -13,6 +13,7 @@ export const API_ROUTES = {
     ME: "/auth/me",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    GOOGLE_LOGIN: "/auth/google",
   },
 
   VENDOR: {
@@ -48,6 +49,15 @@ export const API_ROUTES = {
     VENDOR_STATUS: (vendorId: string) => `/admin/vendors/${vendorId}/status`,
     USERS: "/admin/users",
     USER_STATUS: (userId: string) => `/admin/users/${userId}/status`,
+    DASHBOARD_OVERVIEW: "/admin/dashboard/overview",
+    DASHBOARD_REVENUE: "/admin/dashboard/revenue",
+    ORDERS: "/admin/orders",
+    NOTIFICATIONS_SCHEDULES: "/admin/notifications/schedules",
+    NOTIFICATIONS_BROADCAST: "/admin/notifications/broadcast",
+    NOTIFICATIONS_HISTORY: "/admin/notifications/history",
+    TRANSACTIONS_OVERVIEW: "/admin/transactions/overview",
+    TRANSACTIONS_VENDORS: "/admin/transactions/vendors",
+    TRANSACTIONS_RECENT: "/admin/transactions/recent",
   },
   ORDER:{
     CREATE_CHECKOUT:"/orders/checkout",
@@ -63,5 +73,13 @@ export const API_ROUTES = {
     ADMIN_BY_ID: (concernId: string) => `/concerns/admin/concerns/${concernId}`,
     ADMIN_APPROVE: (concernId: string) => `/concerns/admin/concerns/${concernId}/approve`,
     ADMIN_REJECT: (concernId: string) => `/concerns/admin/concerns/${concernId}/reject`,
+  },
+  REVIEWS: {
+    SUBMIT: "/reviews",
+    GET_HOTEL_REVIEWS: (hotelId: string) => `/reviews/hotel/${hotelId}`,
+    GET_ORDER_REVIEW: (orderId: string) => `/reviews/order/${orderId}`,
+    ADMIN_ALL: "/admin/reviews",
+    ADMIN_TOGGLE_VISIBILITY: (id: string) => `/admin/reviews/${id}/visibility`,
+    ADMIN_DELETE: (id: string) => `/admin/reviews/${id}`,
   },
 } as const;

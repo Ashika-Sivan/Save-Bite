@@ -14,5 +14,7 @@ export interface IVendorRepository {
   reapplyVendor(ownerId: string, data: IVendorCreateData): Promise<IVendor | null>;
   toggleVendorStatus(vendorId: string, status: VendorStatus): Promise<IVendor | null>;
   findByIdWithOwner(vendorId: string): Promise<IVendorWithOwner | null>;
-
+  countVendors(): Promise<number>;
+  countPendingVendors(): Promise<number>;
+  getRecentVendors(limit: number): Promise<IVendorWithOwner[]>;
 }

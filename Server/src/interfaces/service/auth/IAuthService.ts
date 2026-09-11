@@ -20,6 +20,8 @@ export interface IAuthService {
 
   login(data: ILoginRequestDTO): Promise<ILoginServiceResult>;
   
+  googleLogin(idToken: string): Promise<ILoginServiceResult>;
+  
 
   refreshToken(refreshToken: string): Promise<{ accessToken: string }>;
 

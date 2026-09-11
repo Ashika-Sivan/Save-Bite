@@ -65,10 +65,16 @@ export interface IOrderRepository {
     markPaymentFailed(paymentIntentId: string): Promise<IOrder | null>;
     markOrderPaid(paymentIntentId: string, data: IMarkOrderPaidData, session?: ClientSession): Promise<IOrder | null>;
     findByPickupCode(pickupCode: string): Promise<IOrder | null>;
+
     markOrderCollected(orderId: string, collectedAt: Date, session?: ClientSession): Promise<IOrder | null>;
     findById(orderId: string): Promise<IOrder | null>;
+
     updateOrderStatus(orderId: string, orderStatus: OrderStatus): Promise<IOrder | null>;
     findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]>;
-
-
+    findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]>;
+    countTotalOrders(): Promise<number>;
+    
+    getTotalRevenue(): Promise<number>;
+    getRevenueLast7Days(): Promise<{ date: string; revenue: number; orders: number }[]>;
+    findAllOrders(filters?: { page?: number; limit?: number; status?: string }): Promise<{ orders: IOrder[], total: number }>;
 }

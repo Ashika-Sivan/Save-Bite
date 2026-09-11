@@ -18,8 +18,12 @@ api.interceptors.request.use(
 
         if(token){//if user is logged in and a token exists
             config.headers.Authorization=`Bearer ${token}`;//we are actually adding the authorisation header to the outgoing request:-so the header will look like:[ Bearer hdedfwifofoi]
-
         }
+
+        // Bypass localtunnel / tunnel reminder html screen for API calls
+        config.headers["bypass-tunnel-reminder"] = "true";
+        config.headers["Bypass-Tunnel-Reminder"] = "true";
+
         return config//send the request backend
     },
 
