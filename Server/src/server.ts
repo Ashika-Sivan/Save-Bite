@@ -7,6 +7,8 @@ import { Logger } from "./utils/logger";
 
 
 import { initSocket } from "./config/socket";
+import { initSchedulers } from "./jobs/autoRefund.job";
+import { initNotificationScheduler } from "./utils/notificationScheduler";
 
 const appInstance = new App();
 
@@ -17,8 +19,8 @@ class ServerApp {
     constructor() {
         this._server = createServer(appInstance.app);
         this._db = new connectDB();
-        
-        // Initialize Socket.io
+
+
         initSocket(this._server);
     }
 
@@ -29,6 +31,8 @@ class ServerApp {
         this._server.listen(5000, () => {
             Logger.info(`Server running at http://localhost:5000`);
 
+            initSchedulers();
+            initNotificationScheduler();
         })
 
     }

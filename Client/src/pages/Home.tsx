@@ -60,7 +60,8 @@ interface CustomerLocation {
 export default function Home() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { liveHotelIds } = useSelector((state: RootState) => state.notification);
   const cartHotelId = useSelector((state: RootState) => state.cart.hotelId);
 
   const handleAddToCartFromHome = (item: DisplayMenuItem) => {
@@ -369,7 +370,18 @@ export default function Home() {
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visibleHotels.map((hotel) => (
-                <article key={hotel.hotelId} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+                <article key={hotel.hotelId} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md relative">
+                  
+                  {liveHotelIds.includes(hotel.hotelId) && (
+                    <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 rounded-md bg-red-600/90 px-2 py-1 text-xs font-bold text-white shadow-md backdrop-blur-sm animate-pulse">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-white"></span>
+                      </span>
+                      LIVE NOW
+                    </div>
+                  )}
+
                   <img src={getImageUrl(hotel.hotelImageKey)} onError={(event) => { event.currentTarget.src = fallbackRestaurantImage; }} alt={hotel.hotelName} className="h-40 w-full object-cover" />
                   <div className="p-4">
                     <div className="flex justify-between gap-3">

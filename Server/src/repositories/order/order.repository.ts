@@ -170,12 +170,78 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
             .sort({ createdAt: -1 });
     }
 
+    async findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]> {
+        return await Order.find({
+            orderStatus: OrderStatus.PLACED,
+            createdAt: { $lt: date }
+        });
+    }
 
+    async countTotalOrders(): Promise<number> {
+        return await Order.countDocuments({ paymentStatus: PaymentStatus.PAID });
+    }
 
+    async getTotalRevenue(): Promise<number> {
+        const result = await Order.aggregate([
+            { $match: { paymentStatus: PaymentStatus.PAID } },
+            { $group: { _id: null, total: { $sum: "$platformCommissionAmount" } } }
+        ]);
+        return result.length > 0 ? result[0].total : 0;
+    }
 
+    async getRevenueLast7Days(): Promise<{ date: string; revenue: number; orders: number }[]> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
 
+        const result = await Order.aggregate([
+            {
+                $match: {
+                    paymentStatus: PaymentStatus.PAID,
+                    createdAt: { $gte: sevenDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+                    },
+                    revenue: { $sum: "$platformCommissionAmount" },
+                    orders: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
 
+        return result.map(item => ({
+            date: item._id,
+            revenue: item.revenue,
+            orders: item.orders
+        }));
+    }
 
+    async findAllOrders(filters?: { page?: number; limit?: number; status?: string }): Promise<{ orders: IOrder[], total: number }> {
+        const page = filters?.page || 1;
+        const limit = filters?.limit || 10;
+        const skip = (page - 1) * limit;
 
+        const query: any = {};
+        if (filters?.status) {
+            query.orderStatus = filters.status;
+        }
 
+        const [orders, total] = await Promise.all([
+            Order.find(query)
+                .populate("customerId", "name email")
+                .populate("vendorId", "businessName")
+                .populate("hotelId", "hotelName")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
+            Order.countDocuments(query)
+        ]);
+
+        return { orders, total };
+    }
 }

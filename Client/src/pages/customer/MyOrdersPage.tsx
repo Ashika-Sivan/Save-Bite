@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { getMyOrders, type Order } from "../../services/order.service";
 import { raiseOrderConcern } from "../../services/concern.service";
+import { submitReview } from "../../services/review.service";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { EmptyState } from "../../components/common/EmptyState";
+import { ShoppingBag } from "lucide-react";
 
 interface ErrorResponse {
     message?: string;
@@ -22,6 +26,12 @@ const MyOrdersPage = () => {
     const [concernPhoto, setConcernPhoto] = useState<File | null>(null);
     const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
     const [isSubmittingConcern, setIsSubmittingConcern] = useState(false);
+
+    //Rate & Review Hotel
+    const [selectedOrderForReview, setSelectedOrderForReview] = useState<Order | null>(null);
+    const [reviewRating, setReviewRating] = useState<number>(5);
+    const [reviewComment, setReviewComment] = useState<string>("");
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
     const fetchOrders = async () => {
         try {
@@ -183,13 +193,38 @@ const MyOrdersPage = () => {
         }
     };
 
+    const handleReviewSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedOrderForReview) return;
+        if (!reviewComment.trim()) {
+            toast.error("Please enter a review comment");
+            return;
+        }
+
+        try {
+            setIsSubmittingReview(true);
+            await submitReview({
+                orderId: selectedOrderForReview.id,
+                hotelId: selectedOrderForReview.hotelId,
+                rating: reviewRating,
+                comment: reviewComment.trim(),
+            });
+            toast.success("Thank you for reviewing! Your review is now published.");
+            setSelectedOrderForReview(null);
+            setReviewComment("");
+            setReviewRating(5);
+            await fetchOrders();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to submit review");
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex min-h-[70vh] items-center justify-center bg-[#faf7ef]">
-                <div className="text-center">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-green-200 border-t-green-700" />
-                    <p className="mt-3 text-sm font-medium text-gray-500">Loading your orders...</p>
-                </div>
+                <LoadingSpinner message="Loading your orders..." />
             </div>
         );
     }
@@ -248,11 +283,13 @@ const MyOrdersPage = () => {
               
                 <div className="mt-8 space-y-6">
                     {currentOrders.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
-                            <p className="font-medium text-gray-500">
-                                {activeTab === "active" ? "No active orders right now." : "No previous orders found."}
-                            </p>
-                        </div>
+                        <EmptyState 
+                            icon={<ShoppingBag className="h-10 w-10" />}
+                            title={activeTab === "active" ? "No active orders" : "No previous orders"}
+                            description={activeTab === "active" 
+                                ? "You don't have any active food pickups. Start exploring nearby surplus food!" 
+                                : "You haven't completed any orders yet."}
+                        />
                     ) : (
                         currentOrders.map((order) => {
                             const shortId = `ORD-${order.id.slice(-5).toUpperCase()}`;
@@ -338,6 +375,19 @@ const MyOrdersPage = () => {
                                                             className="rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
                                                         >
                                                             ⚠️ Raise Concern
+                                                        </button>
+                                                    )}
+                                                    {(order.orderStatus === "placed" || order.orderStatus === "collected" || order.orderStatus === "resolved") && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedOrderForReview(order);
+                                                                setReviewRating(5);
+                                                                setReviewComment("");
+                                                            }}
+                                                            className="flex items-center gap-1 rounded-full border border-amber-400 bg-amber-400/10 px-4 py-1.5 text-xs font-bold text-amber-900 shadow-sm transition hover:bg-amber-400/20 active:scale-95"
+                                                        >
+                                                            <span>⭐</span> Write Review
                                                         </button>
                                                     )}
                                                 </div>
@@ -432,6 +482,81 @@ const MyOrdersPage = () => {
                                         className="rounded-full bg-emerald-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50"
                                     >
                                         {isSubmittingConcern ? "Submitting..." : "Submit Concern"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Rate & Review Hotel Modal */}
+                {selectedOrderForReview && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                        <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Rate & Review Hotel</h3>
+                                    <p className="text-xs text-gray-500">{selectedOrderForReview.hotelName}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedOrderForReview(null)}
+                                    className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleReviewSubmit} className="mt-4 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Your Rating *
+                                    </label>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setReviewRating(star)}
+                                                className="text-3xl transition transform hover:scale-110 focus:outline-none"
+                                            >
+                                                {star <= reviewRating ? "⭐" : "☆"}
+                                            </button>
+                                        ))}
+                                        <span className="ml-2 text-sm font-semibold text-gray-700">
+                                            {reviewRating}/5 Stars
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                        Your Review Comment *
+                                    </label>
+                                    <textarea
+                                        rows={4}
+                                        required
+                                        value={reviewComment}
+                                        onChange={(e) => setReviewComment(e.target.value)}
+                                        placeholder="How was the food quality, pickup experience, and value for money?"
+                                        className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm focus:border-green-600 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedOrderForReview(null)}
+                                        className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="rounded-full bg-green-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:opacity-50"
+                                    >
+                                        {isSubmittingReview ? "Publishing..." : "Publish Review"}
                                     </button>
                                 </div>
                             </form>

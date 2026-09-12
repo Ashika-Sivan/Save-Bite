@@ -62,9 +62,7 @@ export class AuthController {
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { user, accessToken, refreshToken } =
-        await this._authService.login(req.body);
-
+      const { user, accessToken, refreshToken } = await this._authService.login(req.body);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
@@ -76,6 +74,35 @@ export class AuthController {
       const userData = user ? toUserResponseDTO(user) : null;
 
       ResponseHelper.success(res, StatusCode.OK, AUTH_MESSAGES.LOGIN_SUCCESS, {
+        user: userData,
+        accessToken,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { idToken } = req.body;
+      if (!idToken) {
+        throw new AppError("ID Token is missing", StatusCode.BAD_REQUEST);
+      }
+
+      const { user, accessToken, refreshToken } =
+        await this._authService.googleLogin(idToken);
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false, // process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: env.REFRESH_COOKIE_MAX_AGE,
+        path: '/'
+      });
+
+      const userData = user ? toUserResponseDTO(user) : null;
+
+      ResponseHelper.success(res, StatusCode.OK, "Google Login Successful", {
         user: userData,
         accessToken,
       });
@@ -144,11 +171,8 @@ export class AuthController {
     }
   }
 
-  async forgotPassword(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async forgotPassword(req: Request,res: Response, next: NextFunction): Promise<void> {
+  
     try {
       const result = await this._authService.forgotPassword(req.body);
 
@@ -158,11 +182,7 @@ export class AuthController {
     }
   }
 
-  async resetPassword(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async resetPassword( req: Request,res: Response,next: NextFunction): Promise<void> {
     try {
       const result = await this._authService.resetPassword(req.body);
 

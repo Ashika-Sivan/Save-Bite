@@ -2,6 +2,7 @@ export const ROUTES = {
   AUTH: {
     REGISTER: "/register",
     LOGIN: "/login",
+    GOOGLE: "/google",
     LOGOUT: "/logout",
     VERIFY_OTP: "/verify-otp",
     RESEND_OTP: "/resend-otp",

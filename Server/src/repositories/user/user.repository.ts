@@ -103,6 +103,18 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
             }
         }).select("_id"); // We mostly just need the ID to match with socket tracking
     }
+
+    async countUsers(): Promise<number> {
+        return await User.countDocuments();
+    }
+
+    async countBlockedUsers(): Promise<number> {
+        return await User.countDocuments({ isActive: false });
+    }
+
+    async getRecentUsers(limit: number): Promise<IUser[]> {
+        return await User.find().sort({ createdAt: -1 }).limit(limit).exec();
+    }
 }
 
 

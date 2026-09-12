@@ -9,6 +9,10 @@ import adminRoute from "./routes/admin.routes"
 import customerBrowseRouter from "./routes/customerBrowse.routes"
 import orderRouter from "./routes/order.routes"
 import concernRoutes from "./routes/concern.routes"
+import adminNotificationRoutes from "./routes/adminNotification.routes"
+import reviewRoutes from "./routes/review.routes"
+import adminReviewRoutes from "./routes/adminReview.routes"
+import adminTransactionRoutes from "./routes/adminTransaction.routes"
 import { metricsEndpoint, metricsMiddleware } from "./utils/metrics"
 
 
@@ -37,7 +41,18 @@ export default class App {
 
     this.app.use(
       cors({
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+          if (
+            !origin ||
+            allowedOrigins.includes(origin) ||
+            origin.endsWith(".loca.lt") ||
+            origin.endsWith(".ngrok-free.app")
+          ) {
+            callback(null, true);
+          } else {
+            callback(null, true);
+          }
+        },
         credentials: true,
       })
     );
@@ -52,10 +67,14 @@ export default class App {
     this.app.use('/api/auth', authRoutes)
     this.app.use('/api/auth', otpRoutes)
     this.app.use("/api/vendor", vendorRoute)
+    this.app.use("/api/admin/notifications", adminNotificationRoutes)
+    this.app.use("/api/admin/reviews", adminReviewRoutes)
+    this.app.use("/api/admin/transactions", adminTransactionRoutes)
     this.app.use("/api/admin", adminRoute)
     this.app.use("/api/customer", customerBrowseRouter)
     this.app.use("/api/orders", orderRouter)
     this.app.use("/api/concerns", concernRoutes)
+    this.app.use("/api/reviews", reviewRoutes)
     
     // Prometheus metrics route
     this.app.get("/metrics", metricsEndpoint)

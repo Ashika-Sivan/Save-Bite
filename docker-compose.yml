@@ -22,6 +22,7 @@ services:
       - "5000:5000"
     depends_on:
       - redis
+    restart: unless-stopped
     networks:
       - savebite-network
 
@@ -31,7 +32,8 @@ services:
       dockerfile: dockerfile
       args:
         VITE_BASE_URL: ${VITE_BASE_URL:-/api}
-        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-pk_test_51U2yeI2Le4E4oyQiw4p4bCrRZozEROyeZyTcA0vsAlvpqt5gJH2GY7tKRYSHom6Fc1R9hPUfruWoYmQ3mdQGWXjU00XCI0ESxB}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-971184169971-umpca7fr81kfur1ghb8ihgrkempmt91l.apps.googleusercontent.com}
     image: savebite-client:latest
     container_name: savebite-frontend
     ports:
@@ -48,6 +50,15 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - savebite-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - savebite-network
 

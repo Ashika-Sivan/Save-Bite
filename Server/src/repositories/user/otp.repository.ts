@@ -1,5 +1,5 @@
 import { RedisClientType } from "@redis/client";
-export const OTP_EXPIRY_SECONDS = Number(process.env.OTP_EXPIRY_SECONDS);
+export const OTP_EXPIRY_SECONDS = Number(process.env.OTP_EXPIRY_SECONDS) || 300;
 //get otp
 //save otp
 //delete otp

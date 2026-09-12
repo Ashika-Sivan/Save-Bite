@@ -534,4 +534,42 @@ export class OrderService implements IOrderService {
         const orders = await this._orderRepository.findAllByVendorId(vendor._id);
         return orders.map((order) => this.mapOrderToResponse(order));
     }
+
+    async processAutoRefunds(): Promise<number> {
+        // Find orders placed > 24 hours ago that are still in "PLACED" state
+        const date24HoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const oldOrders = await this._orderRepository.findPlacedOrdersOlderThan(date24HoursAgo);
+
+        let refundedCount = 0;
+
+        for (const order of oldOrders) {
+            try {
+                if (!order.stripePaymentIntentId) {
+                    continue; // Should not happen for PLACED orders, but safety check
+                }
+
+                // 70% refund for no-show
+                const refundRatio = 0.70;
+                const refundAmount = Number((order.totalAmount * refundRatio).toFixed(2));
+                const refundAmountInPaise = Math.round(refundAmount * 100);
+
+                // Talk to stripe to issue refund
+                await stripe.refunds.create({
+                    payment_intent: order.stripePaymentIntentId,
+                    amount: refundAmountInPaise,
+                    reason: "requested_by_customer" // best approximation for no-show refund
+                });
+
+                // Update order status to AUTO_REFUNDED
+                await this._orderRepository.updateOrderStatus(order._id.toString(), OrderStatus.AUTO_REFUNDED);
+                
+                refundedCount++;
+            } catch (error) {
+                // We log and continue so one failing refund doesn't break the whole batch
+                console.error(`Failed to auto-refund order ${order._id}:`, error);
+            }
+        }
+
+        return refundedCount;
+    }
 }

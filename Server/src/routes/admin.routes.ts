@@ -54,4 +54,36 @@ router.get(
   adminController.getVendorById.bind(adminController)
 );
 
+import { orderController } from "../config/dependencies";
+
+// Manual trigger for auto-refunds (testing/admin tool)
+router.post(
+  "/trigger-auto-refunds",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  orderController.triggerAutoRefunds.bind(orderController)
+);
+
+// Admin Dashboard stats
+router.get(
+  "/dashboard/overview",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  adminController.getDashboardOverview.bind(adminController)
+);
+
+router.get(
+  "/dashboard/revenue",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  adminController.getRevenueChart.bind(adminController)
+);
+
+router.get(
+  "/orders",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  adminController.getAllOrders.bind(adminController)
+);
+
 export default router;

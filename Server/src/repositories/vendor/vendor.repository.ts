@@ -146,4 +146,18 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
 
    }
 
+   async countVendors(): Promise<number> {
+       return await Vendor.countDocuments();
+   }
+
+   async countPendingVendors(): Promise<number> {
+       return await Vendor.countDocuments({ status: VendorStatus.PENDING });
+   }
+
+   async getRecentVendors(limit: number): Promise<IVendorWithOwner[]> {
+       return await Vendor.find()
+           .populate<{ ownerId: IPopulatedVendorOwner }>("ownerId", "name email phone")
+           .sort({ createdAt: -1 })
+           .limit(limit);
+   }
 }

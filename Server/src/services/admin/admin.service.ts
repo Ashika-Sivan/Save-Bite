@@ -240,4 +240,50 @@ export class AdminService implements IAdminService {
             documentUrls,
         };
     }
+
+    async getDashboardOverview(): Promise<any> {
+        const totalUsers = await this._userRepository.countUsers();
+        const blockedUsers = await this._userRepository.countBlockedUsers();
+        const totalVendors = await this._vendorRepository.countVendors();
+        const pendingApplications = await this._vendorRepository.countPendingVendors();
+        const totalOrders = await this._orderRespository.countTotalOrders();
+        const totalRevenue = await this._orderRespository.getTotalRevenue();
+
+        const recentUsers = await this._userRepository.getRecentUsers(5);
+        const recentVendors = await this._vendorRepository.getRecentVendors(5);
+
+        return {
+            totalUsers,
+            blockedUsers,
+            totalVendors,
+            pendingApplications,
+            totalOrders,
+            totalRevenue,
+            recentUsers: recentUsers.map(toAdminUserListDTO),
+            recentVendors: recentVendors.map(toAdminVendorListDTO),
+        };
+    }
+
+    async getRevenueChartData(): Promise<any> {
+        const revenueData = await this._orderRespository.getRevenueLast7Days();
+        return revenueData;
+    }
+
+    async getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<any>> {
+        const { orders, total } = await this._orderRespository.findAllOrders({
+            page: options?.page,
+            limit: options?.limit,
+            status: options?.status
+        });
+
+        const totalPages = Math.ceil(total / (options?.limit || 10));
+
+        return {
+            items: orders,
+            total,
+            page: options?.page || 1,
+            limit: options?.limit || 10,
+            totalPages
+        };
+    }
 }
