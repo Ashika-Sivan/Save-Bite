@@ -14,6 +14,7 @@ import { IOrderService } from "../../interfaces/service/order/IOrder.service";
 import stripe from "../../config/stripe";
 import mongoose from "mongoose";
 import { toOrderResponseDTO } from "../../mappers/order.mapper";
+import { getIO, getUserSocketId } from "../../config/socket";
 
 export class OrderService implements IOrderService {
     constructor(
@@ -301,6 +302,21 @@ export class OrderService implements IOrderService {
     if (!updatedOrder) {
         throw new AppError("Unable to mark the order as paid", StatusCode.BAD_REQUEST);
     }
+    
+    try {
+        const io = getIO();
+        const vendorSocketId = await getUserSocketId(updatedOrder.vendorId.toString());
+        if (vendorSocketId) {
+            io.to(vendorSocketId).emit("new_order", {
+                title: "🎉 New Order Received!",
+                body: `Order #${updatedOrder._id.toString().slice(-5).toUpperCase()} has just been placed.`,
+                link: "/vendor/orders",
+                orderId: updatedOrder._id.toString()
+            });
+        }
+    } catch (socketError) {
+        console.error("Failed to emit new_order socket event:", socketError);
+    }
     }
 
     async handlePaymentFailed(paymentIntentId: string): Promise<void> {
@@ -552,6 +568,10 @@ export class OrderService implements IOrderService {
 
         if (diffMinutes > 5) {
             throw new AppError("Cancellation grace period of 5 minutes has expired", StatusCode.BAD_REQUEST);
+        }
+
+        if (order.pickupWindow?.startTime && now >= order.pickupWindow.startTime.getTime()) {
+            throw new AppError("Orders cannot be cancelled once the pickup window has started", StatusCode.BAD_REQUEST);
         }
 
         if (order.stripePaymentIntentId) {

@@ -596,6 +596,12 @@ const CartPage = () => {
                                 ? "The ordering cutoff for this menu has passed."
                                 : "Stock, prices and cutoff will be checked again by the server before payment."}
                         </p>
+                        
+                        {!isOrderingClosed && (
+                            <p className="mt-4 text-center text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200 shadow-sm">
+                                <strong>⚠️ Cancellation Policy:</strong> You may cancel your order within 5 minutes of placing it. However, <strong>orders cannot be cancelled once the pickup window has started</strong>.
+                            </p>
+                        )}
                     </aside>
                 </div>
             </div>

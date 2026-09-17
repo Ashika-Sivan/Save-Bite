@@ -367,10 +367,11 @@ const MyOrdersPage = () => {
                                 const shortId = `ORD-${order.id.slice(-5).toUpperCase()}`;
                                 const isEligibleForConcern = order.orderStatus === "placed";
                                 
-                                // Check if order is eligible for cancellation (within 5 minutes of creation)
+                                // Check if order is eligible for cancellation (within 5 minutes of creation AND pickup hasn't started)
                                 const isEligibleForCancel = order.orderStatus === "placed" && 
                                     order.createdAt && 
-                                    (currentTime - new Date(order.createdAt).getTime()) / (1000 * 60) <= 5;
+                                    (currentTime - new Date(order.createdAt).getTime()) / (1000 * 60) <= 5 &&
+                                    (!order.pickupWindow?.startTime || currentTime < new Date(order.pickupWindow.startTime).getTime());
 
                                 return (
                                     <div
