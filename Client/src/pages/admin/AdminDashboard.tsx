@@ -1,25 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
-import {
-  Users,
-  Store,
-  UserCheck,
-  Clock3,
-  LogOut,
-  IndianRupee,
-  ShoppingBag
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
-} from "recharts";
+import { Users, Store, UserCheck, Clock3, LogOut, IndianRupee, ShoppingBag } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 import { logout } from "../../services/auth.service";
 import { useAppDispatch } from "../../hooks/reduxHooks";
 import { clearCredentials } from "../../redux/authSlice";
@@ -42,18 +25,25 @@ const AdminDashboard = () => {
 
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [advancedCharts, setAdvancedCharts] = useState<{ orderStatusDistribution: any[], topVendors: any[] } | null>(null);
   const [liveMetrics, setLiveMetrics] = useState<{ customers: number; vendors: number; admins: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Colors for the pie chart
+  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [overviewData, chart] = await Promise.all([
+        const { getAdminAdvancedCharts } = await import("../../services/admin.service");
+        const [overviewData, chart, advanced] = await Promise.all([
           getAdminDashboardOverview(),
-          getAdminRevenueChart()
+          getAdminRevenueChart(),
+          getAdminAdvancedCharts()
         ]);
         setOverview(overviewData);
         setChartData(chart);
+        setAdvancedCharts(advanced);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
         toast.error("Failed to load dashboard statistics");
@@ -231,29 +221,91 @@ const AdminDashboard = () => {
 
         {/* Revenue Chart */}
         <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold text-gray-900 mb-6">
+            Revenue Over Last 7 Days
+          </h3>
+          <div className="h-80 w-full">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="date" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip />
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#15803d" strokeWidth={3} name="Revenue (₹)" />
+                  <Line yAxisId="right" type="monotone" dataKey="orders" stroke="#2563eb" strokeWidth={3} name="Orders" />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-400">
+                {isLoading ? "Loading chart data..." : "No revenue data available for the last 7 days."}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Advanced Charts Section */}
+        <section className="mt-10 grid gap-5 lg:grid-cols-2">
+          {/* Pie Chart: Order Status */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-6">
-              Revenue Over Last 7 Days
+              Order Status Distribution
             </h3>
             <div className="h-80 w-full">
-              {chartData.length > 0 ? (
+              {advancedCharts?.orderStatusDistribution && advancedCharts.orderStatusDistribution.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="date" />
-                    <YAxis yAxisId="left" />
-                    <YAxis yAxisId="right" orientation="right" />
+                  <PieChart>
+                    <Pie
+                      data={advancedCharts.orderStatusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {advancedCharts.orderStatusDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
                     <Legend />
-                    <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#15803d" strokeWidth={3} name="Revenue (₹)" />
-                    <Line yAxisId="right" type="monotone" dataKey="orders" stroke="#2563eb" strokeWidth={3} name="Orders" />
-                  </LineChart>
+                  </PieChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">
-                  {isLoading ? "Loading chart data..." : "No revenue data available for the last 7 days."}
+                  {isLoading ? "Loading data..." : "No order status data available."}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Bar Chart: Top 5 Vendors */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              Top 5 Vendors by Revenue
+            </h3>
+            <div className="h-80 w-full">
+              {advancedCharts?.topVendors && advancedCharts.topVendors.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={advancedCharts.topVendors} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis />
+                    <Tooltip cursor={{ fill: 'transparent' }} />
+                    <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue (₹)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  {isLoading ? "Loading data..." : "No vendor revenue data available."}
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         {/* Quick Actions */}
@@ -305,7 +357,7 @@ const AdminDashboard = () => {
                 View all
               </button>
             </div>
-            
+
             <div className="mt-6">
               {overview?.recentVendors && overview.recentVendors.length > 0 ? (
                 <div className="flex flex-col gap-4">
@@ -315,9 +367,8 @@ const AdminDashboard = () => {
                         <p className="font-semibold text-gray-900">{vendor.businessName}</p>
                         <p className="text-xs text-gray-500">{vendor.ownerName} • {vendor.businessType}</p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          vendor.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                          vendor.status === 'approved' ? 'bg-green-100 text-green-700' :
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${vendor.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                        vendor.status === 'approved' ? 'bg-green-100 text-green-700' :
                           'bg-red-100 text-red-700'
                         }`}>
                         {vendor.status.toUpperCase()}
@@ -357,8 +408,7 @@ const AdminDashboard = () => {
                         <p className="font-semibold text-gray-900">{user.name}</p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
                         {user.isActive ? "ACTIVE" : "BLOCKED"}
                       </span>

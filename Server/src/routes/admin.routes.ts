@@ -34,4 +34,6 @@ router.get("/orders",authMiddleware.authenticate,authMiddleware.authorize("admin
 
 router.get("/dashboard/live-metrics",authMiddleware.authenticate,authMiddleware.authorize("admin"),adminController.getLiveMetrics.bind(adminController));
 
+router.get("/dashboard/advanced-charts",authMiddleware.authenticate,authMiddleware.authorize("admin"),adminController.getAdvancedCharts.bind(adminController));
+
 export default router;

@@ -145,4 +145,13 @@ export class AdminController {
       result,
     );
   });
+  getAdvancedCharts = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const result = await this._adminService.getAdvancedChartsData();
+    ResponseHelper.success(
+      res,
+      StatusCode.OK,
+      "Advanced charts data fetched successfully",
+      result,
+    );
+  });
 }

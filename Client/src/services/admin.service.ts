@@ -123,3 +123,8 @@ export const getAdminLiveMetrics = async (): Promise<{ customers: number; vendor
   const response = await api.get("/admin/dashboard/live-metrics"); // Assuming API_ROUTES.ADMIN.LIVE_METRICS doesn't exist yet, I'll use raw string or we can add it to API_ROUTES. Let's use string to be safe.
   return response.data?.data ?? response.data;
 };
+
+export const getAdminAdvancedCharts = async (): Promise<{ orderStatusDistribution: any[], topVendors: any[] }> => {
+  const response = await api.get("/admin/dashboard/advanced-charts");
+  return response.data?.data ?? response.data;
+};
