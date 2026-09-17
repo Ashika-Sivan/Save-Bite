@@ -37,6 +37,7 @@ const MyOrdersPage = () => {
     const [reviewRating, setReviewRating] = useState<number>(5);
     const [reviewComment, setReviewComment] = useState<string>("");
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [currentTime] = useState(() => Date.now());
 
     const fetchOrders = async () => {
         try {
@@ -369,7 +370,7 @@ const MyOrdersPage = () => {
                                 // Check if order is eligible for cancellation (within 5 minutes of creation)
                                 const isEligibleForCancel = order.orderStatus === "placed" && 
                                     order.createdAt && 
-                                    (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60) <= 5;
+                                    (currentTime - new Date(order.createdAt).getTime()) / (1000 * 60) <= 5;
 
                                 return (
                                     <div

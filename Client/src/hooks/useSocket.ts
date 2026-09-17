@@ -163,8 +163,6 @@ export const useSocket = () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [accessToken, user]);
+  }, [accessToken, user, dispatch]);
 
-  
-  return socketRef.current;
 };
