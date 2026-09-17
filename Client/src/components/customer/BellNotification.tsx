@@ -28,7 +28,6 @@ const BellNotification = () => {
 
   const handleNotificationClick = (id: string, link: string) => {
     dispatch(markAsRead(id));
-    setIsOpen(false);
     navigate(link);
   };
 

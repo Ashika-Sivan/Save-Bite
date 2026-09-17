@@ -9,7 +9,7 @@ export interface INotificationSchedule extends Document {
   link: string;
   isActive: boolean;
   type: "MEAL_REMINDER" | "PROMOTIONAL" | "SYSTEM";
-  lastTriggeredDate?: string; // YYYY-MM-DD to avoid duplicate triggers on same day
+  lastTriggeredDate?: string; 
   createdAt: Date;
   updatedAt: Date;
 }

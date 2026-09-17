@@ -6,19 +6,14 @@ export interface ICheckoutItemDTO{
     quantity:number
 }
 
-/*
- * Request received when the customer
- * clicks Proceed to Payment.
- */
+
 export interface ICreateCheckoutDTO{
     menuId:string;
     items:ICheckoutItemDTO[]
 }
 
 
-/*
- * Item returned in an order response.
- */
+
 export interface IOrderItemResponseDTO{
     itemId:string;
     itemName:string;
@@ -80,16 +75,12 @@ export interface IOrderResponseDTO {
     updatedAt: string
 }
 
-/*
- * Request payload for redeeming a pickup code.
- */
+
 export interface IRedeemPickupCodeDTO {
     pickupCode: string;
 }
 
-/*
- * Response payload after successfully redeeming a pickup code.
- */
+
 export interface IRedeemPickupCodeResponseDTO {
     message: string;
     order: IOrderResponseDTO;

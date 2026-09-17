@@ -3,9 +3,9 @@ import { io, Socket } from "socket.io-client";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import React from "react";
-import { addNotification, removeNotificationByHotelId } from "../redux/notificationSlice";
+import { addNotification, removeNotificationByHotelId, setNotifications } from "../redux/notificationSlice";
+import { CustomerNotificationService } from "../services/customerNotification.service";
 
-// The shape of the Redux state
 interface RootState {
   auth: {
     user: {
@@ -22,13 +22,33 @@ export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // Only connect if the user is a logged-in customer
-    if (!accessToken || !user || user.role !== "user") {
+    // Connect if the user is authenticated 
+    if (!accessToken || !user) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
       return;
+    }
+
+    // Fetch persistent notifications from the backend
+    if (user.role === "user") {
+      CustomerNotificationService.fetchNotifications()
+        .then((notifications) => {
+          // Normalize to match frontend structure if needed (ensure dates are numbers, etc.)
+          const normalized = notifications.map(n => ({
+            id: n.id,
+            title: n.title,
+            body: n.body,
+            link: n.link,
+            hotelId: n.hotelId || "system",
+            vendorId: n.vendorId || "system",
+            read: n.read,
+            createdAt: new Date(n.createdAt).getTime()
+          }));
+          dispatch(setNotifications(normalized));
+        })
+        .catch((err) => console.error("Failed to fetch initial notifications:", err));
     }
 
     // Connect to the Socket.io server
@@ -94,7 +114,12 @@ export const useSocket = () => {
     });
 
    //triggr by backend cronjob
-    socket.on("broadcast_notification", (data: { id?: string; title: string; body: string; link?: string; type?: string; createdAt?: string }) => {
+    socket.on("broadcast_notification", (data: { id?: string; title: string; body: string; link?: string; type?: string; targetRole?: string; createdAt?: string }) => {
+      // Filter out notifications not meant for this user's role
+      if (data.targetRole && data.targetRole !== "all" && data.targetRole !== user.role) {
+        return;
+      }
+
       const linkUrl = data.link || "/home";
       dispatch(addNotification({
         title: data.title,
@@ -128,19 +153,18 @@ export const useSocket = () => {
       );
     });
 
-    // Listen for the "business_live_ended" push notification
+    
     socket.on("business_live_ended", (data: { hotelId: string; vendorId: string }) => {
-      // Remove all notifications and the live badge for this hotel
       dispatch(removeNotificationByHotelId(data.hotelId));
     });
 
-    // Cleanup on unmount or when token changes
+   
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
   }, [accessToken, user]);
 
-  // eslint-disable-next-line
+  
   return socketRef.current;
 };

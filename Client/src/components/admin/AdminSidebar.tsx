@@ -8,7 +8,8 @@ import {
   Bell,
   Settings,
   AlertCircle,
-  ShieldCheck,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -44,6 +45,11 @@ const menuItems = [
     icon: WalletCards,
   },
   {
+    label: "Refund Reports",
+    path: "/admin/refunds",
+    icon: RotateCcw,
+  },
+  {
     label: "Reviews",
     path: "/admin/reviews",
     icon: Star,
@@ -60,21 +66,31 @@ const menuItems = [
   },
 ];
 
-const AdminSidebar = () => {
-  return (
-    <aside className="min-h-screen w-64 border-r border-gray-200 bg-white">
-      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white">
-          <ShieldCheck size={20} />
-        </div>
+interface AdminSidebarProps {
+  onClose?: () => void;
+}
 
-        <div>
-          <span className="font-bold text-gray-900">SaveBite</span>
-          <span className="ml-2 text-gray-500">Admin</span>
+const AdminSidebar = ({ onClose }: AdminSidebarProps) => {
+  return (
+    <aside className="flex min-h-screen w-64 flex-col border-r border-gray-200 bg-white shadow-xl md:shadow-none">
+      <div className="flex items-center justify-between border-b border-gray-200 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-full bg-white border border-green-600/20">
+            <img src="/logo.png" alt="SaveBite Logo" className="h-full w-full object-cover" />
+          </div>
+          <div>
+            <span className="font-bold text-gray-900">SaveBite</span>
+            <span className="ml-2 text-gray-500">Admin</span>
+          </div>
         </div>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden p-1 text-gray-500 hover:text-gray-800 focus:outline-none">
+            <X size={20} />
+          </button>
+        )}
       </div>
 
-      <nav className="space-y-2 p-4">
+      <nav className="space-y-2 p-4 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
@@ -82,6 +98,7 @@ const AdminSidebar = () => {
             <NavLink
               key={item.label}
               to={item.path}
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
                   isActive

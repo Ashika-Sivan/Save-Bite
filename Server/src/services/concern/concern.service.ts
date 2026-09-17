@@ -11,6 +11,8 @@ import { extractAndValidateExifTimestamp } from "../../utils/exifParser";
 import { uploadToS3 } from "../../utils/uploadToS3";
 import { getPresignedImageUrl } from "../../utils/getSignedUrl";
 import stripe from "../../config/stripe";
+import { toConcernResponseDTO } from "../../mappers/concern.mapper";
+import { IConcernResponseDTO } from "../../dtos/concern.dto";
 
 export class ConcernService implements IConcernService {
   constructor(
@@ -18,7 +20,7 @@ export class ConcernService implements IConcernService {
     private _orderRepository: IOrderRepository
   ) {}
 
-  async raiseConcern(data: RaiseConcernDTO, file: Express.Multer.File): Promise<IConcern> {
+  async raiseConcern(data: RaiseConcernDTO, file: Express.Multer.File): Promise<IConcernResponseDTO> {
     
     const { orderId, customerId, reason } = data;
 
@@ -57,9 +59,7 @@ export class ConcernService implements IConcernService {
     );
 
     const uploadResult = await uploadToS3(file, "order-concerns");
-    const photoUrl = uploadResult.key.startsWith("http")
-      ? uploadResult.key
-      : `https://${process.env.AWS_S3_BUCKET_NAME || "savebite-storage-ashika"}.s3.${process.env.AWS_REGION || "ap-south-1"}.amazonaws.com/${uploadResult.key}`;
+    const photoUrl = uploadResult.key;
 
     const concern = await this._concernRepository.createConcern({
       orderId: order._id,
@@ -76,10 +76,10 @@ export class ConcernService implements IConcernService {
 
     await this._orderRepository.updateOrderStatus(orderId, OrderStatus.CONCERN_RAISED);
 
-    return concern;
+    return toConcernResponseDTO(concern);
   }
 
-  async getAllConcerns(filterStatus?: string): Promise<IConcern[]> {
+  async getAllConcerns(filterStatus?: string): Promise<IConcernResponseDTO[]> {
     const filter: Record<string, unknown> = {};
     if (filterStatus && filterStatus !== "ALL") {
       filter.status = filterStatus.toLowerCase();
@@ -93,12 +93,12 @@ export class ConcernService implements IConcernService {
         if (doc.photoUrl) {
           doc.photoUrl = await getPresignedImageUrl(doc.photoUrl);
         }
-        return doc as IConcern;
+        return toConcernResponseDTO(doc as IConcern);
       })
     );
   }
 
-  async getConcernById(concernId: string): Promise<IConcern | null> {
+  async getConcernById(concernId: string): Promise<IConcernResponseDTO | null> {
     const concern = await this._concernRepository.findById(concernId);
     if (!concern) return null;
     const concernUnknown = concern as unknown as { toObject?: () => IConcern; photoUrl?: string };
@@ -106,10 +106,10 @@ export class ConcernService implements IConcernService {
     if (doc.photoUrl) {
       doc.photoUrl = await getPresignedImageUrl(doc.photoUrl);
     }
-    return doc as IConcern;
+    return toConcernResponseDTO(doc as IConcern);
   }
 
-  async approveConcern(concernId: string, adminNote?: string): Promise<IConcern> {
+  async approveConcern(concernId: string, adminNote?: string): Promise<IConcernResponseDTO> {
     const concern = await this._concernRepository.findById(concernId);
     if (!concern) {
       throw new AppError("Concern not found", StatusCode.NOT_FOUND);
@@ -149,10 +149,10 @@ export class ConcernService implements IConcernService {
 
     await this._orderRepository.updateOrderStatus(orderIdStr, OrderStatus.RESOLVED);
 
-    return updatedConcern;
+    return toConcernResponseDTO(updatedConcern);
   }
 
-  async rejectConcern(concernId: string, adminNote?: string): Promise<IConcern> {
+  async rejectConcern(concernId: string, adminNote?: string): Promise<IConcernResponseDTO> {
     const concern = await this._concernRepository.findById(concernId);
     if (!concern) {
       throw new AppError("Concern not found", StatusCode.NOT_FOUND);
@@ -176,6 +176,6 @@ export class ConcernService implements IConcernService {
     const orderIdStr = concern.orderId._id ? concern.orderId._id.toString() : concern.orderId.toString();
     await this._orderRepository.updateOrderStatus(orderIdStr, OrderStatus.PLACED);
 
-    return updatedConcern;
+    return toConcernResponseDTO(updatedConcern);
   }
 }

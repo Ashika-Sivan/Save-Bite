@@ -55,4 +55,10 @@ router.post(
   authController.resetPassword.bind(authController)
 );
 
+router.post(
+  ROUTES.AUTH.UPDATE_PASSWORD,
+  authMiddleware.authenticate,
+  authController.updatePassword.bind(authController)
+);
+
 export default router;

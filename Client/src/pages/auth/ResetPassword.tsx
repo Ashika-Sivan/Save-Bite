@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  Leaf,
   Lock,
   Eye,
   EyeOff,
@@ -83,13 +82,20 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10 sm:px-6">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-border bg-card shadow-xl md:grid-cols-2">
+    <div className="min-h-screen bg-brand-light text-brand-dark relative overflow-hidden flex items-center justify-center px-4 py-10 sm:px-6">
+      {/* Decorative Blob 1 */}
+      <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-brand-primary/20 mix-blend-multiply blur-3xl filter animate-blob" />
+      {/* Decorative Blob 2 */}
+      <div className="absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-secondary/20 mix-blend-multiply blur-3xl filter animate-blob animation-delay-2000" />
+      {/* Decorative Blob 3 */}
+      <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-brand-primary/20 mix-blend-multiply blur-3xl filter animate-blob animation-delay-4000" />
+
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/60 bg-white/40 shadow-2xl backdrop-blur-md relative z-10 md:grid-cols-2 transition-all">
         {/* Left panel */}
-        <div className="relative hidden flex-col justify-between bg-primary p-10 text-primary-foreground md:flex">
+        <div className="relative hidden flex-col justify-between bg-brand-primary p-10 text-white md:flex">
           <div className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-foreground/15">
-              <Leaf className="h-5 w-5" />
+            <span className="grid h-10 w-10 overflow-hidden place-items-center rounded-full bg-white">
+              <img src="/logo.png" alt="SaveBite Logo" className="h-full w-full object-cover" />
             </span>
 
             <span className="font-display text-2xl font-semibold">
@@ -98,11 +104,11 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
           </div>
 
           <div>
-            <h2 className="font-display text-4xl leading-tight">
+            <h2 className="font-display text-4xl font-bold leading-tight">
               Set a new password
             </h2>
 
-            <p className="mt-4 max-w-sm text-sm text-primary-foreground/80">
+            <p className="mt-4 max-w-sm text-sm font-medium text-white/80">
               Choose a strong password to keep your SaveBite account secure.
             </p>
           </div>
@@ -115,64 +121,64 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         </div>
 
         {/* Right panel */}
-        <div className="p-8 sm:p-10">
+        <div className="p-8 sm:p-10 flex flex-col justify-center">
           <Link
             to="/login"
-            className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
+            className="mb-6 inline-flex w-fit items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand-dark/60 hover:text-brand-primary transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             Back to log in
           </Link>
 
           {!token && !isCompleted && (
-            <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+            <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-500 text-center">
               This reset link is missing a token. Please request a new password
               reset link from the login page.
             </div>
           )}
 
           {isCompleted ? (
-            <div className="text-center">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
-                <CheckCircle2 className="h-7 w-7" />
+            <div className="text-center space-y-4">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-primary/10 text-brand-primary">
+                <CheckCircle2 className="h-8 w-8" />
               </div>
 
-              <h1 className="mt-4 font-display text-3xl font-semibold">
+              <h1 className="font-display text-3xl font-bold text-brand-dark">
                 Password updated
               </h1>
 
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="text-sm font-medium text-brand-dark/70">
                 Your password has been reset successfully. You can now log in
                 using your new password.
               </p>
 
               <Link
                 to="/login"
-                className="mt-8 grid h-11 w-full place-items-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+                className="mt-8 grid h-12 w-full place-items-center rounded-full bg-brand-primary text-sm font-bold text-white shadow-lg shadow-brand-primary/30 transition-all hover:scale-105 hover:bg-brand-secondary active:scale-95"
               >
                 Continue to log in
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <h1 className="font-display text-3xl font-semibold">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <h1 className="font-display text-3xl font-bold text-brand-dark">
                   Reset password
                 </h1>
 
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-brand-dark/70">
                   Enter a new password containing at least 8 characters.
                 </p>
               </div>
 
               {/* New password */}
-              <div className="space-y-1.5">
-                <label htmlFor="password" className="text-sm font-medium">
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-brand-dark/60">
                   New password
                 </label>
 
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-dark/40" />
 
                   <input
                     id="password"
@@ -182,7 +188,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30"
+                    className="h-12 w-full rounded-2xl border border-white/50 bg-white/50 pl-11 pr-11 text-sm font-bold text-brand-dark outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10"
                   />
 
                   <button
@@ -191,7 +197,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
                       showPassword ? "Hide password" : "Show password"
                     }
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-dark/40 hover:text-brand-primary transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -203,16 +209,16 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
               </div>
 
               {/* Confirm password */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label
                   htmlFor="confirmPassword"
-                  className="text-sm font-medium"
+                  className="text-xs font-bold uppercase tracking-widest text-brand-dark/60"
                 >
                   Confirm new password
                 </label>
 
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-dark/40" />
 
                   <input
                     id="confirmPassword"
@@ -224,7 +230,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
                     onChange={(event) =>
                       setConfirmPassword(event.target.value)
                     }
-                    className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30"
+                    className="h-12 w-full rounded-2xl border border-white/50 bg-white/50 pl-11 pr-11 text-sm font-bold text-brand-dark outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10"
                   />
 
                   <button
@@ -237,7 +243,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
                     onClick={() =>
                       setShowConfirmPassword((current) => !current)
                     }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-dark/40 hover:text-brand-primary transition-colors"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -249,7 +255,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
               </div>
 
               {error && (
-                <p className="text-sm font-medium text-destructive">
+                <p className="text-sm font-bold text-red-500 text-center bg-red-100 rounded-lg p-2">
                   {error}
                 </p>
               )}
@@ -257,11 +263,11 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
               <button
                 type="submit"
                 disabled={!token || isLoading}
-                className="grid h-11 w-full place-items-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="grid h-12 w-full place-items-center rounded-full bg-brand-primary text-sm font-bold text-white shadow-lg shadow-brand-primary/30 transition-all hover:scale-105 hover:bg-brand-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isLoading ? (
                   <span className="inline-flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     Updating password…
                   </span>
                 ) : (

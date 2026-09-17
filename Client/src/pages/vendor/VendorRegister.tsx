@@ -20,7 +20,7 @@ const steps = [
 ];
 
 import { registerVendor } from "../../services/auth.service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { APP_ROUTES } from "../../constants/appRoutes";
 import LocationPicker from "../../components/vendor/LocationPicker";
 
@@ -32,7 +32,6 @@ export default function VendorRegister() {
 
   const [form, setForm] = useState({
     vendorName: "",
-    businessImage: null as File | null,
     place: "",
     address: "",
     latitude: 0,
@@ -89,7 +88,6 @@ export default function VendorRegister() {
       }
 
       if (
-        !form.businessImage ||
         !form.gstCertificate ||
         !form.fssaiCertificate ||
         !form.panCard ||
@@ -120,7 +118,6 @@ export default function VendorRegister() {
 
       formData.append("businessInfo", JSON.stringify(businessInfo));
       formData.append("verification", JSON.stringify(verification));
-      formData.append("businessImage", form.businessImage);
       formData.append("gstCertificate", form.gstCertificate);
       formData.append("fssaiCertificate", form.fssaiCertificate);
       formData.append("panCard", form.panCard);
@@ -140,56 +137,93 @@ export default function VendorRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8faf7] px-4 py-10">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Become a SaveBite Vendor
+    <div className="min-h-screen bg-brand-light text-brand-dark pb-16 relative overflow-hidden">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes liquidBlob1 {
+            0%   { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(0deg) scale(1); }
+            34%  { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(120deg) scale(1.05); }
+            67%  { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; transform: rotate(240deg) scale(0.95); }
+            100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(360deg) scale(1); }
+        }
+        @keyframes liquidBlob2 {
+            0%   { border-radius: 50% 50% 50% 70% / 50% 50% 70% 50%; transform: rotate(0deg) scale(1.1); }
+            34%  { border-radius: 80% 20% 50% 50% / 50% 50% 30% 70%; transform: rotate(-120deg) scale(0.9); }
+            67%  { border-radius: 40% 60% 30% 70% / 60% 30% 70% 40%; transform: rotate(-240deg) scale(1.05); }
+            100% { border-radius: 50% 50% 50% 70% / 50% 50% 70% 50%; transform: rotate(-360deg) scale(1.1); }
+        }
+        .blob-1 { animation: liquidBlob1 18s ease-in-out infinite; }
+        .blob-2 { animation: liquidBlob2 22s ease-in-out infinite; }
+      `}} />
+      
+      {/* Fluid Wavy Background Blobs */}
+      <div className="absolute top-[-10%] right-[-5%] w-[45rem] h-[45rem] bg-brand-primary opacity-20 blob-1 pointer-events-none z-0 mix-blend-multiply"></div>
+      <div className="absolute top-[20%] left-[-15%] w-[40rem] h-[40rem] bg-[#e8cda1] opacity-40 blob-2 pointer-events-none z-0 mix-blend-multiply"></div>
+
+      {/* Navbar */}
+      <nav className="relative z-10 w-full px-6 py-4 md:px-12 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary text-white shadow-lg shadow-brand-primary/30">
+                <Store size={22} strokeWidth={2.5} />
+            </div>
+            <span className="font-display text-2xl font-black tracking-tight text-brand-dark hidden sm:inline-block">
+                SaveBite <span className="text-brand-primary">Vendor</span>
+            </span>
+        </Link>
+        <Link to="/" className="text-sm font-bold text-brand-dark hover:text-brand-primary transition-colors">
+            Back to Home
+        </Link>
+      </nav>
+
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-8 md:py-12">
+        <div className="mb-10 text-center">
+          <h1 className="font-display text-4xl font-black text-brand-dark tracking-tight drop-shadow-sm">
+            Partner with <span className="text-brand-primary">SaveBite</span>
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Complete your business details and verification to start selling on
-            SaveBite.
+          <p className="mt-3 text-base text-brand-dark/70 font-medium max-w-xl mx-auto">
+            Complete your business details and verification to join our mission of reducing food waste while increasing your revenue.
           </p>
         </div>
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-12 flex items-center justify-between rounded-3xl bg-white/40 backdrop-blur-md p-4 shadow-sm border border-white/50 overflow-x-auto hide-scrollbar">
           {steps.map((item, index) => {
             const Icon = item.icon;
             const active = step === item.id;
             const completed = step > item.id;
 
             return (
-              <div key={item.id} className="flex flex-1 items-center">
-                <div className="flex items-center gap-3">
+              <div key={item.id} className="flex flex-1 items-center min-w-fit px-2">
+                <div className={`flex items-center gap-3 transition-all duration-300 ${active ? 'scale-105' : ''}`}>
                   <div
-                    className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold ${active || completed
-                        ? "bg-[#2E7C35] text-white"
-                        : "border bg-white text-gray-400"
+                    className={`grid h-10 w-10 place-items-center rounded-full text-sm font-bold shadow-sm transition-colors duration-300 ${active
+                        ? "bg-brand-primary text-white shadow-brand-primary/30"
+                        : completed 
+                        ? "bg-brand-primary/20 text-brand-primary"
+                        : "bg-white/60 text-brand-dark/40"
                       }`}
                   >
                     {completed ? "✓" : <Icon className="h-4 w-4" />}
                   </div>
 
-                  <div>
+                  <div className="hidden sm:block">
                     <p
-                      className={`text-sm font-semibold ${active ? "text-[#2E7C35]" : "text-gray-600"
+                      className={`text-sm font-bold transition-colors duration-300 ${active ? "text-brand-primary" : completed ? "text-brand-dark" : "text-brand-dark/40"
                         }`}
                     >
                       {item.title}
                     </p>
-                    <p className="text-xs text-gray-400">Step {item.id}</p>
+                    <p className="text-xs font-semibold text-brand-dark/40">Step {item.id}</p>
                   </div>
                 </div>
 
                 {index !== steps.length - 1 && (
-                  <div className="mx-4 h-px flex-1 bg-gray-200" />
+                  <div className="mx-4 h-0.5 flex-1 rounded-full bg-brand-primary/10 min-w-[2rem]" />
                 )}
               </div>
             );
           })}
         </div>
 
-        <div className="rounded-3xl border bg-white p-6 shadow-sm md:p-8">
+        <div className="rounded-3xl border border-white/60 bg-white/60 backdrop-blur-md p-6 shadow-xl md:p-10 relative overflow-hidden">
           {step === 1 && (
             <div>
               <h2 className="mb-6 text-lg font-bold text-gray-900">
@@ -206,14 +240,14 @@ export default function VendorRegister() {
                 />
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  <label className="mb-2 block text-sm font-bold text-brand-dark/70 uppercase tracking-wider">
                     Business Type
                   </label>
                   <select
                     name="businessType"
                     value={form.businessType}
                     onChange={handleChange}
-                    className="w-full rounded-xl border px-4 py-3 text-sm outline-none focus:border-[#2E7C35]"
+                    className="w-full rounded-2xl border border-white/40 bg-white/50 px-4 py-3.5 text-sm font-medium outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 backdrop-blur-sm"
                   >
                     <option value="">Select business type</option>
                     <option value="restaurant">Restaurant</option>
@@ -232,15 +266,8 @@ export default function VendorRegister() {
                   placeholder="Kochi, Kerala"
                 />
 
-                <FileInput
-                  label="Business Image"
-                  name="businessImage"
-                  onChange={handleFileChange}
-                  file={form.businessImage}
-                />
-
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  <label className="mb-2 block text-sm font-bold text-brand-dark/70 uppercase tracking-wider">
                     Business Address
                   </label>
                   <textarea
@@ -249,7 +276,7 @@ export default function VendorRegister() {
                     onChange={handleChange}
                     placeholder="Enter street, area, city, PIN"
                     rows={4}
-                    className="w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none focus:border-[#2E7C35]"
+                    className="w-full resize-none rounded-2xl border border-white/40 bg-white/50 px-4 py-3.5 text-sm font-medium outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 backdrop-blur-sm"
                   />
                 </div>
 
@@ -375,10 +402,6 @@ export default function VendorRegister() {
                         ? `${form.latitude}, ${form.longitude}`
                         : "Not selected",
                     ],
-                    [
-                      "Business Image",
-                      form.businessImage ? form.businessImage.name : "Not uploaded",
-                    ],
                   ]}
                 />
 
@@ -418,22 +441,22 @@ export default function VendorRegister() {
                   ]}
                 />
 
-                <div className="rounded-2xl border border-dashed bg-green-50 p-5 text-sm text-gray-600">
+                <div className="rounded-2xl border border-brand-primary/20 bg-brand-primary/5 backdrop-blur-sm p-5 text-sm font-medium text-brand-dark/70">
                   By submitting, your application enters our verification queue.
                   You&apos;ll receive an email once approved (usually within
                   24-48 hours).
                 </div>
 
-                <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm text-gray-700 hover:border-[#2E7C35]">
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/40 bg-white/50 backdrop-blur-sm p-4 text-sm font-medium text-brand-dark/80 transition-all hover:border-brand-primary/50 hover:bg-white/80">
                   <input
                     type="checkbox"
                     checked={accepted}
                     onChange={(e) => setAccepted(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-[#2E7C35]"
+                    className="mt-0.5 h-4 w-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/30"
                   />
                   <span>
                     I accept the SaveBite{" "}
-                    <a href="#" className="font-semibold text-[#2E7C35] underline">
+                    <a href="#" className="font-bold text-brand-primary hover:underline">
                       Terms & Conditions
                     </a>{" "}
                     and confirm all information provided is accurate.
@@ -443,22 +466,27 @@ export default function VendorRegister() {
             </div>
           )}
 
-          <div className="mt-10 flex items-center justify-between">
+          <div className="mt-12 flex items-center justify-between border-t border-brand-primary/10 pt-6">
             <button
               type="button"
-              disabled={step === 1}
-              onClick={() => setStep(step - 1)}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => {
+                if (step === 1) {
+                  navigate("/");
+                } else {
+                  setStep(step - 1);
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-brand-dark/70 hover:bg-white/50 hover:text-brand-dark transition-all backdrop-blur-sm"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              {step === 1 ? "Cancel" : "Back"}
             </button>
 
             {step < 4 ? (
               <button
                 type="button"
                 onClick={() => setStep(step + 1)}
-                className="inline-flex items-center gap-2 rounded-full bg-[#2E7C35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#25682c]"
+                className="inline-flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-brand-primary/30 transition-all hover:bg-brand-secondary hover:scale-105 active:scale-95"
               >
                 Continue
                 <ArrowRight className="h-4 w-4" />
@@ -467,7 +495,7 @@ export default function VendorRegister() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="rounded-full bg-[#2E7C35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#25682c]"
+                className="rounded-full bg-brand-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-brand-primary/30 transition-all hover:bg-brand-secondary hover:scale-105 active:scale-95"
               >
                 Submit Application
               </button>
@@ -494,7 +522,7 @@ type InputProps = {
 function Input({ label, name, value, placeholder, onChange }: InputProps) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-gray-700">
+      <label className="mb-2 block text-sm font-bold text-brand-dark/70 uppercase tracking-wider">
         {label}
       </label>
       <input
@@ -502,7 +530,7 @@ function Input({ label, name, value, placeholder, onChange }: InputProps) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border px-4 py-3 text-sm outline-none focus:border-[#2E7C35]"
+        className="w-full rounded-2xl border border-white/40 bg-white/50 px-4 py-3.5 text-sm font-medium outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 backdrop-blur-sm placeholder:text-brand-dark/30"
       />
     </div>
   );
@@ -518,16 +546,18 @@ type FileInputProps = {
 function FileInput({ label, name, file, onChange }: FileInputProps) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-gray-700">
+      <label className="mb-2 block text-sm font-bold text-brand-dark/70 uppercase tracking-wider">
         {label}
       </label>
 
-      <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-8 text-center hover:border-[#2E7C35] hover:bg-green-50">
-        <Upload className="mb-2 h-6 w-6 text-[#2E7C35]" />
-        <span className="text-sm font-medium text-gray-700">
+      <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-brand-primary/20 bg-white/40 backdrop-blur-sm px-4 py-8 text-center transition-all hover:border-brand-primary/50 hover:bg-white/60">
+        <div className="mb-3 rounded-full bg-brand-primary/10 p-3 text-brand-primary transition-transform group-hover:scale-110">
+            <Upload size={24} />
+        </div>
+        <span className="text-sm font-bold text-brand-dark">
           {file ? file.name : "Click to upload file"}
         </span>
-        <span className="mt-1 text-xs text-gray-400">
+        <span className="mt-1 text-xs font-semibold text-brand-dark/40">
           JPG, PNG or PDF supported
         </span>
 
@@ -550,23 +580,23 @@ type ReviewSectionProps = {
 
 function ReviewSection({ title, onEdit, items }: ReviewSectionProps) {
   return (
-    <div className="rounded-2xl border bg-white p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900">{title}</h3>
+    <div className="rounded-2xl border border-white/50 bg-white/40 backdrop-blur-sm p-6 shadow-sm">
+      <div className="mb-5 flex items-center justify-between border-b border-brand-primary/10 pb-3">
+        <h3 className="text-base font-bold text-brand-dark">{title}</h3>
         <button
           type="button"
           onClick={onEdit}
-          className="text-xs font-semibold text-[#2E7C35] hover:underline"
+          className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-bold text-brand-primary transition-colors hover:bg-brand-primary/20"
         >
           Edit
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {items.map(([label, value]) => (
           <div key={label}>
-            <p className="text-xs text-gray-400">{label}</p>
-            <p className="mt-0.5 truncate text-sm font-medium text-gray-800">
-              {value || <span className="text-gray-400">—</span>}
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand-dark/40">{label}</p>
+            <p className="mt-1 truncate text-sm font-semibold text-brand-dark/90">
+              {value || <span className="text-brand-dark/30">—</span>}
             </p>
           </div>
         ))}

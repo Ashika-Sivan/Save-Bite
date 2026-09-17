@@ -9,6 +9,7 @@ import {
   IForgotPasswordRequestDTO,
   IResetPasswordRequestDTO,
   ILoginServiceResult,
+  IUpdatePasswordRequestDTO
 } from "../../../dtos/auth.dto"
 
 export interface IAuthService {
@@ -16,7 +17,7 @@ export interface IAuthService {
 
   resendOtp(data: IResendOtpRequestDTO): Promise<boolean>;
 
-  verifyOtp(data: IVerifyOtpRequestDTO): Promise<IUser | null>;
+  verifyOtp(data: IVerifyOtpRequestDTO): Promise<ILoginServiceResult>;
 
   login(data: ILoginRequestDTO): Promise<ILoginServiceResult>;
   
@@ -31,5 +32,6 @@ export interface IAuthService {
 
   resetPassword(data: IResetPasswordRequestDTO): Promise<{ message: string }>;
   
+  updatePassword(data: IUpdatePasswordRequestDTO): Promise<{ message: string }>;
 
 }

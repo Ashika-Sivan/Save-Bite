@@ -80,3 +80,11 @@ export const resetPassword = async (data: {
     const response = await api.post(API_ROUTES.AUTH.RESET_PASSWORD, data);
     return response.data;
 };
+
+export const updatePassword = async (data: {
+    currentPassword?: string;
+    newPassword: string;
+}) => {
+    const response = await api.post(API_ROUTES.AUTH.UPDATE_PASSWORD, data);
+    return response.data;
+};

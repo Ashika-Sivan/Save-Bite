@@ -57,7 +57,6 @@ export class VendorService implements IVendorService {
             files.businessRegistrationCertificate?.[0];
 
         if (
-            !businessImage ||
             !gstCertificate ||
             !fssaiCertificate ||
             !panCard ||
@@ -70,10 +69,9 @@ export class VendorService implements IVendorService {
         }
 
         // Upload every vendor document to S3
-        const businessImageUpload = await uploadToS3(
-            businessImage,
-            "vendor-business-images"
-        );
+        const businessImageUpload = businessImage 
+            ? await uploadToS3(businessImage, "vendor-business-images")
+            : { key: "default-business.png" };
         const gstUpload = await uploadToS3(gstCertificate, "vendor-documents");
         const fssaiUpload = await uploadToS3(
             fssaiCertificate,
@@ -160,7 +158,6 @@ export class VendorService implements IVendorService {
             files.businessRegistrationCertificate?.[0];
 
         if (
-            !businessImage ||
             !gstCertificate ||
             !fssaiCertificate ||
             !panCard ||
@@ -172,10 +169,9 @@ export class VendorService implements IVendorService {
             );
         }
 
-        const businessImageUpload = await uploadToS3(
-            businessImage,
-            "vendor-business-images"
-        );
+        const businessImageUpload = businessImage 
+            ? await uploadToS3(businessImage, "vendor-business-images")
+            : { key: "default-business.png" };
         const gstUpload = await uploadToS3(gstCertificate, "vendor-documents");
         const fssaiUpload = await uploadToS3(
             fssaiCertificate,

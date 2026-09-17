@@ -1,183 +1,50 @@
 import { Request, Response, NextFunction } from "express";
-import { NotificationScheduleModel } from "../models/notification/notificationSchedule.model";
-import { NotificationModel } from "../models/notification/notification.model";
-import { getIO } from "../config/socket";
+import { IAdminNotificationService } from "../interfaces/service/adminNotification/IAdminNotificationService";
 import { ResponseHelper } from "../utils/ResponseHelper";
 import { StatusCode } from "../constants/statusCode";
-import { AppError } from "../errors/AppError";
+import { ADMIN_MESSAGES } from "../constants/messages";
+import { ICreateScheduleRequestDTO, IBroadcastRequestDTO } from "../dtos/adminNotification.dto";
+import { catchAsync } from "../utils/catchAsync";
 
 export class AdminNotificationController {
-  // Get all automated notification schedules
-  async getSchedules(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const schedules = await NotificationScheduleModel.find().sort({ createdAt: -1 });
-      ResponseHelper.success(res, StatusCode.OK, "Schedules fetched successfully", schedules);
-    } catch (error) {
-      next(error);
-    }
-  }
+    constructor(private _adminNotificationService: IAdminNotificationService) { }
 
-  // Create a new automated daily notification schedule
-  async createSchedule(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { name, title, body, time24, targetRole, link, type } = req.body;
+    getSchedules = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const schedules = await this._adminNotificationService.getSchedules();
+        ResponseHelper.success(res, StatusCode.OK, ADMIN_MESSAGES.SCHEDULES_FETCHED_SUCCESS, schedules);
+    });
 
-      if (!name || !title || !body || !time24) {
-        throw new AppError("Name, title, body, and time24 are required", StatusCode.BAD_REQUEST);
-      }
 
-      const schedule = await NotificationScheduleModel.create({
-        name,
-        title,
-        body,
-        time24, // e.g. "08:30"
-        targetRole: targetRole || "customer",
-        link: link || "/home",
-        type: type || "MEAL_REMINDER",
-        isActive: true,
-      });
+    createSchedule = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const data: ICreateScheduleRequestDTO = req.body;
+        const schedule = await this._adminNotificationService.createSchedule(data);
+        ResponseHelper.success(res, StatusCode.CREATED, ADMIN_MESSAGES.SCHEDULES_CREATED_SUCCESS, schedule);
+    });
 
-      ResponseHelper.success(res, StatusCode.CREATED, "Schedule created successfully", schedule);
-    } catch (error) {
-      next(error);
-    }
-  }
 
-  // Toggle active status of a schedule
-  async toggleSchedule(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const schedule = await NotificationScheduleModel.findById(id);
+    toggleSchedule = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const id = req.params.id as string;
+        const schedule = await this._adminNotificationService.toggleSchedule(id);
+        ResponseHelper.success(res, StatusCode.OK, `Schedule ${schedule.isActive ? "enabled" : "disabled"}`, schedule);
+    });
 
-      if (!schedule) {
-        throw new AppError("Schedule not found", StatusCode.NOT_FOUND);
-      }
 
-      schedule.isActive = !schedule.isActive;
-      await schedule.save();
+    deleteSchedule = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const id = req.params.id as string;
+        await this._adminNotificationService.deleteSchedule(id);
+        ResponseHelper.success(res, StatusCode.OK, "Schedule deleted successfully");
+    });
 
-      ResponseHelper.success(res, StatusCode.OK, `Schedule ${schedule.isActive ? "enabled" : "disabled"}`, schedule);
-    } catch (error) {
-      next(error);
-    }
-  }
 
-  // Delete a schedule
-  async deleteSchedule(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const schedule = await NotificationScheduleModel.findByIdAndDelete(id);
+    broadcastInstant = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const data: IBroadcastRequestDTO = req.body;
+        const notification = await this._adminNotificationService.broadcastInstant(data);
+        ResponseHelper.success(res, StatusCode.CREATED, ADMIN_MESSAGES.BRODCAST_SUCCESSFULL, notification);
+    });
 
-      if (!schedule) {
-        throw new AppError("Schedule not found", StatusCode.NOT_FOUND);
-      }
 
-      ResponseHelper.success(res, StatusCode.OK, "Schedule deleted successfully");
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Instant Test Trigger for an automated schedule
-  async triggerScheduleNow(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { id } = req.params;
-      const schedule = await NotificationScheduleModel.findById(id);
-
-      if (!schedule) {
-        throw new AppError("Schedule not found", StatusCode.NOT_FOUND);
-      }
-
-      const notification = await NotificationModel.create({
-        targetRole: schedule.targetRole,
-        title: schedule.title,
-        body: schedule.body,
-        type: schedule.type,
-        link: schedule.link || "/home",
-        read: false,
-      });
-
-      try {
-        const io = getIO();
-        io.emit("broadcast_notification", {
-          id: notification._id.toString(),
-          title: notification.title,
-          body: notification.body,
-          link: notification.link,
-          type: notification.type,
-          createdAt: notification.createdAt,
-        });
-
-        io.emit("business_live", {
-          hotelId: "system",
-          hotelName: "SaveBite Meal Alert",
-          title: notification.title,
-          body: notification.body,
-        });
-      } catch (err) {
-        console.error("Socket error on instant trigger:", err);
-      }
-
-      ResponseHelper.success(res, StatusCode.OK, "Automated reminder triggered live to all users", notification);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Manual one-time broadcast notification
-  async broadcastInstant(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { title, body, targetRole, link, type } = req.body;
-
-      if (!title || !body) {
-        throw new AppError("Title and body are required", StatusCode.BAD_REQUEST);
-      }
-
-      const notification = await NotificationModel.create({
-        targetRole: targetRole || "all",
-        title,
-        body,
-        type: type || "PROMOTIONAL",
-        link: link || "/home",
-        read: false,
-      });
-
-      try {
-        const io = getIO();
-        io.emit("broadcast_notification", {
-          id: notification._id.toString(),
-          title: notification.title,
-          body: notification.body,
-          link: notification.link,
-          type: notification.type,
-          createdAt: notification.createdAt,
-        });
-
-        io.emit("business_live", {
-          hotelId: "system",
-          hotelName: "SaveBite Alert",
-          title: notification.title,
-          body: notification.body,
-        });
-      } catch (err) {
-        console.error("Socket error on broadcast:", err);
-      }
-
-      ResponseHelper.success(res, StatusCode.CREATED, "Broadcast notification sent successfully", notification);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Get recent notification history
-  async getNotificationHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const notifications = await NotificationModel.find().sort({ createdAt: -1 }).limit(50);
-      ResponseHelper.success(res, StatusCode.OK, "History fetched successfully", notifications);
-    } catch (error) {
-      next(error);
-    }
-  }
+    getNotificationHistory = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const notifications = await this._adminNotificationService.getNotificationHistory();
+        ResponseHelper.success(res, StatusCode.OK, ADMIN_MESSAGES.HISTORY_FETCH_SUCCESS, notifications);
+    });
 }
-
-export const adminNotificationController = new AdminNotificationController();

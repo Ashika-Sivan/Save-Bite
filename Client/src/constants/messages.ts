@@ -1,15 +1,23 @@
-// Central registry of all user-facing notification messages, toast alerts, and system prompts used across the client application.
+
 
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: "Login successful!",
   LOGOUT_SUCCESS: "Logged out successfully",
   LOGOUT_FAILED: "Logout failed. Please try again.",
+  LOGOUT_FAILED_ALT: "Failed to logout",
   REGISTER_SUCCESS: "Registration successful!",
   OTP_SENT: "OTP sent successfully to your email",
   OTP_VERIFIED: "OTP verified successfully!",
+  OTP_VERIFIED_ALT: "OTP verified successfully! Registration completed.",
+  OTP_INVALID: "Invalid OTP. Please try again.",
   PASSWORD_RESET_SUCCESS: "Password reset successfully!",
+  PASSWORD_RESET_SUCCESS_ALT: "Password reset successfully! You can now log in.",
   FORGOT_PASSWORD_SENT: "Password reset link sent to your email",
   PLEASE_LOGIN: "Please log in to continue",
+  GOOGLE_FAILED: "Google authentication failed.",
+  GOOGLE_LOGIN_FAILED: "Google Login Failed",
+  GOOGLE_SIGNUP_FAILED: "Google Signup Failed",
+  SIGNUP_LOGIN_SUCCESS: "Signup/Login successful!",
 } as const;
 
 export const CART_MESSAGES = {
@@ -21,6 +29,7 @@ export const CART_MESSAGES = {
   ORDERING_CLOSED: "The ordering cutoff for this menu has passed.",
   REPLACE_CART_TITLE: "Replace current cart?",
   REPLACE_CART_DESC: (name: string) => `Your cart contains food from another restaurant. Clear it and add food from ${name}?`,
+  CART_REPLACED: "Cart replaced successfully",
 } as const;
 
 export const VENDOR_MESSAGES = {
@@ -29,10 +38,27 @@ export const VENDOR_MESSAGES = {
   PREFILLED_ALERT: "Previous application details prefilled automatically!",
   LOCATION_SUCCESS: "Location set successfully",
   LOCATION_DENIED: "Please allow location access",
+  LOCATION_UNSUPPORTED: "Location is not supported by your browser",
   HOTEL_ADDED: "Hotel added successfully",
   MENU_SAVED: "Menu saved successfully",
   MENU_LIVE: "Menu is now live!",
   MENU_END_LIVE: "Live menu session ended",
+  VENDOR_ACCOUNT_ACTIVE: "Your vendor account is already active.",
+  LOGIN_TO_APPLY: "Please log in to apply as a vendor",
+  IMAGE_INVALID: "Please select a valid image",
+  IMAGE_SIZE_ERROR: "Image must be smaller than 5 MB",
+  HOTEL_DETAILS_INCOMPLETE: "Please complete all hotel details",
+  HOTEL_IMAGE_REQUIRED: "Please select a hotel image",
+  HOTEL_LOCATION_REQUIRED: "Please select the hotel location",
+  HOTEL_ID_MISSING: "Hotel ID is missing",
+  ORDERS_REFRESHED: "Orders refreshed",
+  PICKUP_VERIFIED: "Pickup code verified! Order marked as collected 🎉",
+  TERMS_REQUIRED: "Please accept the terms & conditions to continue",
+  ALL_FILES_REQUIRED: "All files are required",
+  ALL_FIELDS_REQUIRED: "All field requird",
+  REGISTRATION_FAILED: "Vendor registration failed",
+  WALLET_UPDATED: "Wallet updated",
+  MENU_INFO_MISSING: "Menu information is missing",
 } as const;
 
 export const ADMIN_MESSAGES = {
@@ -40,6 +66,28 @@ export const ADMIN_MESSAGES = {
   VENDOR_REJECTED: "Vendor rejected successfully",
   REJECTION_REASON_REQUIRED: "Please enter rejection reason",
   USER_STATUS_UPDATED: "User status updated successfully",
+  CONCERN_APPROVED: "Concern approved! 100% refund issued and order marked as resolved.",
+  CONCERN_REJECTED: (status: string) => `Concern rejected. Order reverted to ${status}`,
+  DASHBOARD_STATS_FAILED: "Failed to load dashboard statistics",
+  ADMIN_LOGIN_SUCCESS: "Admin login successful!",
+  SCHEDULE_DELETED: "Schedule deleted successfully",
+  TEST_NOTIFICATION_SENT: "Test notification sent successfully",
+  SCHEDULE_CREATED: "Automated schedule created successfully",
+  BROADCAST_SENT: "Broadcast notification sent successfully",
+  FILL_REQUIRED_FIELDS: "Please fill in all required fields.",
+  ENTER_TITLE_BODY: "Please enter a title and message body.",
+  ORDERS_PDF_SUCCESS: "Orders PDF downloaded successfully!",
+  EXPORT_NO_ORDERS: "No order records available to export",
+  PDF_GENERATE_FAILED: "Failed to generate PDF document",
+  REVIEW_VISIBILITY: (isVisible: boolean) => `Review set to ${isVisible ? 'visible' : 'hidden'}`,
+  REVIEW_DELETED: "Review deleted successfully",
+  TRANSACTION_REFRESHED: "Transaction data refreshed",
+  TRANSACTION_PDF_SUCCESS: "Financial Transactions PDF downloaded successfully!",
+  EXPORT_NO_TRANSACTIONS: "No transaction data available to export",
+  USER_ACTION_SUCCESS: (action: string) => `User ${action}ed successfully`,
+  USER_ACTION_FAILED: (action: string) => `Failed to ${action} user`,
+  VENDOR_ACTION_SUCCESS: (action: string) => `Vendor ${action}ed successfully`,
+  VENDOR_ACTION_FAILED: (action: string) => `Failed to ${action} vendor`,
 } as const;
 
 export const ORDER_MESSAGES = {
@@ -48,4 +96,28 @@ export const ORDER_MESSAGES = {
   PAYMENT_PENDING: "Payment confirmation pending...",
   PAYMENT_FAILED: "Payment failed. Please try again.",
   FETCH_FAILED: "Unable to load orders",
+  ORDERING_CLOSED_ALT: "Ordering has already closed",
+  CHECKOUT_FAILED: "Unable to create checkout",
+  PAYMENT_FORM_LOADING: "Payment form is still loading",
+  CHECKOUT_INFO_MISSING: "Checkout information is missing",
+} as const;
+
+export const PROFILE_MESSAGES = {
+  PASSWORD_UPDATED: "Password updated successfully!",
+  PASSWORD_LENGTH: "Password must be at least 8 characters long.",
+  PASSWORD_LOWERCASE: "Password must contain at least one lowercase letter.",
+  PASSWORD_UPPERCASE: "Password must contain at least one uppercase letter.",
+  PASSWORD_NUMBER: "Password must contain at least one number.",
+  PASSWORD_SAME: "New password cannot be the same as current password.",
+  PASSWORD_MISMATCH: "New passwords do not match!",
+} as const;
+
+export const CUSTOMER_MESSAGES = {
+  REVIEW_PUBLISHED: "Thank you! Your review for this hotel has been published.",
+  REVIEW_COMMENT_REQUIRED: "Please enter a review comment",
+  CONCERN_SUBMITTED: "Concern submitted successfully! Admins will review the EXIF timestamp & evidence.",
+  CONCERN_REVIEW_PUBLISHED: "Thank you for reviewing! Your review is now published.",
+  CONCERN_DESC_REQUIRED: "Please describe your concern",
+  CONCERN_EVIDENCE_REQUIRED: "Please upload a photo evidence",
+  HOTEL_NOT_FOUND: "Restaurant menu not found",
 } as const;

@@ -30,7 +30,6 @@ export default function VendorReapply() {
 
   const [form, setForm] = useState({
     vendorName: "",
-    businessImage: null as File | null,
     place: "",
     address: "",
     latitude: 0,
@@ -136,13 +135,12 @@ export default function VendorReapply() {
       }
 
       if (
-        !form.businessImage ||
         !form.gstCertificate ||
         !form.fssaiCertificate ||
         !form.panCard ||
         !form.businessRegistrationCertificate
       ) {
-        toast.error("All file fields are required");
+        toast.error("All files are required");
         return;
       }
 
@@ -168,7 +166,6 @@ export default function VendorReapply() {
       const formData = new FormData();
       formData.append("businessInfo", JSON.stringify(businessInfo));
       formData.append("verification", JSON.stringify(verification));
-      formData.append("businessImage", form.businessImage);
       formData.append("gstCertificate", form.gstCertificate);
       formData.append("fssaiCertificate", form.fssaiCertificate);
       formData.append("panCard", form.panCard);
@@ -280,13 +277,6 @@ export default function VendorReapply() {
                   value={form.place}
                   onChange={handleChange}
                   placeholder="Kochi, Kerala"
-                />
-
-                <FileInput
-                  label="Business Image"
-                  name="businessImage"
-                  onChange={handleFileChange}
-                  file={form.businessImage}
                 />
 
                 <div className="md:col-span-2">
@@ -439,10 +429,6 @@ export default function VendorReapply() {
                       form.latitude && form.longitude
                         ? `${form.latitude}, ${form.longitude}`
                         : "Not selected",
-                    ],
-                    [
-                      "Business Image",
-                      form.businessImage ? form.businessImage.name : "Not uploaded",
                     ],
                   ]}
                 />

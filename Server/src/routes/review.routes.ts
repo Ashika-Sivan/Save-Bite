@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { reviewController } from "../controllers/review.controller";
-import { authMiddleware } from "../config/dependencies";
+import { reviewController, authMiddleware } from "../config/dependencies";
 
 const router = Router();
 
@@ -15,5 +14,7 @@ router.post("/", reviewController.createReview.bind(reviewController));
 
 // Check review status for an order
 router.get("/order/:orderId", reviewController.getReviewByOrder.bind(reviewController));
+// Check if user can review a hotel
+router.get("/hotel/:hotelId/can-review", reviewController.canReviewHotel.bind(reviewController));
 
 export default router;

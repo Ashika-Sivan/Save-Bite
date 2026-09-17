@@ -4,11 +4,12 @@ import {
   createNotificationSchedule,
   toggleNotificationSchedule,
   deleteNotificationSchedule,
-  triggerScheduleNow,
   sendBroadcastNotification,
   type NotificationSchedule,
 } from "../../services/adminNotification.service";
 import toast from "react-hot-toast";
+
+import Pagination from "../../components/common/Pagination";
 
 type TabType = "schedules" | "broadcast";
 
@@ -16,6 +17,12 @@ const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState<TabType>("schedules");
   const [schedules, setSchedules] = useState<NotificationSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [page, setPage] = useState(1);
+  const limit = 6;
+  const total = schedules.length;
+  const totalPages = Math.ceil(total / limit);
+  const displayedSchedules = schedules.slice((page - 1) * limit, page * limit);
 
   // New Schedule Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,25 +69,43 @@ const AdminNotifications = () => {
     }
   };
 
-  const handleDeleteSchedule = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this automated schedule?")) return;
-    try {
-      await deleteNotificationSchedule(id);
-      toast.success("Schedule deleted successfully");
-      setSchedules((prev) => prev.filter((s) => s._id !== id));
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete schedule");
-    }
+  const handleDeleteSchedule = (id: string) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium text-gray-900">
+            Are you sure you want to delete this automated schedule?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition"
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteNotificationSchedule(id);
+                  toast.success("Schedule deleted successfully");
+                  setSchedules((prev) => prev.filter((s) => s._id !== id));
+                } catch (err: any) {
+                  toast.error(err.response?.data?.message || "Failed to delete schedule");
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
   };
 
-  const handleTriggerNow = async (id: string) => {
-    try {
-      await triggerScheduleNow(id);
-      toast.success("Test notification sent successfully");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to trigger test notification");
-    }
-  };
+
 
   const handleCreateSchedule = async (e: FormEvent) => {
     e.preventDefault();
@@ -218,81 +243,87 @@ const AdminNotifications = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {schedules.map((s) => (
-                  <div
-                    key={s._id}
-                    className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300"
-                  >
-                    <div>
-                      {/* Top Bar: Time & Active Toggle */}
-                      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                        <span className="inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 border border-green-200">
-                          <span>⏰</span> {format12Hour(s.time24)}
-                        </span>
-
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-medium ${s.isActive ? "text-green-600" : "text-gray-400"}`}>
-                            {s.isActive ? "Active" : "Paused"}
+              <>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {displayedSchedules.map((s) => (
+                    <div
+                      key={s._id}
+                      className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300"
+                    >
+                      <div>
+                        {/* Top Bar: Time & Active Toggle */}
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 border border-green-200">
+                            <span>⏰</span> {format12Hour(s.time24)}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleSchedule(s._id)}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                              s.isActive ? "bg-green-600" : "bg-gray-300"
-                            }`}
-                          >
-                            <span
-                              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                                s.isActive ? "translate-x-4" : "translate-x-1"
+
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-medium ${s.isActive ? "text-green-600" : "text-gray-400"}`}>
+                              {s.isActive ? "Active" : "Paused"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSchedule(s._id)}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                s.isActive ? "bg-green-600" : "bg-gray-300"
                               }`}
-                            />
-                          </button>
+                            >
+                              <span
+                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                  s.isActive ? "translate-x-4" : "translate-x-1"
+                                }`}
+                              />
+                            </button>
+                          </div>
                         </div>
+
+                        {/* Content */}
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900">{s.name}</h3>
+                            <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 uppercase">
+                              {s.targetRole}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs font-medium text-green-700">{s.title}</p>
+                          <p className="mt-2 text-xs text-gray-600 line-clamp-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                            {s.body}
+                          </p>
+                        </div>
+
+                        {s.lastTriggeredDate && (
+                          <p className="mt-3 text-[11px] text-gray-400">
+                            Last sent: {s.lastTriggeredDate}
+                          </p>
+                        )}
                       </div>
 
-                      {/* Content */}
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-gray-900">{s.name}</h3>
-                          <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 uppercase">
-                            {s.targetRole}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs font-medium text-green-700">{s.title}</p>
-                        <p className="mt-2 text-xs text-gray-600 line-clamp-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                          {s.body}
-                        </p>
+                      {/* Footer Actions */}
+                      <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSchedule(s._id)}
+                          className="text-xs font-medium text-red-600 hover:text-red-700 transition"
+                        >
+                          Delete
+                        </button>
                       </div>
-
-                      {s.lastTriggeredDate && (
-                        <p className="mt-3 text-[11px] text-gray-400">
-                          Last sent: {s.lastTriggeredDate}
-                        </p>
-                      )}
                     </div>
+                  ))}
+                </div>
 
-                    {/* Footer Actions */}
-                    <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => handleTriggerNow(s._id)}
-                        className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 border border-amber-200 hover:bg-amber-100 transition"
-                      >
-                        ⚡ Test Run Now
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteSchedule(s._id)}
-                        className="text-xs font-medium text-red-600 hover:text-red-700 transition"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                {totalPages > 1 && (
+                  <div className="mt-6">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      total={total}
+                      limit={limit}
+                      onPageChange={setPage}
+                    />
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         )}

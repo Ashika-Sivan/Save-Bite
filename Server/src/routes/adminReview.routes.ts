@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { adminReviewController } from "../controllers/adminReview.controller";
-import { authMiddleware } from "../config/dependencies";
+import { adminReviewController, authMiddleware } from "../config/dependencies";
 
 const router = Router();
 

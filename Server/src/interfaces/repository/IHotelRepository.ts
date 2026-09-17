@@ -81,8 +81,6 @@ export interface IHotelRepository{
     findByVendorId(vendorId:string):Promise<IHotel[]>;
     findByIdAndVendorId(hotelId:string, vendorId:string):Promise<IHotel|null>
     findLiveHotels(query:ILiveHotelQuery):Promise<ILiveHotelPaginatedResult>
-    findLiveHotelMenu(query:ILiveHotelMenuQuery):Promise<ILiveHotelMenuRepositoryResult|null>
-        
-       
-   
+    findLiveHotelMenu(query:ILiveHotelMenuQuery):Promise<ILiveHotelMenuRepositoryResult|null>;
+    findAll(): Promise<IHotel[]>;
 }

@@ -77,4 +77,6 @@ export interface IOrderRepository {
     getTotalRevenue(): Promise<number>;
     getRevenueLast7Days(): Promise<{ date: string; revenue: number; orders: number }[]>;
     findAllOrders(filters?: { page?: number; limit?: number; status?: string }): Promise<{ orders: IOrder[], total: number }>;
+    aggregateOrders(pipeline: any[]): Promise<any[]>;
+    findAll(): Promise<IOrder[]>;
 }

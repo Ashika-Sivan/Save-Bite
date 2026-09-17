@@ -13,6 +13,7 @@ import { VendorStatus } from "../../interfaces/models/IVendor.model";
 import { IOrderService } from "../../interfaces/service/order/IOrder.service";
 import stripe from "../../config/stripe";
 import mongoose from "mongoose";
+import { toOrderResponseDTO } from "../../mappers/order.mapper";
 
 export class OrderService implements IOrderService {
     constructor(
@@ -195,7 +196,7 @@ export class OrderService implements IOrderService {
         if(!order){
             throw new AppError("order not found",StatusCode.NOT_FOUND)
         }
-        return this.mapOrderToResponse(order)
+        return toOrderResponseDTO(order)
     }
 
     async verifyPayment(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
@@ -210,12 +211,12 @@ export class OrderService implements IOrderService {
 
         // Already paid — return immediately
         if (order.paymentStatus === PaymentStatus.PAID) {
-            return this.mapOrderToResponse(order);
+            return toOrderResponseDTO(order);
         }
 
         // Only verify if order is still waiting for payment
         if (order.paymentStatus !== PaymentStatus.PENDING || !order.stripePaymentIntentId) {
-            return this.mapOrderToResponse(order);
+            return toOrderResponseDTO(order);
         }
 
         // Check the payment intent status directly with Stripe
@@ -230,10 +231,10 @@ export class OrderService implements IOrderService {
             if (!updatedOrder) {
                 throw new AppError("Order not found after payment verification", StatusCode.NOT_FOUND);
             }
-            return this.mapOrderToResponse(updatedOrder);
+            return toOrderResponseDTO(updatedOrder);
         }
 
-        return this.mapOrderToResponse(order);
+        return toOrderResponseDTO(order);
     }
 
     async getMyOrders(customerId: string): Promise<IOrderResponseDTO[]> {
@@ -242,55 +243,9 @@ export class OrderService implements IOrderService {
         }
 
         const orders = await this._orderRepository.findAllByCustomerId(new Types.ObjectId(customerId));
-        return orders.map((order) => this.mapOrderToResponse(order));
+        return orders.map((order) => toOrderResponseDTO(order));
     }
 
-    private mapOrderToResponse(order: IOrder): IOrderResponseDTO {
-        const hotelObj = order.hotelId as unknown as { _id: Types.ObjectId; hotelName?: string };
-        const hotelName = typeof hotelObj === "object" && hotelObj?.hotelName ? hotelObj.hotelName : "";
-        
-        const vendorObj = order.vendorId as unknown as any;
-        let vendorLocation;
-        if (vendorObj && typeof vendorObj === "object" && vendorObj.businessInfo?.location?.coordinates) {
-            const [lng, lat] = vendorObj.businessInfo.location.coordinates;
-            vendorLocation = { lat, lng };
-        }
-
-        return {
-            id:order._id.toString(),
-            customerId:order.customerId.toString(),
-            vendorId: (vendorObj?._id ?? order.vendorId).toString(),
-            vendorLocation,
-            hotelId: (hotelObj?._id ?? order.hotelId).toString(),
-            hotelName,
-            menuId:order.menuId.toString(),
-                items:order.items.map((item)=>({
-                    itemId:item.itemId.toString(),
-                    itemName:item.itemName,
-                    unitType:item.unitType,
-                    price:item.price,
-                    quantity:item.quantity,
-                    subTotal:item.subtotal
-                }),
-            ),
-            totalAmount:order.totalAmount,
-            currency:order.currency,
-            paymentStatus:order.paymentStatus,
-            orderStatus:order.orderStatus,
-            settlementStatus:order.settlementStatus,
-            pickupCode:order.pickupCode,
-            pickupWindow:order.pickupWindow?{
-                startTime:order.pickupWindow.startTime.toISOString(),
-                endTime:order.pickupWindow.endTime.toISOString()
-            }
-            :null,
-
-            paidAt:order.paidAt?order.paidAt.toISOString():null,
-            collectedAt:order.collectedAt?order.collectedAt.toISOString():null,
-            createdAt:order.createdAt.toISOString(),
-            updatedAt:order.updatedAt.toISOString()
-       }
-    }
 
     async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {//function actevely talk stripe to check
     if (!paymentIntentId) {
@@ -476,7 +431,7 @@ export class OrderService implements IOrderService {
 
         return {
             message: ORDER_MESSAGES.PICKUP_CODE_REDEEMED,
-            order: this.mapOrderToResponse(updatedOrder),
+            order: toOrderResponseDTO(updatedOrder),
         };
     }
 
@@ -513,7 +468,7 @@ export class OrderService implements IOrderService {
 
         return {
             message: ORDER_MESSAGES.PICKUP_CODE_REDEEMED,
-            order: this.mapOrderToResponse(updatedOrder),
+            order: toOrderResponseDTO(updatedOrder),
         };
     }
 
@@ -532,7 +487,7 @@ export class OrderService implements IOrderService {
         }
 
         const orders = await this._orderRepository.findAllByVendorId(vendor._id);
-        return orders.map((order) => this.mapOrderToResponse(order));
+        return orders.map((order) => toOrderResponseDTO(order));
     }
 
     async processAutoRefunds(): Promise<number> {
@@ -571,5 +526,58 @@ export class OrderService implements IOrderService {
         }
 
         return refundedCount;
+    }
+
+    async cancelOrder(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
+        if (!Types.ObjectId.isValid(customerId) || !Types.ObjectId.isValid(orderId)) {
+            throw new AppError("Invalid order ID", StatusCode.BAD_REQUEST);
+        }
+
+        const order = await this._orderRepository.findByIdAndCustomerId(orderId, new Types.ObjectId(customerId));
+        if (!order) {
+            throw new AppError("Order not found", StatusCode.NOT_FOUND);
+        }
+
+        if (order.orderStatus !== OrderStatus.PLACED) {
+            throw new AppError(`Cannot cancel order in status: ${order.orderStatus}`, StatusCode.BAD_REQUEST);
+        }
+
+        if (order.paymentStatus !== PaymentStatus.PAID) {
+            throw new AppError("Only paid orders can be cancelled", StatusCode.BAD_REQUEST);
+        }
+
+        const now = Date.now();
+        const orderTime = order.createdAt.getTime();
+        const diffMinutes = (now - orderTime) / (1000 * 60);
+
+        if (diffMinutes > 5) {
+            throw new AppError("Cancellation grace period of 5 minutes has expired", StatusCode.BAD_REQUEST);
+        }
+
+        if (order.stripePaymentIntentId) {
+            try {
+                await stripe.refunds.create({
+                    payment_intent: order.stripePaymentIntentId,
+                    reason: "requested_by_customer"
+                });
+            } catch (error: unknown) {
+                console.error("Stripe refund failed during cancellation:", error);
+                throw new AppError(`Refund failed: ${error instanceof Error ? error.message : "Unknown error"}`, StatusCode.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        const itemsToIncrement = order.items.map(item => ({
+            itemId: item.itemId,
+            quantity: item.quantity
+        }));
+
+        await this._dailyMenuRepository.incrementItemStock(order.menuId, itemsToIncrement);
+
+        const updatedOrder = await this._orderRepository.updateOrderStatus(order._id.toString(), OrderStatus.CANCELLED);
+        if (!updatedOrder) {
+            throw new AppError("Failed to update order status", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        return toOrderResponseDTO(updatedOrder);
     }
 }

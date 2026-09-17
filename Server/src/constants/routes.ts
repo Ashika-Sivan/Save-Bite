@@ -1,4 +1,19 @@
 export const ROUTES = {
+  BASE: {
+    AUTH: "/api/auth",
+    OTP: "/api/auth",
+    VENDOR: "/api/vendor",
+    ADMIN_NOTIFICATIONS: "/api/admin/notifications",
+    ADMIN_REVIEWS: "/api/admin/reviews",
+    ADMIN_TRANSACTIONS: "/api/admin/transactions",
+    ADMIN: "/api/admin",
+    CUSTOMER: "/api/customer",
+    ORDERS: "/api/orders",
+    CONCERNS: "/api/concerns",
+    REVIEWS: "/api/reviews",
+    CUSTOMER_NOTIFICATIONS: "/api/customer/notifications",
+    METRICS: "/metrics",
+  },
   AUTH: {
     REGISTER: "/register",
     LOGIN: "/login",
@@ -10,6 +25,7 @@ export const ROUTES = {
     GET_ME: "/me",
     FORGOT_PASSWORD: "/forgot-password",
     RESET_PASSWORD: "/reset-password",
+    UPDATE_PASSWORD: "/update-password",
   },
 
   OTP: {

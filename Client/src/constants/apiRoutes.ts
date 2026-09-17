@@ -1,5 +1,4 @@
-// Central registry of all API route strings used across the client services.
-// Keeping routes here prevents magic strings scattered across service files.
+
 
 export const API_ROUTES = {
   AUTH: {
@@ -13,6 +12,7 @@ export const API_ROUTES = {
     ME: "/auth/me",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    UPDATE_PASSWORD: "/auth/update-password",
     GOOGLE_LOGIN: "/auth/google",
   },
 
@@ -58,6 +58,7 @@ export const API_ROUTES = {
     TRANSACTIONS_OVERVIEW: "/admin/transactions/overview",
     TRANSACTIONS_VENDORS: "/admin/transactions/vendors",
     TRANSACTIONS_RECENT: "/admin/transactions/recent",
+    TRANSACTIONS_REFUNDS: "/admin/transactions/refunds",
   },
   ORDER:{
     CREATE_CHECKOUT:"/orders/checkout",
@@ -66,6 +67,7 @@ export const API_ROUTES = {
     VERIFY_PAYMENT:(orderId:string)=>`/orders/${orderId}/verify-payment`,
     VENDOR_ORDERS: "/orders/vendor-orders",
     REDEEM_PICKUP_CODE: "/orders/redeem-pickup-code",
+    CANCEL_ORDER:(orderId:string)=>`/orders/${orderId}/cancel`,
   },
   CONCERN: {
     RAISE: (orderId: string) => `/concerns/orders/${orderId}/concern`,
@@ -77,6 +79,7 @@ export const API_ROUTES = {
   REVIEWS: {
     SUBMIT: "/reviews",
     GET_HOTEL_REVIEWS: (hotelId: string) => `/reviews/hotel/${hotelId}`,
+    CAN_REVIEW_HOTEL: (hotelId: string) => `/reviews/hotel/${hotelId}/can-review`,
     GET_ORDER_REVIEW: (orderId: string) => `/reviews/order/${orderId}`,
     ADMIN_ALL: "/admin/reviews",
     ADMIN_TOGGLE_VISIBILITY: (id: string) => `/admin/reviews/${id}/visibility`,

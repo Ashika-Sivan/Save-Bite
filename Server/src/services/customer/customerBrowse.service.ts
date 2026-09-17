@@ -5,6 +5,7 @@ import { AppError } from "../../errors/AppError";
 import { IHotelRepository } from "../../interfaces/repository/IHotelRepository";
 import { ICustomerBrowseService, ILiveHotelBrowseQuery } from "../../interfaces/service/customer/ICustomerBrowseService";
 import { getSignedS3Url } from "../../utils/getSignedS3Url";
+import { toLiveHotelListResponseDTO, toLiveHotelMenuResponseDTO } from "../../mappers/liveHotels.mapper";
 
 export class CustomerBrowseService implements ICustomerBrowseService{
     constructor(private readonly _hotelRepository:IHotelRepository){}
@@ -49,36 +50,7 @@ export class CustomerBrowseService implements ICustomerBrowseService{
             startOfDay,endOfDay,cutOffThreshold,latitude:query.latitude,longitude:query.longitude,search:query.search,skip,limit
           })
 
-        const hotels:ILiveHotelResponseDTO[]=result.hotels.map((hotel)=>{
-            const response:ILiveHotelResponseDTO={
-                hotelId:hotel.hotelId.toString(),
-                menuId:hotel.menuId.toString(),
-                 hotelName: hotel.hotelName,
-                businessType: hotel.businessType,
-                 hotelImageKey:hotel.hotelImageKey,
-                 place:hotel.place,
-                 address:hotel.address,
-                 location:{
-                    longitude:hotel.location.coordinates[0],
-                    latitude:hotel.location.coordinates[1]
-                 },
-                 pickupWindow:{
-                    startTime:hotel.pickupWindow.startTime,
-                    endTime:hotel.pickupWindow.endTime
-                 },
-                 availableItemCount:hotel.availableItemCount,
-            }
-
-            if(hotel.distanceInMeter!==undefined){
-                response.distanceInMeters=Math.round(hotel.distanceInMeter)
-            }
-            return response
-        });
-        return {hotels,pagination:{page,limit,total:result.total,
-            totalPages:Math.ceil(result.total/limit)
-        }}
-
-
+        return toLiveHotelListResponseDTO(result, page, limit);
     }
     async getLiveHotelMenu(
         hotelId: string
@@ -122,73 +94,6 @@ export class CustomerBrowseService implements ICustomerBrowseService{
             );
         }
 
-        const items = await Promise.all(
-            result.items.map(async (item) => {
-                const itemImageUrl =
-                    item.itemImageKey
-                        ? await getSignedS3Url(
-                            item.itemImageKey
-                        )
-                        : "";
-
-                return {
-                    itemId:
-                        item.itemId.toString(),
-
-                    itemName:
-                        item.itemName,
-
-                    itemImageUrl,
-
-                    unitType:
-                        item.unitType,
-
-                    originalPrice:
-                        item.originalPrice,
-
-                    discountedPrice:
-                        item.discountedPrice,
-
-                    stockQuantity:
-                        item.stockQuantity,
-
-                    isAvailable:
-                        item.isAvailable,
-                };
-            })
-        );
-
-        return {
-            hotelId:
-                result.hotelId.toString(),
-
-            menuId:
-                result.menuId.toString(),
-
-            hotelName:
-                result.hotelName,
-
-            businessType:
-                result.businessType,
-
-            hotelImageKey:
-                result.hotelImageKey,
-
-            place:
-                result.place,
-
-            address:
-                result.address,
-
-            pickupWindow: {
-                startTime:
-                    result.pickupWindow.startTime,
-
-                endTime:
-                    result.pickupWindow.endTime,
-            },
-
-            items,
-        };
+        return toLiveHotelMenuResponseDTO(result);
     }
 }

@@ -84,3 +84,8 @@ export const redeemPickupCode = async (pickupCode: string): Promise<ApiResponse<
     const response = await api.post<ApiResponse<Order>>(API_ROUTES.ORDER.REDEEM_PICKUP_CODE, { pickupCode });
     return response.data;
 };
+
+export const cancelOrder = async (orderId: string): Promise<ApiResponse<Order>> => {
+    const response = await api.post<ApiResponse<Order>>(API_ROUTES.ORDER.CANCEL_ORDER(orderId));
+    return response.data;
+};

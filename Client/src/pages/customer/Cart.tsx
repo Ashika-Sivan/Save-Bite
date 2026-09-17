@@ -4,6 +4,7 @@ import {
 } from "react"
 import axios from "axios"
 import { createCheckout } from "../../services/order.service"
+import { getLiveHotelMenu } from "../../services/customerBrowse.service"
 
 import {
     useDispatch,
@@ -25,6 +26,7 @@ import {
     clearCart,
     removeFromCart,
     updateCartQuantity,
+    syncCart,
 } from "../../redux/cartSlice"
 
 const CartPage = () => {
@@ -63,6 +65,20 @@ const CartPage = () => {
             )
         }
     }, [])
+
+    useEffect(() => {
+        if (cart.hotelId) {
+            getLiveHotelMenu(cart.hotelId)
+                .then((response) => {
+                    if (response.data && response.data.items) {
+                        dispatch(syncCart({ items: response.data.items }));
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to sync cart with live menu:", err);
+                });
+        }
+    }, [cart.hotelId, dispatch]);
 
     const formatTime = (
         value: string
@@ -325,9 +341,31 @@ const CartPage = () => {
                                     key={
                                         item.itemId
                                     }
-                                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                                    className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
                                 >
-                                    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+                                    {/* Image Section */}
+                                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
+                                        {item.itemImageUrl ? (
+                                            <img
+                                                src={item.itemImageUrl}
+                                                alt={item.itemName}
+                                                onError={(e) => { 
+                                                    e.currentTarget.style.display = 'none';
+                                                    if (e.currentTarget.nextElementSibling) {
+                                                        (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                                                    }
+                                                }}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : null}
+                                        <div 
+                                            className="h-full w-full items-center justify-center text-3xl"
+                                            style={{ display: item.itemImageUrl ? 'none' : 'flex' }}
+                                        >
+                                            🍽️
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-1 flex-col justify-between gap-5 sm:flex-row sm:items-center">
                                         <div>
                                             <h2 className="font-semibold">
                                                 {

@@ -91,3 +91,40 @@ export const getRecentTransactions = async (
   const response = await api.get(API_ROUTES.ADMIN.TRANSACTIONS_RECENT, { params });
   return response.data?.data || response.data;
 };
+
+export interface RefundTransactionItem {
+  _id: string;
+  orderId: string;
+  customerName: string;
+  hotelName: string;
+  totalAmount: number;
+  refundAmount: number;
+  refundPercentage: number;
+  orderStatus: string;
+  refundDate: string;
+}
+
+export interface RefundReportResponse {
+  totalRefundedAmount: number;
+  totalRefundedTransactions: number;
+  items: RefundTransactionItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface RefundReportParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export const getAdminRefundReports = async (
+  params?: RefundReportParams
+): Promise<RefundReportResponse> => {
+  const response = await api.get(API_ROUTES.ADMIN.TRANSACTIONS_REFUNDS, { params });
+  return response.data?.data || response.data;
+};

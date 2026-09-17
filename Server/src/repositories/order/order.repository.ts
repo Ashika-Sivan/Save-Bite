@@ -244,4 +244,8 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
 
         return { orders, total };
     }
+
+    async aggregateOrders(pipeline: any[]): Promise<any[]> {
+        return await this._model.aggregate(pipeline);
+    }
 }

@@ -4,6 +4,8 @@ import { AppError } from "../../errors/AppError";
 import { IVendorRepository } from "../../interfaces/repository/IVendorRepository";
 import { IWalletRepository } from "../../interfaces/repository/IWalletRepository";
 import { IWalletService } from "../../interfaces/service/wallet/IWallet.service";
+import { AUTH_MESSAGES, VENDOR_MESSAGES } from "../../constants/messages";
+import { toWalletSummaryResponseDTO } from "../../mappers/wallet.mapper";
 
 export class WalletService implements IWalletService {
     constructor(
@@ -13,41 +15,17 @@ export class WalletService implements IWalletService {
 
     async getVendorWalletSummary(ownerId: string): Promise<IWalletSummaryResponseDTO> {
         if (!ownerId) {
-            throw new AppError("Vendor not authenticated", StatusCode.UNAUTHORIZED);
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
 
         const vendor = await this._vendorRepository.findByOwnerId(ownerId);
         if (!vendor) {
-            throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         const wallet = await this._walletRepository.getOrCreateWallet(vendor._id);
         const transactions = await this._walletRepository.getTransactionsByVendorId(vendor._id);
 
-        return {
-            wallet: {
-                id: wallet._id.toString(),
-                vendorId: wallet.vendorId.toString(),
-                balance: wallet.balance,
-                totalEarnings: wallet.totalEarnings,
-                totalCommissionPaid: wallet.totalCommissionPaid,
-                currency: wallet.currency,
-                updatedAt: wallet.updatedAt ? wallet.updatedAt.toISOString() : new Date().toISOString(),
-            },
-            transactions: transactions.map((t) => ({
-                id: t._id.toString(),
-                walletId: t.walletId.toString(),
-                vendorId: t.vendorId.toString(),
-                orderId: t.orderId ? (t.orderId as unknown as { _id?: { toString(): string } })._id?.toString() || t.orderId.toString() : "",
-                type: t.type,
-                orderTotal: t.orderTotal,
-                vendorAmount: t.vendorAmount,
-                platformCommission: t.platformCommission,
-                currency: t.currency,
-                description: t.description,
-                status: t.status,
-                createdAt: t.createdAt ? t.createdAt.toISOString() : new Date().toISOString(),
-            })),
-        };
+        return toWalletSummaryResponseDTO(wallet, transactions);
     }
 }

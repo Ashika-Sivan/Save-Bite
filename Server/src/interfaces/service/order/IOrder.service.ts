@@ -10,4 +10,5 @@ export interface IOrderService{
     redeemPickupCode(ownerId: string, dto: IRedeemPickupCodeDTO): Promise<IRedeemPickupCodeResponseDTO>;
     getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]>;
     processAutoRefunds(): Promise<number>;
+    cancelOrder(customerId: string, orderId: string): Promise<IOrderResponseDTO>;
 }

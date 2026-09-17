@@ -38,10 +38,12 @@ import AdminPublicRoute from "./AdminPublicRoutes";
 import AdminLayout from "../components/admin/AdminLayout";
 
 import LiveHotelMenuPage from "../pages/customer/LiveHotelMenu";
+import FoodDetails from "../pages/customer/FoodDetails";
 import CartPage from "../pages/customer/Cart";
 import CheckoutPage from "../pages/customer/CheckoutPage";
 import PaymentSuccessPage from "../pages/customer/PaymentSuccessPage";
 import MyOrdersPage from "../pages/customer/MyOrdersPage";
+import CustomerProfile from "../pages/customer/CustomerProfile";
 import CustomerLayout from "../components/layouts/CustomerLayout";
 
 import AdminConcerns from "../pages/admin/AdminConcerns";
@@ -49,6 +51,7 @@ import AdminOrders from "../pages/admin/AdminOrders";
 import AdminNotifications from "../pages/admin/AdminNotifications";
 import AdminReviews from "../pages/admin/AdminReviews";
 import AdminTransactions from "../pages/admin/AdminTransactions";
+import AdminRefunds from "../pages/admin/AdminRefunds";
 import AdminSettings from "../pages/admin/AdminSettings";
 
 export default function AppRoutes() {
@@ -73,6 +76,15 @@ export default function AppRoutes() {
                         element={
                             <ProtectedRoute>
                                 <LiveHotelMenuPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/customer/restaurants/:hotelId/menu/:itemId"
+                        element={
+                            <ProtectedRoute>
+                                <FoodDetails />
                             </ProtectedRoute>
                         }
                     />
@@ -109,6 +121,15 @@ export default function AppRoutes() {
                         element={
                             <ProtectedRoute>
                                 <MyOrdersPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path={APP_ROUTES.CUSTOMER.PROFILE}
+                        element={
+                            <ProtectedRoute>
+                                <CustomerProfile />
                             </ProtectedRoute>
                         }
                     />
@@ -228,6 +249,7 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.ADMIN.NOTIFICATIONS} element={<AdminNotifications />} />
                         <Route path={APP_ROUTES.ADMIN.REVIEWS} element={<AdminReviews />} />
                         <Route path={APP_ROUTES.ADMIN.TRANSACTIONS} element={<AdminTransactions />} />
+                        <Route path="/admin/refunds" element={<AdminRefunds />} />
                         <Route path={APP_ROUTES.ADMIN.SETTINGS} element={<AdminSettings />} />
                     </Route>
                 </Route>

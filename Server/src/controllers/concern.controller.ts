@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IConcernService } from "../interfaces/service/concern/IConcern.service";
 import { StatusCode } from "../constants/statusCode";
 import { AppError } from "../errors/AppError";
-
+import { catchAsync } from "../utils/catchAsync";
 export class ConcernController {
-  constructor(private _concernService: IConcernService) {}
+  constructor(private _concernService: IConcernService) { }
 
-  async raiseConcern(req: Request, res: Response): Promise<void> {
+  raiseConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const orderId = req.params.orderId as string;
     const { reason } = req.body;
     const user = (req as unknown as { user: { userId?: string; id?: string } }).user;
@@ -36,20 +36,20 @@ export class ConcernController {
       message: "Concern raised successfully",
       data: { concern },
     });
-  }
+  });
 
-  async getAllConcerns(req: Request, res: Response): Promise<void> {
+  getAllConcerns = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { status } = req.query;
-  
+
     const concerns = await this._concernService.getAllConcerns(status as string);
 
     res.status(StatusCode.OK).json({
       success: true,
       data: { concerns },
     });
-  }
+  });
 
-  async getConcernById(req: Request, res: Response): Promise<void> {
+  getConcernById = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const concern = await this._concernService.getConcernById(concernId);
 
@@ -61,9 +61,9 @@ export class ConcernController {
       success: true,
       data: { concern },
     });
-  }
+  });
 
-  async approveConcern(req: Request, res: Response): Promise<void> {
+  approveConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const { adminNote } = req.body;
 
@@ -74,9 +74,9 @@ export class ConcernController {
       message: "Concern approved and order marked as resolved (100% refund issued)",
       data: { concern },
     });
-  }
+  });
 
-  async rejectConcern(req: Request, res: Response): Promise<void> {
+  rejectConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const { adminNote } = req.body;
 
@@ -87,5 +87,5 @@ export class ConcernController {
       message: "Concern rejected and order reverted to placed status",
       data: { concern },
     });
-  }
+  });
 }

@@ -11,5 +11,6 @@ orderRouter.get(ROUTES.ORDER.VENDOR_ORDERS, authMiddleware.authenticate, authMid
 orderRouter.post(ROUTES.ORDER.REDEEM_PICKUP_CODE, authMiddleware.authenticate, authMiddleware.authorize("vendor"), orderController.redeemPickupCode.bind(orderController));
 orderRouter.get(ROUTES.ORDER.VERIFY_PAYMENT, authMiddleware.authenticate, authMiddleware.authorize("user"), orderController.verifyPayment.bind(orderController));
 orderRouter.get(ROUTES.ORDER.GET_BY_ID, authMiddleware.authenticate, authMiddleware.authorize("user"), orderController.getOrderById.bind(orderController));
+orderRouter.post("/:orderId/cancel", authMiddleware.authenticate, authMiddleware.authorize("user"), orderController.cancelOrder.bind(orderController));
 
 export default orderRouter;

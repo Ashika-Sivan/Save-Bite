@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Eye, EyeOff, User, Store, ArrowRight, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, User, Store } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { GoogleLogin } from "@react-oauth/google";
@@ -215,85 +215,83 @@ export default function Login() {
     }
   };
 
-  const inputClass = (error: string) =>
-    `w-full rounded-xl border bg-gray-50/50 px-4 py-3 text-sm text-gray-900 outline-none transition ${
-      error
-        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
-        : "border-gray-300 focus:border-green-700 focus:bg-white focus:ring-2 focus:ring-green-100"
-    }`;
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#faf7ef] px-4 py-12">
-      <div className="w-full max-w-md space-y-6 rounded-3xl border border-gray-200 bg-white p-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-brand-light px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative background shapes */}
+      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-40 blur-[120px] pointer-events-none">
+        <div className="aspect-square h-[50rem] rounded-full bg-brand-primary/30" />
+      </div>
+      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 opacity-30 blur-[100px] pointer-events-none">
+        <div className="aspect-[4/3] h-[40rem] rounded-[100%] bg-brand-primary/20" />
+      </div>
+      
+      <div className="animate-slide-up relative z-10 w-full max-w-md space-y-8 rounded-[2.5rem] bg-white/95 backdrop-blur-sm p-10 shadow-2xl shadow-brand-primary/10 sm:p-12 border border-brand-primary/5">
         {/* Brand Header */}
         <div className="text-center">
           <div
-            className="inline-flex cursor-pointer items-center gap-2"
+            className="inline-flex cursor-pointer items-center gap-3 transition-transform hover:scale-105"
             onClick={() => navigate("/")}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-700 text-white shadow-md">
-              🍃
+            <div className="flex h-12 w-12 overflow-hidden items-center justify-center rounded-full bg-brand-primary shadow-lg shadow-brand-primary/30">
+              <img src="/logo.png" alt="SaveBite Logo" className="h-full w-full object-cover" />
             </div>
-            <span className="text-2xl font-bold text-green-700">SaveBite</span>
+            <span className="text-3xl font-display font-bold tracking-tight text-brand-dark">SaveBite</span>
           </div>
 
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">
-            {activeRole === "vendor" ? "Partner Portal Login 🏪" : "Welcome Back 👋"}
+          <h1 className="mt-8 text-3xl font-display font-semibold tracking-tight text-brand-dark">
+            {activeRole === "vendor" ? "Partner Portal 🏪" : "Welcome Back 👋"}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-gray-500/90 font-medium leading-relaxed">
             {activeRole === "vendor"
-              ? "Access your restaurant dashboard, orders, & daily menus."
-              : "Log in to discover and rescue surplus food near you."}
+              ? "Access your restaurant dashboard."
+              : "Log in to rescue surplus food near you."}
           </p>
         </div>
 
         {/* Role Switcher Tabs */}
-        <div className="grid grid-cols-2 rounded-2xl bg-gray-100 p-1.5 gap-1 border border-gray-200">
+        <div className="flex rounded-2xl bg-brand-light/50 p-1.5 border border-brand-primary/10">
           <button
             type="button"
             onClick={() => handleRoleChange("customer")}
-            className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all duration-300 ${
               activeRole === "customer"
-                ? "bg-white text-green-800 shadow-sm"
-                : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-brand-primary shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            <User size={16} />
-            Customer / Foodie
+            <User size={18} className={activeRole === "customer" ? "text-brand-primary" : ""} />
+            Customer
           </button>
 
           <button
             type="button"
             onClick={() => handleRoleChange("vendor")}
-            className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all duration-300 ${
               activeRole === "vendor"
-                ? "bg-green-700 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-800"
+                ? "bg-white text-brand-primary shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            <Store size={16} />
-            Restaurant Partner
+            <Store size={18} className={activeRole === "vendor" ? "text-brand-primary" : ""} />
+            Partner
           </button>
         </div>
 
-        {/* Vendor Partner Badge Info */}
-        {activeRole === "vendor" && (
-          <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50/80 p-3 text-xs font-medium text-green-800">
-            <ShieldCheck size={18} className="shrink-0 text-green-700" />
-            <span>Manage food menu items, track 90% revenue payouts, & verify pickup codes.</span>
-          </div>
-        )}
-
         {/* Error Alert */}
         {errors.general && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-medium text-red-600">
-            {errors.general}
+          <div className="animate-fade-in rounded-xl bg-red-50 p-4 border border-red-100">
+            <div className="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-red-500">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-bold text-red-800">{errors.general}</span>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
               Email Address
             </label>
@@ -305,20 +303,24 @@ export default function Login() {
               placeholder="you@example.com"
               value={form.email}
               onChange={handleChange}
-              className={inputClass(errors.email)}
+              className={`block w-full rounded-2xl border px-4 py-3.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
+                errors.email
+                  ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500/20"
+                  : "border-brand-primary/20 bg-white/50 focus:border-brand-primary focus:bg-white focus:ring-brand-primary/20"
+              }`}
             />
-            {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+            {errors.email && <p className="animate-fade-in text-sm font-semibold text-red-600">{errors.email}</p>}
           </div>
 
           {/* Password */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
                 Password
               </label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-green-700 hover:underline"
+                className="text-xs font-bold text-brand-primary transition-colors hover:text-brand-primary-hover hover:underline"
               >
                 Forgot password?
               </Link>
@@ -333,68 +335,92 @@ export default function Login() {
                 placeholder="••••••••"
                 value={form.password}
                 onChange={handleChange}
-                className={`${inputClass(errors.password)} pr-10`}
+                className={`block w-full rounded-2xl border px-4 py-3.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 pr-10 ${
+                  errors.password
+                    ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-brand-primary/20 bg-white/50 focus:border-brand-primary focus:bg-white focus:ring-brand-primary/20"
+                }`}
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-1 flex items-center p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+            {errors.password && <p className="animate-fade-in text-sm font-semibold text-red-600">{errors.password}</p>}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-50 ${
-              activeRole === "vendor"
-                ? "bg-green-700 hover:bg-green-800"
-                : "bg-green-700 hover:bg-green-800"
-            }`}
+            className="mt-4 flex w-full justify-center rounded-full bg-brand-primary px-4 py-4 text-sm font-bold text-white shadow-lg shadow-brand-primary/20 transition-all hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 hover:-translate-y-0.5 active:translate-y-0"
           >
-            {loading ? "Signing in..." : activeRole === "vendor" ? "Sign in to Vendor Portal" : "Sign in to SaveBite"}
-            <ArrowRight size={16} />
+            {loading ? (
+              <svg className="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              "Sign in securely"
+            )}
           </button>
         </form>
 
-        <div className="relative flex items-center py-2">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink-0 px-4 text-xs font-medium text-gray-400">OR</span>
-          <div className="flex-grow border-t border-gray-200"></div>
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs font-bold uppercase tracking-widest leading-6">
+            <span className="bg-white px-4 text-gray-400">Or continue with</span>
+          </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center transition-transform hover:scale-[1.02]">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => {
-              toast.error("Google Login Failed");
-            }}
+            onError={() => toast.error("Google Login Failed")}
             useOneTap
-            shape="rectangular"
+            shape="pill"
             theme="outline"
             text="continue_with"
             size="large"
-            width="100%"
+            width="384"
           />
         </div>
 
-        <p className="text-center text-xs text-gray-500 mt-4">
+        <p className="mt-8 text-center text-sm font-medium text-gray-600">
           Don't have an account?{" "}
           <Link
             to={`/signup${activeRole === "vendor" ? "?role=vendor" : ""}`}
-            className="font-bold text-green-700 hover:underline"
+            className="font-bold text-brand-primary transition-colors hover:text-brand-primary-hover hover:underline"
           >
-            {activeRole === "vendor" ? "Register your restaurant" : "Sign up as Customer"}
+            Sign up
           </Link>
         </p>
       </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-slide-up {
+          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}} />
     </div>
   );
 }

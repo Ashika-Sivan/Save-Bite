@@ -9,63 +9,66 @@ import { StatusCode } from "../../constants/statusCode";
 import { VendorStatus } from "../../interfaces/models/IVendor.model";
 import { IDailyMenu, MenuUnitType } from "../../interfaces/models/IDailyMenu.model";
 import { getSignedS3Url } from "../../utils/getSignedS3Url";
-import { DAILY_MENU_MESSAGES } from "../../constants/messages";
+import { DAILY_MENU_MESSAGES, VENDOR_MESSAGES, HOTEL_MESSAGES } from "../../constants/messages";
 import { uploadToS3 } from "../../utils/uploadToS3";
+import { toDailyMenuResponseDTO } from "../../mappers/dailyMenu.mapper";
 
 import { IUserRepository } from "../../interfaces/repository/IUserRepository";
+import { INotificationRepository } from "../../interfaces/repository/INotificationRepository";
 
-export class DailyMenuService implements IDailyMenuService{
+export class DailyMenuService implements IDailyMenuService {
     constructor(
-        private readonly _dailyMenuRepository:IDailyMenuRepository,
-        private readonly _hotelRepository:IHotelRepository,
-        private readonly _vendorRepository:IVendorRepository,
-        private readonly _userRepository:IUserRepository
-    ){}
+        private readonly _dailyMenuRepository: IDailyMenuRepository,
+        private readonly _hotelRepository: IHotelRepository,
+        private readonly _vendorRepository: IVendorRepository,
+        private readonly _userRepository: IUserRepository,
+        private readonly _notificationRepository: INotificationRepository
+    ) { }
 
-   async createMenu(ownerId: string, hotelId: string, data: ICreateDailyMenuDTO): Promise<IDailyMenuResponseDTO> {
-       if(!Types.ObjectId.isValid(hotelId)){
-        throw new AppError("invalid hotel id",StatusCode.BAD_REQUEST)
-       }
+    async createMenu(ownerId: string, hotelId: string, data: ICreateDailyMenuDTO): Promise<IDailyMenuResponseDTO> {
+        if (!Types.ObjectId.isValid(hotelId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_HOTEL_ID, StatusCode.BAD_REQUEST)
+        }
 
-       const vendor=await this._vendorRepository.findByOwnerId(ownerId)
-       if(!vendor){
-        throw new AppError("vendor account not found",StatusCode.NOT_FOUND)
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId)
+        if (!vendor) {
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND)
 
-       }
+        }
 
-       if(vendor.status!==VendorStatus.APPROVED){
-        throw new AppError("only approved vendor can create a menu",StatusCode.FORBIDDEN)
-       }
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_CREATE, StatusCode.FORBIDDEN)
+        }
 
-       const hotel=await this._hotelRepository.findByIdAndVendorId(hotelId,vendor._id.toString())
-       if(!hotel){
-        throw new AppError("Hotel not found or access denied ",StatusCode.NOT_FOUND)
-       }
+        const hotel = await this._hotelRepository.findByIdAndVendorId(hotelId, vendor._id.toString())
+        if (!hotel) {
+            throw new AppError(HOTEL_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED, StatusCode.NOT_FOUND)
+        }
 
-       if(!hotel.isActive){
-        throw new AppError("cannot create menu for inactive hotels",StatusCode.BAD_REQUEST)
-       }
+        if (!hotel.isActive) {
+            throw new AppError(DAILY_MENU_MESSAGES.CANNOT_CREATE_FOR_INACTIVE, StatusCode.BAD_REQUEST)
+        }
 
-       const pickupStartTime=new Date(data.pickupStartTime)
-       const pickupEndTime=new Date(data.pickupEndTime)
+        const pickupStartTime = new Date(data.pickupStartTime)
+        const pickupEndTime = new Date(data.pickupEndTime)
 
-       if(Number.isNaN(pickupStartTime.getTime())||Number.isNaN(pickupEndTime.getTime())){
-        throw new AppError("invalid pickup time",StatusCode.BAD_REQUEST)
-       }
+        if (Number.isNaN(pickupStartTime.getTime()) || Number.isNaN(pickupEndTime.getTime())) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_PICKUP_TIME, StatusCode.BAD_REQUEST)
+        }
 
-       if(pickupStartTime>=pickupEndTime){
-        throw new AppError("pickup end time must be after the start time",StatusCode.BAD_REQUEST)
+        if (pickupStartTime >= pickupEndTime) {
+            throw new AppError(DAILY_MENU_MESSAGES.END_TIME_AFTER_START, StatusCode.BAD_REQUEST)
 
-       }
+        }
 
-       const todayStart=new Date();//current date:-Aug 3,2026-6.30 pm
-       todayStart.setHours(0,0,0,0)//Aug 3,2026-12.00 am(change time to mid night)this is actually exact beginig of today
+        const todayStart = new Date();//current date:-Aug 3,2026-6.30 pm
+        todayStart.setHours(0, 0, 0, 0)//Aug 3,2026-12.00 am(change time to mid night)this is actually exact beginig of today
 
 
-       const tomorrowStart=new Date(todayStart);//which is to find the begining of tomorrow.
-       tomorrowStart.setDate(tomorrowStart.getDate()+1)//current day + next day:-aug-3 to aug-4
+        const tomorrowStart = new Date(todayStart);//which is to find the begining of tomorrow.
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1)//current day + next day:-aug-3 to aug-4
 
-            const existingMenu =
+        const existingMenu =
             await this._dailyMenuRepository
                 .findTodayMenuByHotel(
                     hotelId,
@@ -74,406 +77,368 @@ export class DailyMenuService implements IDailyMenuService{
                     tomorrowStart
                 )
 
-        if(existingMenu){
+        if (existingMenu) {
             throw new AppError(
                 "today's menu already exists for this hotel",
                 StatusCode.BAD_REQUEST
             )
         }
 
-    if(pickupStartTime<todayStart||pickupStartTime>=tomorrowStart||pickupEndTime>tomorrowStart){
-        throw new AppError( "Pickup window must be for today",StatusCode.BAD_REQUEST)
-    }
-
-    const now=new Date()
-    if(pickupStartTime<=now){
-        throw new AppError("pickup start time is must be in the future",StatusCode.BAD_REQUEST)
-    }
-
-    const cutoffTime=new Date(pickupEndTime.getTime()-30*60*1000)
-    if(now>=cutoffTime){
-        throw new AppError("Pickup end time must be more than 30 minutes from now",StatusCode.BAD_REQUEST)
-    }
-
-    const menu=await this._dailyMenuRepository.createMenu({
-        vendorId:vendor._id,
-        hotelId:hotel._id,
-        menuDate:todayStart,
-        pickupWindow:{
-            startTime:pickupStartTime,
-            endTime:pickupEndTime
+        if (pickupStartTime < todayStart || pickupStartTime >= tomorrowStart || pickupEndTime > tomorrowStart) {
+            throw new AppError(DAILY_MENU_MESSAGES.PICKUP_WINDOW_TODAY, StatusCode.BAD_REQUEST)
         }
-    })
-    return this.toResponseDTO(menu)
-   }
-    private async toResponseDTO(
-        menu: IDailyMenu
-    ): Promise<IDailyMenuResponseDTO> {
-        const items = await Promise.all(
-            menu.items.map(async (item) => {
-                const itemImageUrl =
-                    item.itemImageKey
-                        ? await getSignedS3Url(
-                              item.itemImageKey
-                          )
-                        : "";
 
-                return {
-                    id: item._id.toString(),
-                    itemName: item.itemName,
-                    itemImageUrl,
-                    unitType: item.unitType,
-                    originalPrice: item.originalPrice,
-                    discountedPrice:
-                        item.discountedPrice,
-                    stockQuantity:
-                        item.stockQuantity,
-                    isAvailable: item.isAvailable,
-                };
-            })
-        );
+        const now = new Date()
+        if (pickupStartTime <= now) {
+            throw new AppError(DAILY_MENU_MESSAGES.START_TIME_FUTURE, StatusCode.BAD_REQUEST)
+        }
 
-        return {
-            id: menu._id.toString(),
-            vendorId: menu.vendorId.toString(),
-            hotelId: menu.hotelId.toString(),
-            menuDate: menu.menuDate.toISOString(),
+        const cutoffTime = new Date(pickupEndTime.getTime() - 30 * 60 * 1000)
+        if (now >= cutoffTime) {
+            throw new AppError(DAILY_MENU_MESSAGES.END_TIME_30_MINS, StatusCode.BAD_REQUEST)
+        }
 
+        const menu = await this._dailyMenuRepository.createMenu({
+            vendorId: vendor._id,
+            hotelId: hotel._id,
+            menuDate: todayStart,
             pickupWindow: {
-                startTime:
-                    menu.pickupWindow.startTime
-                        .toISOString(),
-
-                endTime:
-                    menu.pickupWindow.endTime
-                        .toISOString(),
-            },
-
-            items,
-            isLive: menu.isLive,
-            createdAt: menu.createdAt.toISOString(),
-            updatedAt: menu.updatedAt.toISOString(),
-        };
+                startTime: pickupStartTime,
+                endTime: pickupEndTime
+            }
+        })
+        return toDailyMenuResponseDTO(menu)
     }
 
+    async addMenuItem(
+        ownerId: string,
+        menuId: string,
+        data: IAddDailyMenuItemDTO,
+        imageFile: Express.Multer.File
+    ): Promise<IDailyMenuResponseDTO> {
+        if (!Types.ObjectId.isValid(menuId)) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.INVALID_ID,
+                StatusCode.BAD_REQUEST
+            );
+        }
 
-async addMenuItem(
-    ownerId: string,
-    menuId: string,
-    data: IAddDailyMenuItemDTO,
-      imageFile: Express.Multer.File
-): Promise<IDailyMenuResponseDTO> {
-    if (!Types.ObjectId.isValid(menuId)) {
-        throw new AppError(
-            "Invalid menu ID",
-            StatusCode.BAD_REQUEST
-        );
-    }
+        if (!imageFile) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST)
+        }
 
-    if(!imageFile){
-        throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID,StatusCode.BAD_REQUEST)
-    }
-
-    const vendor =
-        await this._vendorRepository.findByOwnerId(
-            ownerId
-        );
-
-    if (!vendor) {
-        throw new AppError(
-            "Vendor account not found",
-            StatusCode.NOT_FOUND
-        );
-    }
-
-    if (vendor.status !== VendorStatus.APPROVED) {
-        throw new AppError(
-            "Only approved vendors can add menu items",
-            StatusCode.FORBIDDEN
-        );
-    }
-    /*
-    form data send normal field as string.therefor convert the numeric field first
-    */
-
-    const itemName = data.itemName?.trim();
-    const originalPrice=Number(data.originalPrice)
-    const discountedPrice=Number(data.discountedPrice)
-    const stockQuantity=Number(data.stockQuantity)
-
-
-    if (!itemName) {
-        throw new AppError(
-            "Item name is required",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    if (
-        !Object.values(MenuUnitType).includes(
-            data.unitType
-        )
-    ) {
-        throw new AppError(
-            "Invalid menu unit type",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    if (
-        !Number.isFinite(originalPrice) ||
-        !Number.isFinite(discountedPrice)
-    ) {
-        throw new AppError(
-            "Prices must be valid numbers",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    if (originalPrice <= 0 ||discountedPrice <= 0){
-        throw new AppError(
-            "Prices must be greater than zero",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    if (discountedPrice >= originalPrice ) {
-        throw new AppError(
-            "Discounted price must be lower than the original price",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    if ( !Number.isInteger(stockQuantity)||stockQuantity <= 0 ){
-        throw new AppError(
-            "Stock quantity must be a positive whole number",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    const uploadResult =await uploadToS3(imageFile,"menu-items");
-    const itemImageKey=uploadResult.key
-    const itemData:IDailyMenuItemCreateData={
-        itemName,itemImageKey,unitType:data.unitType,originalPrice,discountedPrice,stockQuantity,isAvailable:true
-    }
-
-    const updatedMenu =
-        await this._dailyMenuRepository.addItem(
-            menuId,
-            vendor._id,
-            itemData
-        );
-
-    if (!updatedMenu) {
-        throw new AppError(
-            "Menu not found or access denied",
-            StatusCode.NOT_FOUND
-        );
-    }
-
-    return await this.toResponseDTO(updatedMenu);
-}
-
-async goLive(ownerId: string,menuId: string): Promise<IDailyMenuResponseDTO> {
-    if (!Types.ObjectId.isValid(menuId)) {
-        throw new AppError( "Invalid menu ID", StatusCode.BAD_REQUEST );  
-    }
-    const vendor =await this._vendorRepository .findByOwnerId(ownerId);
-        
-    if (!vendor) {
-        throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);  
-    }
-
-    if (
-        vendor.status !==
-        VendorStatus.APPROVED
-    ) {
-        throw new AppError(
-            "Only approved vendors can go live",
-            StatusCode.FORBIDDEN
-        );
-    }
-
-    const menu =
-        await this._dailyMenuRepository
-            .findByIdAndVendorId(
-                menuId,
-                vendor._id
+        const vendor =
+            await this._vendorRepository.findByOwnerId(
+                ownerId
             );
 
-    if (!menu) {
-        throw new AppError(
-            "Menu not found or access denied",
-            StatusCode.NOT_FOUND
-        );
-    }
-
-    if (menu.isLive) {
-        throw new AppError(
-            "Menu is already live",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-    const hotel =
-        await this._hotelRepository
-            .findByIdAndVendorId(
-                menu.hotelId.toString(),
-                vendor._id.toString()
+        if (!vendor) {
+            throw new AppError(
+                "Vendor account not found",
+                StatusCode.NOT_FOUND
             );
+        }
 
-    if (!hotel || !hotel.isActive) {
-        throw new AppError(
-            "Cannot go live with an inactive hotel",
-            StatusCode.BAD_REQUEST
-        );
-    }
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(
+                "Only approved vendors can add menu items",
+                StatusCode.FORBIDDEN
+            );
+        }
 
-    const hasAvailableItem =
-        menu.items.some(
-            (item) =>
-                item.isAvailable &&
-                item.stockQuantity > 0
-        );
 
-    if (!hasAvailableItem) {
-        throw new AppError(
-            "Add at least one available item with stock before going live",
-            StatusCode.BAD_REQUEST
-        );
-    }
+        const itemName = data.itemName?.trim();
+        const originalPrice = Number(data.originalPrice)
+        const discountedPrice = Number(data.discountedPrice)
+        const stockQuantity = Number(data.stockQuantity)
 
-    const currentTime = new Date();
 
-    if (
-        currentTime <
-        menu.pickupWindow.startTime
-    ) {
-        throw new AppError(
-            "Cannot go live before the configured food availability time",
-            StatusCode.BAD_REQUEST
-        );
-    }
-    const cutoffTime = new Date(
-        menu.pickupWindow.endTime.getTime() -
-            30 * 60 * 1000
-    );
+        if (!itemName) {
+            throw new AppError(
+                "Item name is required",
+                StatusCode.BAD_REQUEST
+            );
+        }
 
-    if (currentTime >= cutoffTime) {
-        throw new AppError(
-            "Cannot go live because ordering has already closed",
-            StatusCode.BAD_REQUEST
-        );
-    }
+        if (
+            !Object.values(MenuUnitType).includes(
+                data.unitType
+            )
+        ) {
+            throw new AppError(
+                "Invalid menu unit type",
+                StatusCode.BAD_REQUEST
+            );
+        }
 
-    const updatedMenu =
-        await this._dailyMenuRepository
-            .updateLiveStatus(
+        if (
+            !Number.isFinite(originalPrice) ||
+            !Number.isFinite(discountedPrice)
+        ) {
+            throw new AppError(
+                "Prices must be valid numbers",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        if (originalPrice <= 0 || discountedPrice <= 0) {
+            throw new AppError(
+                "Prices must be greater than zero",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        if (discountedPrice >= originalPrice) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.DISCOUNT_LOWER,
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        if (!Number.isInteger(stockQuantity) || stockQuantity <= 0) {
+            throw new AppError(
+                "Stock quantity must be a positive whole number",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const uploadResult = await uploadToS3(imageFile, "menu-items");
+        const itemImageKey = uploadResult.key
+        const itemData: IDailyMenuItemCreateData = {
+            itemName, itemImageKey, unitType: data.unitType, originalPrice, discountedPrice, stockQuantity, isAvailable: true
+        }
+
+        const updatedMenu =
+            await this._dailyMenuRepository.addItem(
                 menuId,
                 vendor._id,
-                true
+                itemData
             );
 
-    if (!updatedMenu) {
-        throw new AppError(
-            "Unable to update menu live status",
-            StatusCode.NOT_FOUND
+        if (!updatedMenu) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED,
+                StatusCode.NOT_FOUND
+            );
+        }
+
+        return await toDailyMenuResponseDTO(updatedMenu);
+    }
+
+    async goLive(ownerId: string, menuId: string): Promise<IDailyMenuResponseDTO> {
+        if (!Types.ObjectId.isValid(menuId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST);
+        }
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId);
+
+        if (!vendor) {
+            throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);
+        }
+
+        if (
+            vendor.status !==
+            VendorStatus.APPROVED
+        ) {
+            throw new AppError(
+                "Only approved vendors can go live",
+                StatusCode.FORBIDDEN
+            );
+        }
+
+        const menu =
+            await this._dailyMenuRepository
+                .findByIdAndVendorId(
+                    menuId,
+                    vendor._id
+                );
+
+        if (!menu) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED,
+                StatusCode.NOT_FOUND
+            );
+        }
+
+        if (menu.isLive) {
+            throw new AppError(
+                "Menu is already live",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const hotel =
+            await this._hotelRepository
+                .findByIdAndVendorId(
+                    menu.hotelId.toString(),
+                    vendor._id.toString()
+                );
+
+        if (!hotel || !hotel.isActive) {
+            throw new AppError(
+                "Cannot go live with an inactive hotel",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const hasAvailableItem =
+            menu.items.some(
+                (item) =>
+                    item.isAvailable &&
+                    item.stockQuantity > 0
+            );
+
+        if (!hasAvailableItem) {
+            throw new AppError(
+                "Add at least one available item with stock before going live",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const currentTime = new Date();
+
+        if (
+            currentTime <
+            menu.pickupWindow.startTime
+        ) {
+            throw new AppError(
+                "Cannot go live before the configured food availability time",
+                StatusCode.BAD_REQUEST
+            );
+        }
+        const cutoffTime = new Date(
+            menu.pickupWindow.endTime.getTime() -
+            30 * 60 * 1000
+        );
+
+        if (currentTime >= cutoffTime) {
+            throw new AppError(
+                "Cannot go live because ordering has already closed",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        const updatedMenu =
+            await this._dailyMenuRepository
+                .updateLiveStatus(
+                    menuId,
+                    vendor._id,
+                    true
+                );
+
+        if (!updatedMenu) {
+            throw new AppError(
+                "Unable to update menu live status",
+                StatusCode.NOT_FOUND
+            );
+        }
+
+
+        try {
+            const [longitude, latitude] = hotel.location.coordinates;
+            // Find users within 5km (5000 meters)
+            const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
+
+            const { getIO, getUserSocketId } = await import("../../config/socket");
+            const io = getIO();
+
+            for (const user of nearbyUsers) {
+                const socketId = await getUserSocketId(user._id.toString());
+                const notificationTitle = "New Surplus Food Alert! 🍽️";
+                const notificationBody = `${hotel.hotelName} just went live with surplus food near you!`;
+                const notificationLink = `/customer/restaurants/${hotel._id}/menu`;
+
+                // Save to persistent database
+                await this._notificationRepository.create({
+                    userId: user._id,
+                    targetRole: "customer",
+                    title: notificationTitle,
+                    body: notificationBody,
+                    type: "PROMOTIONAL",
+                    link: notificationLink,
+                    read: false
+                });
+
+                if (socketId) {
+                    // Emit notification directly to the connected user
+                    io.to(socketId).emit("business_live", {
+                        title: notificationTitle,
+                        body: notificationBody,
+                        link: notificationLink,
+                        hotelId: hotel._id,
+                        vendorId: vendor._id
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to send live notifications:", err);
+        }
+
+        return await toDailyMenuResponseDTO(
+            updatedMenu
         );
     }
-
-    // --- Send Live Notifications via Socket.io ---
-    try {
-        const [longitude, latitude] = hotel.location.coordinates;
-        // Find users within 5km (5000 meters)
-        const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
-        
-        const { getIO, getUserSocketId } = await import("../../config/socket");
-        const io = getIO();
-
-        for (const user of nearbyUsers) {
-            const socketId = await getUserSocketId(user._id.toString());
-            if (socketId) {
-                // Emit notification directly to the connected user
-                io.to(socketId).emit("business_live", {
-                    title: "New Surplus Food Alert! 🍽️",
-                    body: `${hotel.hotelName} just went live with surplus food near you!`,
-                    link: `/customer/restaurants/${hotel._id}/menu`,
-                    hotelId: hotel._id,
-                    vendorId: vendor._id
-                });
-            }
+    async getTodayMenu(ownerId: string, hotelId: string): Promise<IDailyMenuResponseDTO | null> {
+        if (!Types.ObjectId.isValid(hotelId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_HOTEL_ID, StatusCode.BAD_REQUEST)
         }
-    } catch (err) {
-        console.error("Failed to send live notifications:", err);
-    }
-
-    return await this.toResponseDTO(
-        updatedMenu
-    );
-}
-  async getTodayMenu(ownerId: string, hotelId: string): Promise<IDailyMenuResponseDTO | null> {
-        if(!Types.ObjectId.isValid(hotelId)){
-            throw new AppError("invalid hotel id",StatusCode.BAD_REQUEST)
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId)
+        if (!vendor) {
+            throw new AppError('vendor account not found', StatusCode.NOT_FOUND)
         }
-        const vendor=await this._vendorRepository.findByOwnerId(ownerId)
-        if(!vendor){
-            throw new AppError('vendor account not found',StatusCode.NOT_FOUND)
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_VIEW, StatusCode.FORBIDDEN)
         }
-        if(vendor.status!==VendorStatus.APPROVED){
-            throw new AppError("Only approveed vendor can view daily menu",StatusCode.FORBIDDEN)
-        }
-        const hotel=await this._hotelRepository.findByIdAndVendorId(hotelId,vendor._id.toString())
-        if(!hotel){
-            throw new AppError("hotel not found or access denied",StatusCode.NOT_FOUND)
+        const hotel = await this._hotelRepository.findByIdAndVendorId(hotelId, vendor._id.toString())
+        if (!hotel) {
+            throw new AppError(HOTEL_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED, StatusCode.NOT_FOUND)
         }
 
-        const startOfDay=new Date()
-        startOfDay.setHours(0,0,0,0)
+        const startOfDay = new Date()
+        startOfDay.setHours(0, 0, 0, 0)
 
 
-        const endOfDay=new Date(startOfDay)
-        endOfDay.setDate(endOfDay.getDate()+1)
+        const endOfDay = new Date(startOfDay)
+        endOfDay.setDate(endOfDay.getDate() + 1)
 
-        const menu=await this._dailyMenuRepository.findTodayMenuByHotel(hotelId,vendor._id,startOfDay,endOfDay);
+        const menu = await this._dailyMenuRepository.findTodayMenuByHotel(hotelId, vendor._id, startOfDay, endOfDay);
 
-        if(!menu){
+        if (!menu) {
             return null
         }
-         return this.toResponseDTO(menu)
-    
+        return toDailyMenuResponseDTO(menu)
+
     }
     async endLive(ownerId: string, menuId: string): Promise<IDailyMenuResponseDTO> {
-        if(!Types.ObjectId.isValid(menuId)){
-            throw new AppError("invalid menu ID",StatusCode.BAD_REQUEST)
+        if (!Types.ObjectId.isValid(menuId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST)
         }
-        const vendor=await this._vendorRepository.findByOwnerId(ownerId)
-        if(!vendor){
-            throw new AppError("vendor account not found",StatusCode.NOT_FOUND)
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId)
+        if (!vendor) {
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND)
         }
-        if(vendor.status!==VendorStatus.APPROVED){
-            throw new AppError("only approved vendor can make live menu ")
-        }
-
-        const menu=await this._dailyMenuRepository.findByIdAndVendorId(menuId,vendor._id)
-        if(!menu){
-            throw new AppError("Menu not found or access denied",StatusCode.NOT_FOUND)
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_LIVE)
         }
 
-        if(!menu.isLive){
-            throw new AppError("Menu is already offline",StatusCode.BAD_REQUEST)
-        }
-        const updatedMenu=await this._dailyMenuRepository.updateLiveStatus(menuId,vendor._id,false)
-        if(!updatedMenu){
-            throw new AppError("unble to end menu live status",StatusCode.NOT_FOUND)
+        const menu = await this._dailyMenuRepository.findByIdAndVendorId(menuId, vendor._id)
+        if (!menu) {
+            throw new AppError(DAILY_MENU_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED, StatusCode.NOT_FOUND)
         }
 
-        // --- Send Live Ended Notifications via Socket.io ---
+        if (!menu.isLive) {
+            throw new AppError(DAILY_MENU_MESSAGES.ALREADY_OFFLINE, StatusCode.BAD_REQUEST)
+        }
+        const updatedMenu = await this._dailyMenuRepository.updateLiveStatus(menuId, vendor._id, false)
+        if (!updatedMenu) {
+            throw new AppError(DAILY_MENU_MESSAGES.UNABLE_TO_END_LIVE, StatusCode.NOT_FOUND)
+        }
+
         try {
             const hotel = await this._hotelRepository.findByIdAndVendorId(menu.hotelId.toString(), vendor._id.toString());
             if (hotel && hotel.location && hotel.location.coordinates) {
                 const [longitude, latitude] = hotel.location.coordinates;
                 const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
-                
+
                 const { getIO, getUserSocketId } = await import("../../config/socket");
                 const io = getIO();
 
@@ -491,189 +456,182 @@ async goLive(ownerId: string,menuId: string): Promise<IDailyMenuResponseDTO> {
             console.error("Failed to send live ended notifications:", err);
         }
 
-        return this.toResponseDTO(updatedMenu)
+        return toDailyMenuResponseDTO(updatedMenu)
     }
 
-async updatePickupWindow(
-    ownerId: string,
-    menuId: string,
-    data: IUpdatePickupWindowDTO
-): Promise<IDailyMenuResponseDTO> {
+    async updatePickupWindow(ownerId: string, menuId: string, data: IUpdatePickupWindowDTO): Promise<IDailyMenuResponseDTO> {
 
-    if(!Types.ObjectId.isValid(menuId)){
-        throw new AppError(
-            "invalid menu id",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    const vendor=
-        await this._vendorRepository
-            .findByOwnerId(ownerId)
-
-    if(!vendor){
-        throw new AppError(
-            "vendor account not found",
-            StatusCode.NOT_FOUND
-        )
-    }
-
-    if(vendor.status !== VendorStatus.APPROVED){
-        throw new AppError(
-            "only approved vendors can update the pickup window",
-            StatusCode.FORBIDDEN
-        )
-    }
-
-    const menu=
-        await this._dailyMenuRepository
-            .findByIdAndVendorId(
-                menuId,
-                vendor._id
+        if (!Types.ObjectId.isValid(menuId)) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.INVALID_ID,
+                StatusCode.BAD_REQUEST
             )
+        }
 
-    if(!menu){
-        throw new AppError(
-            "menu not found or access denied",
-            StatusCode.NOT_FOUND
-        )
-    }
+        const vendor =
+            await this._vendorRepository
+                .findByOwnerId(ownerId)
 
-    if(menu.isLive){
-        throw new AppError(
-            "end the live session before changing the pickup window",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    if(!data){
-        throw new AppError(
-            "pickup-window data is required",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    const pickupStartTime=
-        new Date(data.pickupStartTime)
-
-    const pickupEndTime=
-        new Date(data.pickupEndTime)
-
-    if(
-        Number.isNaN(
-            pickupStartTime.getTime()
-        ) ||
-        Number.isNaN(
-            pickupEndTime.getTime()
-        )
-    ){
-        throw new AppError(
-            "invalid pickup time",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    if(pickupStartTime >= pickupEndTime){
-        throw new AppError(
-            "pickup end time must be after the start time",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    const now=new Date()
-
-    const startOfDay=new Date()
-    startOfDay.setHours(0,0,0,0)
-
-    const endOfDay=new Date(startOfDay)
-    endOfDay.setDate(
-        endOfDay.getDate()+1
-    )
-
-    if(
-        pickupStartTime < startOfDay ||
-        pickupStartTime >= endOfDay ||
-        pickupEndTime > endOfDay
-    ){
-        throw new AppError(
-            "pickup window must end by midnight",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    /*
-     * Ordering closes 30 minutes
-     * before pickup closes.
-     */
-    const cutoffTime=new Date(
-        pickupEndTime.getTime() -
-        30*60*1000
-    )
-
-    if(pickupStartTime >= cutoffTime){
-        throw new AppError(
-            "food availability time must be before the order cutoff time",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    if(now >= cutoffTime){
-        throw new AppError(
-            "pickup closing time must be more than 30 minutes from now",
-            StatusCode.BAD_REQUEST
-        )
-    }
-
-    const updatedMenu=
-        await this._dailyMenuRepository
-            .updatePickupWindow(
-                menuId,
-                vendor._id,
-                {
-                    startTime:pickupStartTime,
-                    endTime:pickupEndTime
-                }
+        if (!vendor) {
+            throw new AppError(
+                VENDOR_MESSAGES.VENDOR_NOT_FOUND,
+                StatusCode.NOT_FOUND
             )
+        }
 
-    if(!updatedMenu){
-        throw new AppError(
-            "unable to update the pickup window",
-            StatusCode.BAD_REQUEST
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(
+                "only approved vendors can update the pickup window",
+                StatusCode.FORBIDDEN
+            )
+        }
+
+        const menu =
+            await this._dailyMenuRepository
+                .findByIdAndVendorId(
+                    menuId,
+                    vendor._id
+                )
+
+        if (!menu) {
+            throw new AppError("menu not found or access denied", StatusCode.NOT_FOUND)
+        }
+
+        if (menu.isLive) {
+            throw new AppError("end the live session before changing the pickup window", StatusCode.BAD_REQUEST)
+
+
+
+        }
+
+        if (!data) {
+            throw new AppError(
+                "pickup-window data is required",
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        const pickupStartTime =
+            new Date(data.pickupStartTime)
+
+        const pickupEndTime =
+            new Date(data.pickupEndTime)
+
+        if (
+            Number.isNaN(
+                pickupStartTime.getTime()
+            ) ||
+            Number.isNaN(
+                pickupEndTime.getTime()
+            )
+        ) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.INVALID_PICKUP_TIME,
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        if (pickupStartTime >= pickupEndTime) {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.END_TIME_AFTER_START,
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        const now = new Date()
+
+        const startOfDay = new Date()
+        startOfDay.setHours(0, 0, 0, 0)
+
+        const endOfDay = new Date(startOfDay)
+        endOfDay.setDate(
+            endOfDay.getDate() + 1
         )
-    }
 
-    return this.toResponseDTO(updatedMenu)
-}
+        if (
+            pickupStartTime < startOfDay ||
+            pickupStartTime >= endOfDay ||
+            pickupEndTime > endOfDay
+        ) {
+            throw new AppError(
+                "pickup window must end by midnight",
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        /*
+         * Ordering closes 30 minutes
+         * before pickup closes.
+         */
+        const cutoffTime = new Date(
+            pickupEndTime.getTime() -
+            30 * 60 * 1000
+        )
+
+        if (pickupStartTime >= cutoffTime) {
+            throw new AppError(
+                "food availability time must be before the order cutoff time",
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        if (now >= cutoffTime) {
+            throw new AppError(
+                "pickup closing time must be more than 30 minutes from now",
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        const updatedMenu =
+            await this._dailyMenuRepository
+                .updatePickupWindow(
+                    menuId,
+                    vendor._id,
+                    {
+                        startTime: pickupStartTime,
+                        endTime: pickupEndTime
+                    }
+                )
+
+        if (!updatedMenu) {
+            throw new AppError(
+                "unable to update the pickup window",
+                StatusCode.BAD_REQUEST
+            )
+        }
+
+        return toDailyMenuResponseDTO(updatedMenu)
+    }
     async updateMenuItem(ownerId: string, menuId: string, itemId: string, data: IUpdateDailyMenuItemDTO): Promise<IDailyMenuResponseDTO> {
-        if(!Types.ObjectId.isValid(menuId)||!Types.ObjectId.isValid(itemId)){
-            throw new AppError("invalid menu id",StatusCode.BAD_REQUEST)
+        if (!Types.ObjectId.isValid(menuId) || !Types.ObjectId.isValid(itemId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST)
         }
 
-        if(!data||Object.keys(data).length===0){
-            throw new AppError("Atleast one field is required",StatusCode.BAD_REQUEST)
+        if (!data || Object.keys(data).length === 0) {
+            throw new AppError(DAILY_MENU_MESSAGES.AT_LEAST_ONE_FIELD, StatusCode.BAD_REQUEST)
         }
 
-        const vendor=await this._vendorRepository.findByOwnerId(ownerId)
-        if(!vendor){
-            throw new AppError("vendor account not found",StatusCode.NOT_FOUND)
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId)
+        if (!vendor) {
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND)
         }
 
-        if(vendor.status!==VendorStatus.APPROVED){
-            throw new AppError("Daily approved vendor can update menu item",StatusCode.FORBIDDEN)
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_UPDATE, StatusCode.FORBIDDEN)
 
         }
-        const menu =await this._dailyMenuRepository.findByIdAndVendorId(
+        const menu = await this._dailyMenuRepository.findByIdAndVendorId(
             menuId,
             vendor._id
         );
-        
+
 
         if (!menu) {
-            throw new AppError("Menu not found or access denied",  StatusCode.NOT_FOUND);    
-            
+            throw new AppError(DAILY_MENU_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED, StatusCode.NOT_FOUND);
+
         }
 
-        const existingItem=menu.items.find((item)=>item._id.toString()==itemId)
+        const existingItem = menu.items.find((item) => item._id.toString() == itemId)
         if (!existingItem) {
             throw new AppError(
                 "Menu item not found",
@@ -681,11 +639,11 @@ async updatePickupWindow(
             );
         }
 
-         const updateData: IUpdateDailyMenuItemDTO = {
+        const updateData: IUpdateDailyMenuItemDTO = {
             ...data,
         };
-         if (data.itemName !== undefined) {
-                 const itemName = data.itemName.trim();
+        if (data.itemName !== undefined) {
+            const itemName = data.itemName.trim();
 
             if (!itemName) {
                 throw new AppError(
@@ -697,115 +655,115 @@ async updatePickupWindow(
             updateData.itemName = itemName;
         }
 
-        if(data.unitType!==undefined && !Object.values(MenuUnitType).includes(data.unitType)){
-            throw new AppError("invalid menu unit type",StatusCode.BAD_REQUEST)
+        if (data.unitType !== undefined && !Object.values(MenuUnitType).includes(data.unitType)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_UNIT_TYPE, StatusCode.BAD_REQUEST)
         }
 
-    const originalPrice = data.originalPrice ?? existingItem.originalPrice;
-     const discountedPrice = data.discountedPrice ?? existingItem.discountedPrice;
+        const originalPrice = data.originalPrice ?? existingItem.originalPrice;
+        const discountedPrice = data.discountedPrice ?? existingItem.discountedPrice;
 
-     if(!Number.isFinite(originalPrice)||!Number.isFinite(discountedPrice)||originalPrice<=0||discountedPrice<=0){
-        throw new AppError("price must be valud numbers greated than zero",StatusCode.BAD_REQUEST)
-     }
-       
-     if(discountedPrice>=originalPrice){
-        throw new AppError(  "Discounted price must be lower than the original price",StatusCode.BAD_REQUEST)
-     }
-      if (
-        data.stockQuantity !== undefined &&
-        (
-            !Number.isInteger(data.stockQuantity) ||
-            data.stockQuantity < 0
-        )
-    ) {
-        throw new AppError(
-            "Stock quantity must be a non-negative whole number",
-            StatusCode.BAD_REQUEST
-        );
-    }
-
-     if (
-        data.isAvailable !== undefined &&
-        typeof data.isAvailable !== "boolean"
-    ) {
-        throw new AppError(
-            "Availability must be true or false",
-            StatusCode.BAD_REQUEST
-        );
-    }
-    /*
-    here automatically mark  the item unavailable when stock becom e0
-    */
-       if (data.stockQuantity === 0) {
-        updateData.isAvailable = false;
+        if (!Number.isFinite(originalPrice) || !Number.isFinite(discountedPrice) || originalPrice <= 0 || discountedPrice <= 0) {
+            throw new AppError(DAILY_MENU_MESSAGES.PRICE_GREATER_THAN_ZERO, StatusCode.BAD_REQUEST)
         }
 
-        const updatedMenu=await this._dailyMenuRepository.updateItem(menuId,itemId,vendor._id,updateData)
-        
+        if (discountedPrice >= originalPrice) {
+            throw new AppError(DAILY_MENU_MESSAGES.DISCOUNT_LOWER, StatusCode.BAD_REQUEST)
+        }
+        if (
+            data.stockQuantity !== undefined &&
+            (
+                !Number.isInteger(data.stockQuantity) ||
+                data.stockQuantity < 0
+            )
+        ) {
+            throw new AppError(
+                "Stock quantity must be a non-negative whole number",
+                StatusCode.BAD_REQUEST
+            );
+        }
+
+        if (
+            data.isAvailable !== undefined &&
+            typeof data.isAvailable !== "boolean"
+        ) {
+            throw new AppError(
+                "Availability must be true or false",
+                StatusCode.BAD_REQUEST
+            );
+        }
+        /*
+        here automatically mark  the item unavailable when stock becom e0
+        */
+        if (data.stockQuantity === 0) {
+            updateData.isAvailable = false;
+        }
+
+        const updatedMenu = await this._dailyMenuRepository.updateItem(menuId, itemId, vendor._id, updateData)
+
 
         if (!updatedMenu) {
-        throw new AppError(
-            "Unable to update the menu item",
-            StatusCode.NOT_FOUND
-        );
-    }
-    return this.toResponseDTO(updatedMenu)
+            throw new AppError(
+                "Unable to update the menu item",
+                StatusCode.NOT_FOUND
+            );
+        }
+        return toDailyMenuResponseDTO(updatedMenu)
 
-      
-}
- async usePreviousMenu(ownerId:string,menuId:string):Promise<IDailyMenuResponseDTO>{
-    if(!Types.ObjectId.isValid(menuId)){
-        throw new AppError("invalid menu id",StatusCode.BAD_REQUEST)
-    }
-
-    const vendor=await this._vendorRepository.findByOwnerId(ownerId)
-    if(!vendor){
-        throw new AppError("vendor account not found",StatusCode.NOT_FOUND)
-    }
-
-    if(vendor.status!==VendorStatus.APPROVED){
-        throw new AppError("only approved vendor can use a previous menu",StatusCode.FORBIDDEN)
-    }
-
-    const currentMenu=await this._dailyMenuRepository.findByIdAndVendorId(menuId,vendor._id)
-    if(!currentMenu){
-        throw new AppError("Todays menu not found or access denied",StatusCode.NOT_FOUND)
-    }
-    if(currentMenu.isLive){
-        throw new AppError("End the live menu before using a previous menu",StatusCode.NOT_FOUND)
-    }
-    if(currentMenu.items.length>0){
-        throw new AppError("previous menu can only be used when todays menu is empty")
-    }
-
-    const previousMenu=await this._dailyMenuRepository.findLatestMenuBeforeDate(currentMenu.hotelId,vendor._id,currentMenu.menuDate)
-    if(!previousMenu){
-        throw new AppError("No previous menu is available for this hotel",StatusCode.NOT_FOUND)
-    }
-
-    const copiedItem:IDailyMenuItemCreateData[]=previousMenu.items.filter((item)=>Boolean(item.itemImageKey)).map((item)=>({
-        itemName:item.itemName,
-        itemImageKey:item.itemImageKey,
-        unitType:item.unitType,
-        originalPrice:item.originalPrice,
-        discountedPrice:item.discountedPrice,
-        stockQuantity:0,
-        isAvailable:false
-    }))
-    if(copiedItem.length===0){
-        throw new AppError("the prebious menu has no reusable item with food image",StatusCode.BAD_REQUEST)
-    }
-
-    const updatedMenu=await this._dailyMenuRepository.setItemIfEmpty(menuId,vendor._id,copiedItem);
-
-    if(!updatedMenu){
-        throw new AppError("unable to use the previous menu .Make sure todays menu is empty and offline")
 
     }
-    return await this.toResponseDTO(updatedMenu)
-        
+    async usePreviousMenu(ownerId: string, menuId: string): Promise<IDailyMenuResponseDTO> {
+        if (!Types.ObjectId.isValid(menuId)) {
+            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST)
+        }
+
+        const vendor = await this._vendorRepository.findByOwnerId(ownerId)
+        if (!vendor) {
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND)
+        }
+
+        if (vendor.status !== VendorStatus.APPROVED) {
+            throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_PREVIOUS, StatusCode.FORBIDDEN)
+        }
+
+        const currentMenu = await this._dailyMenuRepository.findByIdAndVendorId(menuId, vendor._id)
+        if (!currentMenu) {
+            throw new AppError(DAILY_MENU_MESSAGES.TODAY_NOT_FOUND, StatusCode.NOT_FOUND)
+        }
+        if (currentMenu.isLive) {
+            throw new AppError(DAILY_MENU_MESSAGES.END_LIVE_BEFORE_PREVIOUS, StatusCode.NOT_FOUND)
+        }
+        if (currentMenu.items.length > 0) {
+            throw new AppError(DAILY_MENU_MESSAGES.PREVIOUS_ONLY_EMPTY)
+        }
+
+        const previousMenu = await this._dailyMenuRepository.findLatestMenuBeforeDate(currentMenu.hotelId, vendor._id, currentMenu.menuDate)
+        if (!previousMenu) {
+            throw new AppError(DAILY_MENU_MESSAGES.NO_PREVIOUS_MENU, StatusCode.NOT_FOUND)
+        }
+
+        const copiedItem: IDailyMenuItemCreateData[] = previousMenu.items.filter((item) => Boolean(item.itemImageKey)).map((item) => ({
+            itemName: item.itemName,
+            itemImageKey: item.itemImageKey,
+            unitType: item.unitType,
+            originalPrice: item.originalPrice,
+            discountedPrice: item.discountedPrice,
+            stockQuantity: 0,
+            isAvailable: false
+        }))
+        if (copiedItem.length === 0) {
+            throw new AppError(DAILY_MENU_MESSAGES.NO_REUSABLE_ITEM, StatusCode.BAD_REQUEST)
+        }
+
+        const updatedMenu = await this._dailyMenuRepository.setItemIfEmpty(menuId, vendor._id, copiedItem);
+
+        if (!updatedMenu) {
+            throw new AppError(DAILY_MENU_MESSAGES.UNABLE_TO_USE_PREVIOUS)
+
+        }
+        return await toDailyMenuResponseDTO(updatedMenu)
 
 
- }  
-   
+
+    }
+
 }

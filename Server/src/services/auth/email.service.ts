@@ -22,7 +22,8 @@ export class EmailService implements IEmailService {
   }
 
   async sendResetPasswordEmail(email: string, token: string): Promise<void> {
-    const resetLink = `${env.CLIENT_URL}/reset-password?token=${token}`;
+    const clientUrl = (env.CLIENT_URL.split(",")[0] || "").trim();
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
 
     try {
       await transporter.sendMail({
