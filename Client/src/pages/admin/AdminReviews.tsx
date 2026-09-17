@@ -7,6 +7,7 @@ import {
 } from "../../services/adminReview.service";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
+import DataTable from "../../components/common/DataTable";
 import { Search } from "lucide-react";
 
 const AdminReviews = () => {
@@ -81,16 +82,41 @@ const AdminReviews = () => {
     }
   };
 
-  const handleDeleteReview = async (id: string) => {
-    if (!window.confirm("Are you sure you want to permanently delete this customer review?")) return;
-    try {
-      await deleteReview(id);
-      toast.success("Review deleted successfully");
-      setReviews((prev) => prev.filter((r) => r._id !== id));
-      setTotal((prev) => Math.max(0, prev - 1));
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete review");
-    }
+  const handleDeleteReview = (id: string) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium text-gray-900">
+            Are you sure you want to permanently delete this customer review?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition"
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteReview(id);
+                  toast.success("Review deleted successfully");
+                  setReviews((prev) => prev.filter((r) => r._id !== id));
+                  setTotal((prev) => Math.max(0, prev - 1));
+                } catch (err: any) {
+                  toast.error(err.response?.data?.message || "Failed to delete review");
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
   };
 
   return (
@@ -193,27 +219,18 @@ const AdminReviews = () => {
               No customer reviews found matching the search criteria.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-700">
-                <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase font-semibold text-gray-500">
-                  <tr>
-                    <th className="px-5 py-3.5">Customer</th>
-                    <th className="px-5 py-3.5">Hotel Name</th>
-                    <th className="px-5 py-3.5">Rating</th>
-                    <th className="px-5 py-3.5">Comment</th>
-                    <th className="px-5 py-3.5">Date</th>
-                    <th className="px-5 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {reviews.map((rev) => (
-                    <tr key={rev._id} className="hover:bg-gray-50/60 transition">
-                      <td className="px-5 py-4 font-semibold text-gray-900">
-                        {rev.userName}
-                      </td>
-
-                      <td className="px-5 py-4">
+              <DataTable
+                columns={[
+                  {
+                    header: "Customer",
+                    render: (rev) => (
+                      <span className="font-semibold text-gray-900">{rev.userName}</span>
+                    ),
+                  },
+                  {
+                    header: "Hotel Name",
+                    render: (rev) => (
+                      <>
                         <span className="font-semibold text-gray-900">
                           {rev.hotelId?.hotelName || "Hotel"}
                         </span>
@@ -222,66 +239,79 @@ const AdminReviews = () => {
                             {rev.hotelId.place}
                           </span>
                         )}
-                      </td>
-
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 border border-amber-200">
-                          ⭐ {rev.rating}/5
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4 max-w-xs">
-                        <p className="text-xs text-gray-700 line-clamp-2" title={rev.comment}>
-                          "{rev.comment}"
-                        </p>
-                      </td>
-
-                      <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">
+                      </>
+                    ),
+                  },
+                  {
+                    header: "Rating",
+                    render: (rev) => (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 border border-amber-200">
+                        ⭐ {rev.rating}/5
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Comment",
+                    render: (rev) => (
+                      <p className="text-xs text-gray-700 line-clamp-2 max-w-xs" title={rev.comment}>
+                        "{rev.comment}"
+                      </p>
+                    ),
+                  },
+                  {
+                    header: "Date",
+                    render: (rev) => (
+                      <span className="whitespace-nowrap text-xs text-gray-500">
                         {new Date(rev.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}
-                      </td>
-
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          rev.isVisible
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-gray-100 text-gray-500 border border-gray-200"
-                        }`}>
-                          {rev.isVisible ? "Visible" : "Hidden"}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleVisibility(rev._id)}
-                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                              rev.isVisible
-                                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                : "bg-green-50 text-green-700 hover:bg-green-100"
-                            }`}
-                          >
-                            {rev.isVisible ? "Hide" : "Show"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteReview(rev._id)}
-                            className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Status",
+                    render: (rev) => (
+                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        rev.isVisible
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-gray-100 text-gray-500 border border-gray-200"
+                      }`}>
+                        {rev.isVisible ? "Visible" : "Hidden"}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Actions",
+                    align: "right",
+                    render: (rev) => (
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleVisibility(rev._id)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                            rev.isVisible
+                              ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              : "bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}
+                        >
+                          {rev.isVisible ? "Hide" : "Show"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(rev._id)}
+                          className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={reviews}
+                getRowKey={(r) => r._id}
+              />
           )}
 
           {/* Pagination Footer */}

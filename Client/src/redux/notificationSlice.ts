@@ -16,15 +16,41 @@ interface NotificationState {
   liveHotelIds: string[];
 }
 
-const initialState: NotificationState = {
+export const NOTIFICATION_STORAGE_KEY = "savebite_notifications";
+
+const emptyNotificationState: NotificationState = {
   notifications: [],
   liveHotelIds: [],
 };
+
+const loadNotificationState = (): NotificationState => {
+  try {
+    const saved = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+    if (!saved) return emptyNotificationState;
+    return JSON.parse(saved) as NotificationState;
+  } catch (error) {
+    console.error("Failed to load notifications from storage", error);
+    return emptyNotificationState;
+  }
+};
+
+const initialState: NotificationState = loadNotificationState();
 
 const notificationSlice = createSlice({
   name: 'notification',
   initialState,
   reducers: {
+    setNotifications: (state, action: PayloadAction<NotificationItem[]>) => {
+      state.notifications = action.payload;
+      
+      // Update live hotels based on the fetched notifications
+      const liveHotels = action.payload
+        .filter(n => n.hotelId && n.hotelId !== 'system')
+        .map(n => n.hotelId);
+      
+      // Remove duplicates
+      state.liveHotelIds = [...new Set(liveHotels)];
+    },
     addNotification: (state, action: PayloadAction<Omit<NotificationItem, 'id' | 'read' | 'createdAt'>>) => {
       const newNotification: NotificationItem = {
         ...action.payload,
@@ -34,7 +60,7 @@ const notificationSlice = createSlice({
       };
       // Add to start of array
       state.notifications.unshift(newNotification);
-      
+
       // Add to live hotels if not already there
       if (!state.liveHotelIds.includes(action.payload.hotelId)) {
         state.liveHotelIds.push(action.payload.hotelId);
@@ -65,13 +91,14 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { 
-  addNotification, 
-  markAsRead, 
-  markAllAsRead, 
-  removeNotificationById, 
-  removeNotificationByHotelId, 
-  clearNotifications 
+export const {
+  setNotifications,
+  addNotification,
+  markAsRead,
+  markAllAsRead,
+  removeNotificationById,
+  removeNotificationByHotelId,
+  clearNotifications
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

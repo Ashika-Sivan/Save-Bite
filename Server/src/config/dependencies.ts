@@ -24,6 +24,21 @@ import { OrderRepository } from "../repositories/order/order.repository";
 import { WalletRepository } from "../repositories/wallet/wallet.repository";
 import { OrderService } from "../services/customer/order.service";
 import { OrderController } from "../controllers/order.controller";
+import { NotificationScheduleRepository } from "../repositories/notification/notificationSchedule.repository";
+import { NotificationRepository } from "../repositories/notification/notification.repository";
+import { AdminNotificationService } from "../services/adminNotification/adminNotification.service";
+import { AdminNotificationController } from "../controllers/adminNotification.controller";
+import { CustomerNotificationService } from "../services/customer/customerNotification.service";
+import { CustomerNotificationController } from "../controllers/customerNotification.controller";
+
+import { ReviewRepository } from "../repositories/review/review.repository";
+import { WalletTransactionRepository } from "../repositories/wallet/walletTransaction.repository";
+import { ReviewService } from "../services/review/review.service";
+import { AdminReviewService } from "../services/adminReview/adminReview.service";
+import { AdminTransactionService } from "../services/adminTransaction/adminTransaction.service";
+import { ReviewController } from "../controllers/review.controller";
+import { AdminReviewController } from "../controllers/adminReview.controller";
+import { AdminTransactionController } from "../controllers/adminTransaction.controller";
 
 const userRepository = new UserRepository();
 const tokenService = new TokenService();
@@ -37,6 +52,10 @@ const passwordHasher = new BcryptPasswordHasher();
 const resetTokenService = new RedisPasswordResetTokenService();
 const orderRepository = new OrderRepository();
 const walletRepository = new WalletRepository();
+const notificationScheduleRepository = new NotificationScheduleRepository();
+const notificationRepository = new NotificationRepository();
+const reviewRepository = new ReviewRepository();
+const walletTransactionRepository = new WalletTransactionRepository();
 
 const authService = new AuthService(
   userRepository,
@@ -47,12 +66,20 @@ const authService = new AuthService(
   emailService
 );
 const vendorService = new VendorService(vendorRepository)
-const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository,userRepository)
+const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository,userRepository,notificationRepository)
 const adminService = new AdminService(vendorRepository, userRepository, orderRepository);
+const adminNotificationService = new AdminNotificationService(notificationScheduleRepository, notificationRepository);
+const reviewService = new ReviewService(reviewRepository, orderRepository, userRepository);
+const adminReviewService = new AdminReviewService(reviewRepository, hotelRepository);
+const adminTransactionService = new AdminTransactionService(orderRepository, hotelRepository, walletTransactionRepository);
 
 export const authController = new AuthController(authService);
 export const vendorController = new VendorController(vendorService);
 export const adminController = new AdminController(adminService);
+export const adminNotificationController = new AdminNotificationController(adminNotificationService);
+export const reviewController = new ReviewController(reviewService);
+export const adminReviewController = new AdminReviewController(adminReviewService);
+export const adminTransactionController = new AdminTransactionController(adminTransactionService);
 export const authMiddleware = new AuthMiddleware(tokenService);
 
 import { WalletService } from "../services/vendor/wallet.service";
@@ -72,7 +99,9 @@ import { ConcernController } from "../controllers/concern.controller";
 
 const concernRepository = new ConcernRepository();
 const concernService = new ConcernService(concernRepository, orderRepository);
+const customerNotificationService = new CustomerNotificationService(notificationRepository);
 
 export const orderController = new OrderController(orderService);
 export const walletController = new WalletController(walletService);
 export const concernController = new ConcernController(concernService);
+export const customerNotificationController = new CustomerNotificationController(customerNotificationService);

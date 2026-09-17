@@ -168,4 +168,38 @@ async decrementItemStock( menuId: Types.ObjectId, items: IStockDecrementData[], 
     );
 }
 
+async incrementItemStock(menuId: Types.ObjectId, items: IStockDecrementData[], session?: ClientSession): Promise<IDailyMenu | null> {
+    const stockUpdates: Record<string, number> = {};
+    const arrayFilters: Record<string, unknown>[] = [];
+
+    items.forEach((item, index) => {
+        stockUpdates[`items.$[item${index}].stockQuantity`] = item.quantity;
+
+        arrayFilters.push({
+            [`item${index}._id`]: item.itemId,
+        });
+    });
+
+    const update: UpdateQuery<IDailyMenu> = {
+        $inc: stockUpdates,
+    };
+
+    const options: Record<string, unknown> = {
+        new: true,
+        runValidators: true,
+        arrayFilters,
+    };
+    if (session) {
+        options.session = session;
+    }
+
+    return await DailyMenu.findOneAndUpdate(
+        {
+            _id: menuId,
+        },
+        update,
+        options
+    );
+}
+
 }

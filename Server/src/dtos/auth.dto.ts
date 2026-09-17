@@ -33,27 +33,33 @@ export interface IResetPasswordRequestDTO {
   newPassword: string;
 }
 
+export interface IUpdatePasswordRequestDTO {
+  userId: string;
+  currentPassword?: string;
+  newPassword: string;
+}
+
 //response DTO
-export interface IUserResponseDTO{
-  id:string;
-  name:string;
-  email:string;
-  role:string;
-  phone?:string;
-  isAuthenticated:boolean
+export interface IUserResponseDTO {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  isAuthenticated: boolean
 }
-export interface ILoginResponseDTO{
-  user:IUserResponseDTO;
-  accessToken:string;
+export interface ILoginResponseDTO {
+  user: IUserResponseDTO;
+  accessToken: string;
 
 
 }
-export interface IMessageResponseDTO{
-  message:string;
+export interface IMessageResponseDTO {
+  message: string;
 }
-export interface ILoginServiceResult{
-  user:IUser,
-  accessToken:string;
-  refreshToken:string;
+export interface ILoginServiceResult {
+  user: IUser,
+  accessToken: string;
+  refreshToken: string;
 
 }

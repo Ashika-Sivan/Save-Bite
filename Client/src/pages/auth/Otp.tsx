@@ -3,12 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { verifyOtp, sendOtp } from "../../services/auth.service";
 import toast from "react-hot-toast";
 
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../redux/authSlice";
+
 const OTP_LENGTH = 6;
 const TIMER_SECONDS = 60;
 
 const Otp = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const email = location.state?.email || "";
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
@@ -31,11 +35,25 @@ const Otp = () => {
     }
 
     try {
-      await verifyOtp(email, otpValue);
+      const response = await verifyOtp(email, otpValue);
+      
+      const user = response?.data?.user || response?.user;
+      const accessToken = response?.data?.accessToken || response?.accessToken;
+
+      if (user && accessToken) {
+        dispatch(
+          setCredentials({
+            user,
+            accessToken,
+          })
+        );
+      } else {
+        console.error("Failed to extract user and accessToken from response:", response);
+      }
 
       toast.success("OTP verified successfully! Registration completed.");
 
-      navigate("/login");
+      navigate("/home");
     } catch {
       toast.error("Invalid OTP. Please try again.");
 
@@ -55,7 +73,6 @@ const Otp = () => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
           setCanResend(true);
-          setStatusMsg({ text: "OTP expired. Please resend.", type: "error" });
           return 0;
         }
         return prev - 1;
@@ -69,7 +86,6 @@ const Otp = () => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
           setCanResend(true);
-          setStatusMsg({ text: "OTP expired. Please resend.", type: "error" });
           return 0;
         }
         return prev - 1;

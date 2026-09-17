@@ -1,6 +1,7 @@
 export const AUTH_MESSAGES = {
   REGISTER_SUCCESS: "User registered successfully",
   LOGIN_SUCCESS: "User login successful",
+  INVALID_CURRENT_PASSWORD:"Invalid current password",
   LOGOUT_SUCCESS: "Logout successful",
   OTP_RESEND_SUCCESS: "OTP resent successfully",
   OTP_VERIFY_SUCCESS: "OTP verified successfully",
@@ -65,6 +66,21 @@ export const ADMIN_MESSAGES = {
   USER_NOT_FOUND: "User not found",
   USER_STATUS_UPDATE_FAILED: "Failed to update user status",
   VENDOR_APPLICATION_NOT_FOUND: "Vendor application not found",
+  REVIEWS_FETCHED: "Admin reviews fetched successfully",
+  REVIEW_NOT_FOUND: "Review not found",
+  SCHEDULES_FETCHED_SUCCESS:"schedules fetched successfully",
+  DATA_MISSING:"Name,titles,body and time24 are required",
+  SCHEDULES_CREATED_SUCCESS:"Schedules created successfully",
+  SCHEDULES_NOTFOUND:"Scheules not found",
+  SHEDULES_DELETE:"Schedule deleted successfully",
+  AUTOMATED_REMINDER_TRIGGER:"Automated reminder triggered live to all users",
+  BRODCAST_SUCCESSFULL:"broadcast notification send successfully",
+  HISTORY_FETCH_SUCCESS:"History fetched successfully",
+  REVIEW_VISIBILITY_UPDATED: (status: string) => `Review visibility set to ${status}`,
+  REVIEW_DELETED: "Review deleted successfully",
+  TRANSACTION_OVERVIEW_FETCHED: "Admin transaction overview fetched successfully",
+  VENDOR_BREAKDOWN_FETCHED: "Vendor breakdown fetched successfully",
+  RECENT_TRANSACTIONS_FETCHED: "Recent transactions fetched successfully",
 } as const;
 
 export const HOTEL_MESSAGES = {
@@ -77,6 +93,7 @@ export const HOTEL_MESSAGES = {
   INVALID_LOCATION: "Please provide valid latitude and longitude",
   VENDOR_NOT_FOUND: "Vendor account not found",
   VENDOR_NOT_APPROVED: "Only approved vendors can manage hotels",
+  NOT_FOUND_OR_ACCESS_DENIED: "Hotel not found or access denied",
 } as const;
 
 export const DAILY_MENU_MESSAGES = {
@@ -88,7 +105,32 @@ export const DAILY_MENU_MESSAGES = {
   PICKUP_WINDOW_UPDATED: "Pickup window has been updated successfully",
   ITEM_UPDATED: "Item updated successfully",
   IMAGE_REQUIRED: "Food image required",
-  INVALID_ID: "Invalid menu id",
+  INVALID_ID: "Invalid menu ID",
+  INVALID_HOTEL_ID: "Invalid hotel ID",
+  ONLY_APPROVED_VENDOR_CREATE: "Only approved vendor can create a menu",
+  ONLY_APPROVED_VENDOR_VIEW: "Only approved vendor can view daily menu",
+  ONLY_APPROVED_VENDOR_LIVE: "Only approved vendor can make live menu",
+  ONLY_APPROVED_VENDOR_UPDATE: "Only approved vendor can update menu item",
+  ONLY_APPROVED_VENDOR_PREVIOUS: "Only approved vendor can use a previous menu",
+  CANNOT_CREATE_FOR_INACTIVE: "Cannot create menu for inactive hotels",
+  INVALID_PICKUP_TIME: "Invalid pickup time",
+  END_TIME_AFTER_START: "Pickup end time must be after the start time",
+  PICKUP_WINDOW_TODAY: "Pickup window must be for today",
+  START_TIME_FUTURE: "Pickup start time must be in the future",
+  END_TIME_30_MINS: "Pickup end time must be more than 30 minutes from now",
+  NOT_FOUND_OR_ACCESS_DENIED: "Menu not found or access denied",
+  ALREADY_OFFLINE: "Menu is already offline",
+  UNABLE_TO_END_LIVE: "Unable to end menu live status",
+  AT_LEAST_ONE_FIELD: "At least one field is required",
+  INVALID_UNIT_TYPE: "Invalid menu unit type",
+  PRICE_GREATER_THAN_ZERO: "Price must be a valid number greater than zero",
+  DISCOUNT_LOWER: "Discounted price must be lower than the original price",
+  TODAY_NOT_FOUND: "Today's menu not found or access denied",
+  END_LIVE_BEFORE_PREVIOUS: "End the live menu before using a previous menu",
+  PREVIOUS_ONLY_EMPTY: "Previous menu can only be used when today's menu is empty",
+  NO_PREVIOUS_MENU: "No previous menu is available for this hotel",
+  NO_REUSABLE_ITEM: "The previous menu has no reusable item with food image",
+  UNABLE_TO_USE_PREVIOUS: "Unable to use the previous menu. Make sure today's menu is empty and offline",
 } as const;
 
 export const ORDER_MESSAGES = {
@@ -114,4 +156,19 @@ export const CUSTOMER_MESSAGES = {
   LIVE_HOTELS_FETCHED: "Live hotels fetched successfully",
   LIVE_HOTEL_MENU_FETCHED: "Live hotel menu fetched successfully",
   HOTEL_NOT_LIVE: "This restaurant is not currently accepting orders",
+} as const;
+
+export const REVIEW_MESSAGES = {
+  REQUIRED_FIELDS: "hotelId, rating (1-5), and comment are required",
+  INVALID_RATING: "Rating must be a number between 1 and 5",
+  ORDER_NOT_FOUND: "Order not found",
+  ONLY_OWN_ORDERS: "You can only review your own orders",
+  ALREADY_REVIEWED: "You have already reviewed this order",
+  MUST_ORDER_FIRST: "You must order from this hotel at least once before leaving a review",
+  SUBMITTED_SUCCESS: "Review submitted successfully!",
+  HOTEL_ID_REQUIRED: "Hotel ID is required",
+  REVIEWS_FETCHED: "Hotel reviews fetched successfully",
+  ORDER_ID_REQUIRED: "Order ID is required",
+  REVIEW_STATUS_FETCHED: "Review status fetched",
+  ELIGIBILITY_STATUS_FETCHED: "Eligibility status fetched",
 } as const;

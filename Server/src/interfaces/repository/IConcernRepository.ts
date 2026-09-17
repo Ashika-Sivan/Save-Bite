@@ -12,4 +12,5 @@ export interface IConcernRepository {
     adminNote?: string,
     resolvedAt?: Date
   ): Promise<IConcern | null>;
+
 }

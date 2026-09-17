@@ -7,7 +7,6 @@ import {
   KeyRound,
   Search,
   RefreshCw,
-  Calendar,
   AlertTriangle,
   Sparkles,
   ChevronDown,
@@ -27,6 +26,7 @@ import {
 import { getVendorOrders, redeemPickupCode, type Order } from "../../services/order.service";
 import { getVendorHotels } from "../../services/hotel.service";
 import type { Hotel } from "../../types/hotel.types";
+import DataTable from "../../components/common/DataTable";
 import Pagination from "../../components/common/Pagination";
 
 type StatusFilter = "ALL" | "PLACED" | "COLLECTED" | "EXPIRED_CANCELLED";
@@ -455,149 +455,132 @@ export default function VendorOrders() {
               </div>
             ) : (
               <div className="mt-6 space-y-6">
-                {paginatedOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
-                  >
-                    {/* Card Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 bg-gray-50/80 px-6 py-4 gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-gray-500 uppercase">Order:</span>
-                          <span className="font-mono text-sm font-bold text-gray-900">{formatOrderId(order.id)}</span>
+                <DataTable
+                  columns={[
+                    {
+                      header: "Order",
+                      render: (order) => (
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-gray-500 uppercase">Order:</span>
+                            <span className="font-mono text-sm font-bold text-gray-900">{formatOrderId(order.id)}</span>
+                          </div>
+                          {order.hotelName && (
+                            <p className="text-xs font-semibold text-green-700 mt-0.5">{order.hotelName}</p>
+                          )}
+                          {order.createdAt && (
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              Placed: {new Date(order.createdAt).toLocaleString()}
+                            </p>
+                          )}
                         </div>
-                        {order.hotelName && (
-                          <p className="text-xs font-semibold text-green-700 mt-0.5">{order.hotelName}</p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        {/* Order Status Badge */}
-                        {order.orderStatus === "placed" && (
-                          <span className="flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
-                            <Clock size={14} />
-                            Pending Pickup
-                          </span>
-                        )}
-                        {order.orderStatus === "collected" && (
-                          <span className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800 border border-green-300">
-                            <CheckCircle2 size={14} />
-                            Collected
-                          </span>
-                        )}
-                        {order.orderStatus === "expired" && (
-                          <span className="flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800 border border-red-300">
-                            <XCircle size={14} />
-                            Expired
-                          </span>
-                        )}
-                        {order.orderStatus === "cancelled" && (
-                          <span className="flex items-center gap-1 rounded-full bg-gray-200 px-3 py-1 text-xs font-bold text-gray-700">
-                            Cancelled
-                          </span>
-                        )}
-
-                        {/* Payment Badge */}
+                      ),
+                    },
+                    {
+                      header: "Items",
+                      render: (order) => (
+                        <div className="flex flex-col gap-1 max-w-[200px]">
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx} className="text-xs">
+                              <span className="font-medium text-gray-900">{item.itemName}</span>
+                              <span className="text-gray-500 ml-1">x{item.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ),
+                    },
+                    {
+                      header: "Total",
+                      render: (order) => (
                         <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                          Paid: ₹{order.totalAmount}
+                          ₹{order.totalAmount}
                         </span>
-                      </div>
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="p-6">
-                      <div className="grid gap-6 md:grid-cols-3">
-                        {/* Items List */}
-                        <div className="md:col-span-2 space-y-3">
-                          <h5 className="text-xs font-bold uppercase tracking-wider text-gray-400">Order Items</h5>
-                          <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 bg-gray-50/50 p-3">
-                            {order.items.map((item, idx) => (
-                              <div key={idx} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
-                                <div>
-                                  <p className="font-semibold text-gray-900 text-sm">{item.itemName}</p>
-                                  <p className="text-xs text-gray-500">
-                                    Qty: {item.quantity} × ₹{item.price} ({item.unitType})
-                                  </p>
-                                </div>
-                                <span className="font-bold text-gray-800 text-sm">₹{item.subTotal}</span>
-                              </div>
-                            ))}
-                          </div>
+                      ),
+                    },
+                    {
+                      header: "Status",
+                      render: (order) => (
+                        <div className="flex flex-col gap-2 items-start">
+                          {order.orderStatus === "placed" && (
+                            <span className="flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
+                              <Clock size={14} />
+                              Pending Pickup
+                            </span>
+                          )}
+                          {order.orderStatus === "collected" && (
+                            <span className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800 border border-green-300">
+                              <CheckCircle2 size={14} />
+                              Collected
+                            </span>
+                          )}
+                          {order.orderStatus === "expired" && (
+                            <span className="flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800 border border-red-300">
+                              <XCircle size={14} />
+                              Expired
+                            </span>
+                          )}
+                          {order.orderStatus === "cancelled" && (
+                            <span className="flex items-center gap-1 rounded-full bg-gray-200 px-3 py-1 text-xs font-bold text-gray-700">
+                              Cancelled
+                            </span>
+                          )}
                         </div>
-
-                        {/* Order Timeline & Actions */}
-                        <div className="flex flex-col justify-between rounded-xl border border-gray-100 bg-gray-50/50 p-4">
-                          <div className="space-y-2">
-                            <h5 className="text-xs font-bold uppercase tracking-wider text-gray-400">Pickup Details</h5>
-
-                            {order.pickupWindow ? (
-                              <div className="text-xs text-gray-600 space-y-1">
-                                <p className="flex items-center gap-1 font-medium">
-                                  <Calendar size={14} className="text-gray-400" />
-                                  Window:
-                                </p>
-                                <p className="pl-5 text-gray-800 font-semibold">
-                                  {new Date(order.pickupWindow.startTime).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}{" "}
-                                  -{" "}
-                                  {new Date(order.pickupWindow.endTime).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </p>
-                              </div>
-                            ) : null}
-
-                            {order.collectedAt && (
-                              <div className="mt-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-200">
-                                <p className="font-semibold">Handed Over At:</p>
-                                <p>{new Date(order.collectedAt).toLocaleString()}</p>
-                              </div>
-                            )}
-
-                            {order.createdAt && (
-                              <p className="text-[11px] text-gray-400 pt-2">
-                                Placed: {new Date(order.createdAt).toLocaleString()}
+                      ),
+                    },
+                    {
+                      header: "Pickup Window",
+                      render: (order) => (
+                        <div className="text-xs">
+                          {order.pickupWindow ? (
+                            <div className="text-gray-600">
+                              <p className="font-semibold">
+                                {new Date(order.pickupWindow.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {" - "}
+                                {new Date(order.pickupWindow.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                               </p>
-                            )}
-                          </div>
-
-                          {/* Action Button */}
-                          <div className="mt-4 pt-3 border-t border-gray-200">
-                            {order.orderStatus === "placed" ? (
-                              (() => {
-                                const isExpired = order.pickupWindow ? new Date(order.pickupWindow.endTime) < new Date() : false;
-                                return (
-                                  <button
-                                    onClick={() => handleOpenRedeemModal(order)}
-                                    disabled={isExpired}
-                                    className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${
-                                      isExpired
-                                        ? "bg-gray-400 cursor-not-allowed opacity-80"
-                                        : "bg-green-700 hover:bg-green-800"
-                                    }`}
-                                  >
-                                    {isExpired ? <XCircle size={16} /> : <KeyRound size={16} />}
-                                    {isExpired ? "Pickup Window Expired" : "Verify Pickup Code"}
-                                  </button>
-                                );
-                              })()
-                            ) : (
-                              <div className="text-center text-xs font-medium text-gray-400 py-1.5 bg-gray-100 rounded-lg">
-                                {order.orderStatus === "collected"
-                                  ? "Order Completed & Collected ✅"
-                                  : "Order Inactive"}
-                              </div>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                          {order.collectedAt && (
+                            <p className="text-green-700 mt-1 font-medium text-[11px]">
+                              Collected at {new Date(order.collectedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                      ),
+                    },
+                    {
+                      header: "Action",
+                      render: (order) => {
+                        if (order.orderStatus === "placed") {
+                          const isExpired = order.pickupWindow ? new Date(order.pickupWindow.endTime) < new Date() : false;
+                          return (
+                            <button
+                              onClick={() => handleOpenRedeemModal(order)}
+                              disabled={isExpired}
+                              className={`flex items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold text-white shadow-sm transition ${
+                                isExpired
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-green-700 hover:bg-green-800"
+                              }`}
+                            >
+                              {isExpired ? <XCircle size={14} /> : <KeyRound size={14} />}
+                              {isExpired ? "Expired" : "Verify Code"}
+                            </button>
+                          );
+                        }
+                        return (
+                          <div className="text-xs font-medium text-gray-400">
+                            {order.orderStatus === "collected" ? "Completed" : "Inactive"}
+                          </div>
+                        );
+                      }
+                    }
+                  ]}
+                  data={paginatedOrders}
+                  getRowKey={(o) => o.id}
+                />
                 
                 {total > limit && (
                   <Pagination

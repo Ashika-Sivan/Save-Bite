@@ -13,6 +13,7 @@ import {
 
 import { getVendorHotels } from "../../services/hotel.service";
 import type { Hotel } from "../../types/hotel.types";
+import Pagination from "../../components/common/Pagination";
 
 interface ErrorResponse {
   message?: string;
@@ -23,6 +24,8 @@ const HotelList = () => {
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const limit = 6;
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -54,6 +57,10 @@ const HotelList = () => {
       </div>
     );
   }
+
+  const total = hotels.length;
+  const totalPages = Math.ceil(total / limit);
+  const displayedHotels = hotels.slice((page - 1) * limit, page * limit);
 
   return (
     <main className="flex-1 p-5 md:p-8">
@@ -104,79 +111,93 @@ const HotelList = () => {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {hotels.map((hotel) => (
-              <article
-                key={hotel._id}
-                className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-              >
-                <div className="h-44 w-full overflow-hidden bg-green-50">
-                  <img src={hotel.hotelImageUrl} alt={hotel.hotelName} className="h-full w-full object-cover" />
-                </div>
+          <>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {displayedHotels.map((hotel) => (
+                <article
+                  key={hotel._id}
+                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                >
+                  <div className="h-44 w-full overflow-hidden bg-green-50">
+                    <img src={hotel.hotelImageUrl} alt={hotel.hotelName} className="h-full w-full object-cover" />
+                  </div>
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-lg font-bold text-gray-900">
-                        {hotel.hotelName}
-                      </h2>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-gray-900">
+                          {hotel.hotelName}
+                        </h2>
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        {hotel.businessType}
-                      </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {hotel.businessType}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          hotel.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {hotel.isActive ? "Active" : "Inactive"}
+                      </span>
                     </div>
 
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        hotel.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {hotel.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <div className="mt-4 flex items-start gap-2 text-sm text-gray-600">
+                      <MapPin
+                        size={17}
+                        className="mt-0.5 shrink-0 text-green-700"
+                      />
+
+                      <span>
+                        {hotel.address}, {hotel.place}
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            `/vendor/hotels/${hotel._id}/menu`
+                          )
+                        }
+                        className="flex items-center justify-center gap-2 rounded-xl bg-green-700 px-3 py-2.5 text-sm font-semibold text-white hover:bg-green-800"
+                      >
+                        <Utensils size={17} />
+                        Today’s Menu
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/vendor/hotels/${hotel._id}`)
+                        }
+                        className="flex items-center justify-center gap-1 rounded-xl border border-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        View
+                        <ChevronRight size={17} />
+                      </button>
+                    </div>
                   </div>
+                </article>
+              ))}
+            </div>
 
-                  <div className="mt-4 flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin
-                      size={17}
-                      className="mt-0.5 shrink-0 text-green-700"
-                    />
-
-                    <span>
-                      {hotel.address}, {hotel.place}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          `/vendor/hotels/${hotel._id}/menu`
-                        )
-                      }
-                      className="flex items-center justify-center gap-2 rounded-xl bg-green-700 px-3 py-2.5 text-sm font-semibold text-white hover:bg-green-800"
-                    >
-                      <Utensils size={17} />
-                      Today’s Menu
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(`/vendor/hotels/${hotel._id}`)
-                      }
-                      className="flex items-center justify-center gap-1 rounded-xl border border-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                      View
-                      <ChevronRight size={17} />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  limit={limit}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>

@@ -8,6 +8,7 @@ import {
 import { downloadTransactionsPDF } from "../../utils/pdfExporter";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
+import DataTable from "../../components/common/DataTable";
 import { Search, RefreshCw, DollarSign, Store, ShieldCheck, CreditCard, Download, ArrowUpDown, Filter } from "lucide-react";
 
 const AdminTransactions = () => {
@@ -106,14 +107,7 @@ const AdminTransactions = () => {
     }
   };
 
-  const toggleAdminEarnedSort = () => {
-    setSortAdminEarned((prev) => {
-      if (prev === "") return "desc";
-      if (prev === "desc") return "asc";
-      return "";
-    });
-    setVendorPage(1);
-  };
+
 
   return (
     <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
@@ -288,66 +282,69 @@ const AdminTransactions = () => {
                 No vendor breakdown data found matching your search and filter criteria.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-gray-700">
-                  <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase font-semibold text-gray-500">
-                    <tr>
-                      <th className="px-5 py-3.5">Vendor / Hotel</th>
-                      <th className="px-5 py-3.5">Business Type</th>
-                      <th className="px-5 py-3.5 text-center">Orders</th>
-                      <th className="px-5 py-3.5 text-right">Gross Sales</th>
-                      <th
-                        className="px-5 py-3.5 text-right cursor-pointer select-none hover:text-green-800 transition"
-                        onClick={toggleAdminEarnedSort}
-                        title="Click to sort by Admin Earned"
-                      >
-                        <span className="inline-flex items-center justify-end gap-1">
-                          Admin Earned
-                          <ArrowUpDown size={12} className={sortAdminEarned ? "text-green-700 font-bold" : "text-gray-400"} />
-                          {sortAdminEarned === "desc" ? "↓" : sortAdminEarned === "asc" ? "↑" : ""}
+              <DataTable
+                columns={[
+                  {
+                    header: "Vendor / Hotel",
+                    render: (v) => (
+                      <>
+                        <span className="font-semibold text-gray-900 block">
+                          {v.hotelName}
                         </span>
-                      </th>
-                      <th className="px-5 py-3.5 text-right">Vendor Net Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {vendors.map((v, idx) => (
-                      <tr key={v.hotelId || idx} className="hover:bg-gray-50/60 transition">
-                        <td className="px-5 py-4">
-                          <span className="font-semibold text-gray-900 block">
-                            {v.hotelName}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {v.place} {v.businessName ? `• ${v.businessName}` : ""}
-                          </span>
-                        </td>
-
-                        <td className="px-5 py-4 text-xs font-medium text-gray-600">
-                          <span className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 border border-gray-200">
-                            {v.businessType}
-                          </span>
-                        </td>
-
-                        <td className="px-5 py-4 text-center font-semibold text-gray-900">
-                          {v.totalOrders}
-                        </td>
-
-                        <td className="px-5 py-4 text-right font-medium text-gray-900">
-                          ₹{v.grossSales.toLocaleString("en-IN")}
-                        </td>
-
-                        <td className="px-5 py-4 text-right font-bold text-green-700 bg-green-50/30">
-                          ₹{v.adminCommission.toLocaleString("en-IN")}
-                        </td>
-
-                        <td className="px-5 py-4 text-right font-bold text-blue-700">
-                          ₹{v.vendorNetPayout.toLocaleString("en-IN")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        <span className="text-xs text-gray-400">
+                          {v.place} {v.businessName ? `• ${v.businessName}` : ""}
+                        </span>
+                      </>
+                    ),
+                  },
+                  {
+                    header: "Business Type",
+                    render: (v) => (
+                      <span className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 border border-gray-200">
+                        {v.businessType}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Orders",
+                    align: "center",
+                    render: (v) => (
+                      <span className="font-semibold text-gray-900">
+                        {v.totalOrders}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Gross Sales",
+                    align: "right",
+                    render: (v) => (
+                      <span className="font-medium text-gray-900">
+                        ₹{v.grossSales.toLocaleString("en-IN")}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Admin Earned",
+                    align: "right",
+                    render: (v) => (
+                      <span className="font-bold text-green-700 bg-green-50/30 px-2 py-1 rounded">
+                        ₹{v.adminCommission.toLocaleString("en-IN")}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: "Vendor Net Total",
+                    align: "right",
+                    render: (v) => (
+                      <span className="font-bold text-blue-700">
+                        ₹{v.vendorNetPayout.toLocaleString("en-IN")}
+                      </span>
+                    ),
+                  },
+                ]}
+                data={vendors}
+                getRowKey={(v) => v.hotelId || v.hotelName}
+              />
             )}
 
             {/* Vendor Pagination */}

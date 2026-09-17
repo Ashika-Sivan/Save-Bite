@@ -5,6 +5,7 @@ import {
   Wallet,
   User,
   LogOut,
+  X
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -42,7 +43,11 @@ const menuItems = [
   },
 ];
 
-const VendorSidebar = () => {
+interface VendorSidebarProps {
+  onClose?: () => void;
+}
+
+const VendorSidebar = ({ onClose }: VendorSidebarProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -83,23 +88,31 @@ const VendorSidebar = () => {
   };
 
   return (
-    <aside className="hidden min-h-screen w-64 border-r border-gray-200 bg-white md:flex flex-col">
-      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-6 cursor-pointer" onClick={() => navigate("/")}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-700 text-white">
-          🍃
+    <aside className="flex min-h-screen w-64 flex-col border-r border-gray-200 bg-white shadow-xl md:shadow-none">
+      <div className="flex items-center justify-between border-b border-gray-200 px-6 py-6">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+          <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-full bg-white shadow-sm border border-green-700/20">
+            <img src="/logo.png" alt="SaveBite Logo" className="h-full w-full object-cover" />
+          </div>
+          <div>
+            <span className="text-xl font-bold text-green-700">SaveBite</span>
+          </div>
         </div>
-        <div>
-          <span className="text-xl font-bold text-green-700">SaveBite</span>
-        </div>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden p-1 text-gray-500 hover:text-gray-800 focus:outline-none">
+            <X size={20} />
+          </button>
+        )}
       </div>
 
-      <nav className="space-y-2 p-4 flex-1">
+      <nav className="space-y-2 p-4 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink
               key={item.label}
               to={item.path}
+              onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
                   isActive
@@ -116,7 +129,7 @@ const VendorSidebar = () => {
         
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-red-500 transition hover:bg-red-50"
+          className="w-full mt-4 flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-red-500 transition hover:bg-red-50"
         >
           <LogOut size={18} />
           Logout

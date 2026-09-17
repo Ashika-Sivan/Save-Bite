@@ -42,6 +42,7 @@ export interface IDailyMenuRepository{//it is for repository
     findLatestMenuBeforeDate(hotelId:Types.ObjectId,vendorId:Types.ObjectId,beforeDate:Date):Promise<IDailyMenu|null>
     setItemIfEmpty(menuId:string,vendorId:Types.ObjectId,items:IDailyMenuItemCreateData[]):Promise<IDailyMenu|null>
     decrementItemStock(menuId:Types.ObjectId,items:IStockDecrementData[],session?:ClientSession):Promise<IDailyMenu|null>
+    incrementItemStock(menuId:Types.ObjectId,items:IStockDecrementData[],session?:ClientSession):Promise<IDailyMenu|null>
        
     
 }

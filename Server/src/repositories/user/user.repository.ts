@@ -7,43 +7,43 @@ import { Types } from "mongoose";
 //this file is responsible for talking to mongodb
 // only db operations go here
 
-export class UserRepository  extends BaseRepository<IUser> implements IUserRepository {
+export class UserRepository extends BaseRepository<IUser> implements IUserRepository {
 
-    constructor(){
+    constructor() {
         super(User)
     }
-    async findByEmail(email:string):Promise<IUser|null>{
-        return await User.findOne({email}).select("+password")
-        
-        
+    async findByEmail(email: string): Promise<IUser | null> {
+        return await User.findOne({ email }).select("+password")
 
-        
+
+
+
     }
     async updateAuthenticationStatus(email: string, status: boolean): Promise<IUser | null> {
         return await User.findOneAndUpdate(
-            {email},
-            {isAuthenticated:status},
-            {new :true}
+            { email },
+            { isAuthenticated: status },
+            { new: true }
         )
-        
+
     }
     async updateRole(userId: string, role: "vendor"): Promise<IUser | null> {
         return await User.findByIdAndUpdate(
             userId,
             {
                 role,
-                isBusinessOwner:true
+                isBusinessOwner: true
             },
             {
-                new :true
-               
+                new: true
+
             }
         )
     }
 
 
 
-    
+
 
     async getAllUsers(options?: IPaginationOptions): Promise<{ users: IUser[]; total: number }> {
         const page = Math.max(1, options?.page || 1);
@@ -52,7 +52,7 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
         const search = options?.search?.trim();
         const status = options?.status;
 
-        const filterQuery: Record<string, unknown> = { role: 'user' , isAuthenticated:true};
+        const filterQuery: Record<string, unknown> = { role: 'user', isAuthenticated: true };
 
         if (status && status !== "all") {
             if (status === "active") {
@@ -71,9 +71,9 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
 
         const total = await User.countDocuments(filterQuery);
 
-       
 
-        const totalOrder=await Order.countDocuments()
+
+        const totalOrder = await Order.countDocuments()
 
         const users = await User.find(filterQuery)
             .select("-password")
@@ -81,7 +81,7 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
             .skip(skip)
             .limit(limit)
             .lean();
-            
+
 
         return { users, total };
     }
@@ -101,7 +101,7 @@ export class UserRepository  extends BaseRepository<IUser> implements IUserRepos
                     $maxDistance: maxDistanceInMeters
                 }
             }
-        }).select("_id"); // We mostly just need the ID to match with socket tracking
+        }).select("_id");
     }
 
     async countUsers(): Promise<number> {

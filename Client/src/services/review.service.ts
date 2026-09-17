@@ -6,7 +6,7 @@ export interface ReviewItem {
   userId: string;
   userName: string;
   userAvatar?: string;
-  hotelId: any;
+  hotelId: string;
   orderId: string;
   rating: number;
   comment: string;
@@ -39,6 +39,11 @@ export const submitReview = async (payload: SubmitReviewPayload): Promise<Review
 
 export const getHotelReviews = async (hotelId: string): Promise<HotelReviewsResponse> => {
   const response = await api.get(API_ROUTES.REVIEWS.GET_HOTEL_REVIEWS(hotelId));
+  return response.data?.data || response.data;
+};
+
+export const checkCanReviewHotel = async (hotelId: string): Promise<{ canReview: boolean }> => {
+  const response = await api.get(API_ROUTES.REVIEWS.CAN_REVIEW_HOTEL(hotelId));
   return response.data?.data || response.data;
 };
 

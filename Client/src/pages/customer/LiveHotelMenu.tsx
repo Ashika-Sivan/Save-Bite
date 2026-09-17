@@ -39,7 +39,7 @@ import {
     getLiveHotelMenu,
 } from "../../services/customerBrowse.service"
 
-import { getHotelReviews, submitReview, type ReviewItem, type RatingStats } from "../../services/review.service"
+import { getHotelReviews, submitReview, checkCanReviewHotel, type ReviewItem, type RatingStats } from "../../services/review.service"
 
 const fallbackRestaurantImage =
     "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000"
@@ -97,6 +97,7 @@ const LiveHotelMenuPage = () => {
     const [reviewRating, setReviewRating] = useState(5)
     const [reviewComment, setReviewComment] = useState("")
     const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+    const [canReview, setCanReview] = useState(false)
 
     const fetchReviews = async () => {
         if (!hotelId) return;
@@ -137,6 +138,14 @@ const LiveHotelMenuPage = () => {
                         setReviewsData(revRes)
                     } catch (rErr) {
                         console.error("Failed to load reviews:", rErr)
+                    }
+
+                    // Check review eligibility
+                    try {
+                        const canReviewRes = await checkCanReviewHotel(hotelId)
+                        setCanReview(canReviewRes.canReview)
+                    } catch (cErr) {
+                        console.error("Failed to check review eligibility:", cErr)
                     }
                 } catch (requestError) {
                     console.error(
@@ -279,6 +288,12 @@ const LiveHotelMenuPage = () => {
 
             quantity:
                 getQuantity(item.itemId),
+
+            hotelImageKey:
+                menu.hotelImageKey,
+
+            itemImageUrl:
+                item.itemImageUrl,
         }
 
         if (
@@ -692,17 +707,19 @@ const LiveHotelMenuPage = () => {
                             <p className="mt-1 text-xs text-gray-500">Real feedback from verified food pickup orders</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setReviewRating(5);
-                                    setReviewComment("");
-                                    setIsReviewModalOpen(true);
-                                }}
-                                className="flex items-center gap-1.5 rounded-full bg-green-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-green-800 active:scale-95"
-                            >
-                                <span>⭐</span> Write a Review
-                            </button>
+                            {canReview && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setReviewRating(5);
+                                        setReviewComment("");
+                                        setIsReviewModalOpen(true);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm font-semibold hover:bg-amber-100 transition"
+                                >
+                                    <span>⭐</span> Write a Review
+                                </button>
+                            )}
                             {reviewsData?.stats && (
                                 <div className="flex items-center gap-3 rounded-2xl bg-amber-50 px-4 py-2 border border-amber-200">
                                     <span className="text-xl font-black text-amber-700">{reviewsData.stats.averageRating || 0}</span>

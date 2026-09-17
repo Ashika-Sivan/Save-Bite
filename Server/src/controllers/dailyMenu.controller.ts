@@ -5,201 +5,130 @@ import { AppError } from "../errors/AppError";
 import { AUTH_MESSAGES, DAILY_MENU_MESSAGES } from "../constants/messages";
 import { StatusCode } from "../constants/statusCode";
 import { ResponseHelper } from "../utils/ResponseHelper";
+import { catchAsync } from "../utils/catchAsync";
 
-export class DailyMenuController{
-    constructor(private readonly _dailyMenuService:IDailyMenuService){}
+export class DailyMenuController {
+    constructor(private readonly _dailyMenuService: IDailyMenuService) { }
 
-    async createMenu(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId;
-            const hotelId=req.params.hotelId;
+    createMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId;
+        const hotelId = req.params.hotelId;
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
 
-            if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-
-            }
-
-            if(typeof hotelId!=='string'){
-                throw new AppError("invalid hotel id",StatusCode.BAD_REQUEST)
-            }
-            const menu=await this._dailyMenuService.createMenu(ownerId,hotelId,req.body)
-            ResponseHelper.success(res,StatusCode.CREATED,DAILY_MENU_MESSAGES.CREATED,menu)
-            
-        } catch (error) {
-            next(error)
-            
         }
-    }
-
-    async addMenuItem(req: AuthRequest, res: Response,next: NextFunction): Promise<void> {
-        try {
-            const ownerId = req.user?.userId;
-            const menuId = req.params.menuId;
-
-            if (!ownerId) {
-                throw new AppError(
-                    AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
-                    StatusCode.UNAUTHORIZED
-                );
-            }
-
-            if (typeof menuId !== "string") {
-                throw new AppError(
-                    DAILY_MENU_MESSAGES.INVALID_ID,
-                    StatusCode.BAD_REQUEST
-                );
-            }
-
-            if(!req.file){
-                throw new AppError(DAILY_MENU_MESSAGES.IMAGE_REQUIRED,StatusCode.BAD_REQUEST)
-            }
-
-            const menu =
-                await this._dailyMenuService.addMenuItem(
-                    ownerId,
-                    menuId,
-                    req.body,
-                    req.file
-                );
-
-            ResponseHelper.success(
-                res,
-                StatusCode.CREATED,
-                DAILY_MENU_MESSAGES.ITEM_ADDED,
-                menu
+        if (typeof hotelId !== 'string') {
+            throw new AppError("invalid hotel id", StatusCode.BAD_REQUEST)
+        }
+        const menu = await this._dailyMenuService.createMenu(ownerId, hotelId, req.body)
+        ResponseHelper.success(res, StatusCode.CREATED, DAILY_MENU_MESSAGES.CREATED, menu)
+    });
+    addMenuItem = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId;
+        const menuId = req.params.menuId;
+        if (!ownerId) {
+            throw new AppError(
+                AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
+                StatusCode.UNAUTHORIZED
             );
-        } catch (error) {
-            next(error);
         }
-    }
-    async goLive(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId
-            const menuId=req.params.menuId;
-
-            if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-            }
-
-            if (typeof menuId !== "string") {
+        if (typeof menuId !== "string") {
+            throw new AppError(
+                DAILY_MENU_MESSAGES.INVALID_ID,
+                StatusCode.BAD_REQUEST
+            );
+        }
+        if (!req.file) {
+            throw new AppError(DAILY_MENU_MESSAGES.IMAGE_REQUIRED, StatusCode.BAD_REQUEST)
+        }
+        const menu =
+            await this._dailyMenuService.addMenuItem(
+                ownerId,
+                menuId,
+                req.body,
+                req.file
+            );
+        ResponseHelper.success(
+            res,
+            StatusCode.CREATED,
+            DAILY_MENU_MESSAGES.ITEM_ADDED,
+            menu
+        );
+    });
+    goLive = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId
+        const menuId = req.params.menuId;
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
+        }
+        if (typeof menuId !== "string") {
             throw new AppError("Invalid menu ID", StatusCode.BAD_REQUEST)
-            }
-            const menu=await this._dailyMenuService.goLive(ownerId,menuId);
-            ResponseHelper.success(res,StatusCode.OK,DAILY_MENU_MESSAGES.GO_LIVE_SUCCESS,menu)
-            
-        } catch (error) {
-            next(error)
-            
         }
-    }
-
-    async getTodayMenu(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId
-            const hotelId=req.params.hotelId
-
-            if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-            }
-            if(typeof hotelId!=='string'){
-                throw new AppError("invalid hotel ID",StatusCode.BAD_REQUEST)
-            }
-            const menu=await this._dailyMenuService.getTodayMenu(ownerId,hotelId);
-            ResponseHelper.success(res,StatusCode.OK,DAILY_MENU_MESSAGES.TODAY_MENU_FETCHED,menu)
-
-            
-        } catch (error) {
-            next(error)
+        const menu = await this._dailyMenuService.goLive(ownerId, menuId);
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.GO_LIVE_SUCCESS, menu)
+    });
+    getTodayMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId
+        const hotelId = req.params.hotelId
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
         }
-    }
-    async endLive(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId
-            const menuId=req.params.menuId
-
-             if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-            }
-             if(typeof menuId!=='string'){
-                throw new AppError("invalid menu ID",StatusCode.BAD_REQUEST)
-            }
-            const menu=await this._dailyMenuService.endLive(ownerId,menuId);
-            ResponseHelper.success(res,StatusCode.OK,DAILY_MENU_MESSAGES.END_LIVE_SUCCESS,menu)
-
-
-            
-        } catch (error) {
-            next(error)
-            
+        if (typeof hotelId !== 'string') {
+            throw new AppError("invalid hotel ID", StatusCode.BAD_REQUEST)
         }
-    }
-    async updatePickupWindow(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId = req.user?.userId;
-             const menuId = req.params.menuId;
-
-              if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-            }
-             if(typeof menuId!=='string'){
-                throw new AppError("invalid menu ID",StatusCode.BAD_REQUEST)
-            }
-            const _menu=await this._dailyMenuService.updatePickupWindow(ownerId,menuId,req.body);
-            ResponseHelper.success(res,StatusCode.OK,DAILY_MENU_MESSAGES.PICKUP_WINDOW_UPDATED)
-            
-        } catch (error) {
-             next(error);
-            
+        const menu = await this._dailyMenuService.getTodayMenu(ownerId, hotelId);
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.TODAY_MENU_FETCHED, menu)
+    });
+    endLive = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId
+        const menuId = req.params.menuId
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
         }
-    }
-
-    async updateMenuItem(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId
-            const{menuId,itemId}=req.params
-
-            if(!ownerId){
-                throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-            }
-            
-
-            if(typeof menuId!=="string"||typeof itemId!=="string"){
-                throw new AppError("invalid menu or item ID",StatusCode.BAD_REQUEST)
-            }
-
-            const _menu=await this._dailyMenuService.updateMenuItem(ownerId,menuId,itemId,req.body)
-            ResponseHelper.success(res,StatusCode.OK,DAILY_MENU_MESSAGES.ITEM_UPDATED)
-        } catch (error) {
-            next(error)
-            
+        if (typeof menuId !== 'string') {
+            throw new AppError("invalid menu ID", StatusCode.BAD_REQUEST)
         }
-    }
-    async usePreviousMenu(req:AuthRequest,res:Response,next:NextFunction):Promise<void>{
-        try {
-            const ownerId=req.user?.userId
-          const menuId=req.params.menuId
-          if(!ownerId){
-            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED,StatusCode.UNAUTHORIZED)
-          }
-
-          if(typeof menuId!=='string'){
-            throw new AppError("invalid menu id",StatusCode.BAD_REQUEST)
-          }
-
-          const menu=await this._dailyMenuService.usePreviousMenu(ownerId,menuId);
-          ResponseHelper.success(
-            res,StatusCode.OK,
-           " previous menu copied successfully",
-           menu
-          )
-
-            
-        } catch (error) {
-            next(error)
-            
+        const menu = await this._dailyMenuService.endLive(ownerId, menuId);
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.END_LIVE_SUCCESS, menu)
+    });
+    updatePickupWindow = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId;
+        const menuId = req.params.menuId;
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
         }
-    }
-
-    
-
+        if (typeof menuId !== 'string') {
+            throw new AppError("invalid menu ID", StatusCode.BAD_REQUEST)
+        }
+        const _menu = await this._dailyMenuService.updatePickupWindow(ownerId, menuId, req.body);
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.PICKUP_WINDOW_UPDATED)
+    });
+    updateMenuItem = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId
+        const { menuId, itemId } = req.params
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
+        }
+        if (typeof menuId !== "string" || typeof itemId !== "string") {
+            throw new AppError("invalid menu or item ID", StatusCode.BAD_REQUEST)
+        }
+        const _menu = await this._dailyMenuService.updateMenuItem(ownerId, menuId, itemId, req.body)
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.ITEM_UPDATED)
+    });
+    usePreviousMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const ownerId = req.user?.userId
+        const menuId = req.params.menuId
+        if (!ownerId) {
+            throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
+        }
+        if (typeof menuId !== 'string') {
+            throw new AppError("invalid menu id", StatusCode.BAD_REQUEST)
+        }
+        const menu = await this._dailyMenuService.usePreviousMenu(ownerId, menuId);
+        ResponseHelper.success(
+            res, StatusCode.OK,
+            " previous menu copied successfully",
+            menu
+        )
+    });
 }

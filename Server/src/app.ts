@@ -10,10 +10,12 @@ import customerBrowseRouter from "./routes/customerBrowse.routes"
 import orderRouter from "./routes/order.routes"
 import concernRoutes from "./routes/concern.routes"
 import adminNotificationRoutes from "./routes/adminNotification.routes"
+import customerNotificationRoutes from "./routes/customerNotification.routes"
 import reviewRoutes from "./routes/review.routes"
 import adminReviewRoutes from "./routes/adminReview.routes"
 import adminTransactionRoutes from "./routes/adminTransaction.routes"
 import { metricsEndpoint, metricsMiddleware } from "./utils/metrics"
+import { ROUTES } from "./constants/routes";
 
 
 
@@ -64,20 +66,21 @@ export default class App {
     this.app.use(metricsMiddleware);
   }
   private routes(): void {
-    this.app.use('/api/auth', authRoutes)
-    this.app.use('/api/auth', otpRoutes)
-    this.app.use("/api/vendor", vendorRoute)
-    this.app.use("/api/admin/notifications", adminNotificationRoutes)
-    this.app.use("/api/admin/reviews", adminReviewRoutes)
-    this.app.use("/api/admin/transactions", adminTransactionRoutes)
-    this.app.use("/api/admin", adminRoute)
-    this.app.use("/api/customer", customerBrowseRouter)
-    this.app.use("/api/orders", orderRouter)
-    this.app.use("/api/concerns", concernRoutes)
-    this.app.use("/api/reviews", reviewRoutes)
+    this.app.use(ROUTES.BASE.AUTH, authRoutes)
+    this.app.use(ROUTES.BASE.OTP, otpRoutes)
+    this.app.use(ROUTES.BASE.VENDOR, vendorRoute)
+    this.app.use(ROUTES.BASE.ADMIN_NOTIFICATIONS, adminNotificationRoutes)
+    this.app.use(ROUTES.BASE.ADMIN_REVIEWS, adminReviewRoutes)
+    this.app.use(ROUTES.BASE.ADMIN_TRANSACTIONS, adminTransactionRoutes)
+    this.app.use(ROUTES.BASE.ADMIN, adminRoute)
+    this.app.use(ROUTES.BASE.CUSTOMER, customerBrowseRouter)
+    this.app.use(ROUTES.BASE.CUSTOMER_NOTIFICATIONS, customerNotificationRoutes)
+    this.app.use(ROUTES.BASE.ORDERS, orderRouter)
+    this.app.use(ROUTES.BASE.CONCERNS, concernRoutes)
+    this.app.use(ROUTES.BASE.REVIEWS, reviewRoutes)
     
     // Prometheus metrics route
-    this.app.get("/metrics", metricsEndpoint)
+    this.app.get(ROUTES.BASE.METRICS, metricsEndpoint)
 
   }
 

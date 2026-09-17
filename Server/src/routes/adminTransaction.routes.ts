@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { adminTransactionController } from "../controllers/adminTransaction.controller";
-import { authMiddleware } from "../config/dependencies";
+import { adminTransactionController, authMiddleware } from "../config/dependencies";
 
 const router = Router();
 
@@ -15,5 +14,8 @@ router.get("/vendors", adminTransactionController.getVendorBreakdown.bind(adminT
 
 // Recent Transactions Ledger
 router.get("/recent", adminTransactionController.getRecentTransactions.bind(adminTransactionController));
+
+// Refund Reports
+router.get("/refunds", adminTransactionController.getRefunds.bind(adminTransactionController));
 
 export default router;

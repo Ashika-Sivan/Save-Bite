@@ -53,11 +53,6 @@ export const deleteNotificationSchedule = async (id: string) => {
   return response.data;
 };
 
-export const triggerScheduleNow = async (id: string) => {
-  const response = await api.post(`${API_ROUTES.ADMIN.NOTIFICATIONS_SCHEDULES}/${id}/trigger`);
-  return response.data;
-};
-
 export const sendBroadcastNotification = async (data: BroadcastDTO) => {
   const response = await api.post(API_ROUTES.ADMIN.NOTIFICATIONS_BROADCAST, data);
   return response.data;

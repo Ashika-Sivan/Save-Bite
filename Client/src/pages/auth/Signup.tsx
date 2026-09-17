@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { signupUser } from "../../services/auth.service";
-import { User, Store, ArrowRight, ShieldCheck } from "lucide-react";
+import { User, Store, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
@@ -38,6 +38,8 @@ const Signup = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRoleChange = (role: AuthRole) => {
     setSearchParams({ role });
@@ -207,8 +209,8 @@ const Signup = () => {
           className="flex items-center gap-3 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
-            🌱
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-white flex items-center justify-center">
+            <img src="/logo.png" alt="SaveBite Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold">SaveBite</h1>
         </div>
@@ -346,15 +348,24 @@ const Signup = () => {
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
                 Password
               </label>
-              <input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="new-password"
-                placeholder="Enter password"
-                className={inputClass(errors.password)}
-              />
+              <div className="relative mt-1">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  placeholder="Enter password"
+                  className={inputClass(errors.password).replace("mt-1", "") + " pr-10"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
             </div>
 
@@ -362,15 +373,24 @@ const Signup = () => {
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-800">
                 Confirm Password
               </label>
-              <input
-                name="confirmPassword"
-                type="password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                autoComplete="new-password"
-                placeholder="Confirm password"
-                className={inputClass(errors.confirmPassword)}
-              />
+              <div className="relative mt-1">
+                <input
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  placeholder="Confirm password"
+                  className={inputClass(errors.confirmPassword).replace("mt-1", "") + " pr-10"}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
               )}

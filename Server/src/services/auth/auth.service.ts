@@ -15,6 +15,7 @@ import {
   IForgotPasswordRequestDTO,
   IResetPasswordRequestDTO,
   ILoginServiceResult,
+  IUpdatePasswordRequestDTO
 } from "../../dtos/auth.dto";
 import { IPasswordHasher } from "../../interfaces/service/auth/IPasswordHasher";
 import { IPasswordResetTokenService } from "../../interfaces/service/auth/IPasswordResetTokenService";
@@ -79,7 +80,7 @@ export class AuthService implements IAuthService {
     return true;
   }
 
-  async verifyOtp(data: IVerifyOtpRequestDTO): Promise<IUser | null> {
+  async verifyOtp(data: IVerifyOtpRequestDTO): Promise<ILoginServiceResult> {
     const { email } = data;
 
     await this._otpService.verifyOtp(data);
@@ -89,7 +90,24 @@ export class AuthService implements IAuthService {
       true
     );
 
-    return user;
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
+    }
+
+    const payload = {
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessToken = this._tokenService.generateAccessToken(payload);
+    const refreshToken = this._tokenService.generateRefreshToken(payload);
+
+    return {
+      user,
+      accessToken,
+      refreshToken,
+    };
   }
   
 
@@ -111,6 +129,14 @@ export class AuthService implements IAuthService {
       throw new AppError(
         AUTH_MESSAGES.VERIFY_EMAIL_FIRST,
         StatusCode.UNAUTHORIZED
+      );
+    }
+
+    if (user.isActive === false) {
+      Logger.error(`[LOGIN FAIL] User "${email}" is blocked (isActive: false)`);
+      throw new AppError(
+        AUTH_MESSAGES.ACCESS_DENIED,
+        StatusCode.FORBIDDEN
       );
     }
 
@@ -181,7 +207,7 @@ export class AuthService implements IAuthService {
         });
       }
 
-      if (!user.isActive) {
+      if (user.isActive === false) {
         throw new AppError(AUTH_MESSAGES.ACCESS_DENIED, StatusCode.FORBIDDEN);
       }
 
@@ -212,6 +238,7 @@ export class AuthService implements IAuthService {
     if (!user) {
       throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
     }
+    
 
     const accessToken = this._tokenService.generateAccessToken({
       userId: user._id.toString(),
@@ -228,6 +255,8 @@ export class AuthService implements IAuthService {
     return await this._userRepository.findById(userId);
   }
 
+
+
   async forgotPassword( data: IForgotPasswordRequestDTO): Promise<{ message: string }> {
    
     const { email } = data;
@@ -242,14 +271,13 @@ export class AuthService implements IAuthService {
       user._id.toString()
     );
 
-
-
     await this._emailService.sendResetPasswordEmail(user.email, resetToken);
 
     return {
       message: AUTH_MESSAGES.RESET_LINK_SENT,
     };
   }
+
 
   async resetPassword( data: IResetPasswordRequestDTO): Promise<{ message: string }> {
     const { token, newPassword } = data;
@@ -263,6 +291,8 @@ export class AuthService implements IAuthService {
       );
     }
 
+
+
     const hashedPassword = await this._passwordHasher.hash(newPassword);
 
     await this._userRepository.updateById(userId, {
@@ -273,6 +303,35 @@ export class AuthService implements IAuthService {
 
     return {
       message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
+    };
+  }
+
+  async updatePassword(data: IUpdatePasswordRequestDTO): Promise<{ message: string }> {
+    const { userId, currentPassword, newPassword } = data;
+    
+    const user = await this._userRepository.findById(userId);
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
+
+    }
+
+    
+    
+    if (currentPassword) {
+      if (!user.password) {
+          throw new AppError(AUTH_MESSAGES.INVALID_CREDENTIALS, StatusCode.BAD_REQUEST);
+      }
+      const isPasswordValid = await this._passwordHasher.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        throw new AppError(AUTH_MESSAGES.INVALID_CURRENT_PASSWORD, StatusCode.BAD_REQUEST);
+      }
+    }
+    
+    const hashedPassword = await this._passwordHasher.hash(newPassword);
+    await this._userRepository.updateById(userId, { password: hashedPassword });
+    
+    return {
+      message: "Password updated successfully"
     };
   }
 }

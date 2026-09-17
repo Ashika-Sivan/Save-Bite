@@ -1,4 +1,4 @@
-// Central registry of all UI page navigation routes used across the client application.
+
 
 export const APP_ROUTES = {
   PUBLIC: {
@@ -16,7 +16,10 @@ export const APP_ROUTES = {
     CART: "/cart",
     CHECKOUT:"/checkout",
     PAYMENT_SUCCESS:"/payment-success",
-    MY_ORDERS: "/orders"
+    PAYMENT_SUCCESS_ORDER: (orderId: string) => `/payment-success?orderId=${orderId}`,
+    MY_ORDERS: "/orders",
+    PROFILE: "/profile",
+    FOOD_DETAILS: (hotelId: string, itemId: string) => `/customer/restaurants/${hotelId}/menu/${itemId}`
   },
 
   VENDOR: {
@@ -27,6 +30,7 @@ export const APP_ROUTES = {
     DASHBOARD: "/vendor/dashboard",
     HOTELS: "/vendor/hotels",
     ADD_HOTEL: "/vendor/hotels/add",
+    ADD_MENU: "/vendor/menu/add",
     HOTEL_BY_ID: (hotelId: string) => `/vendor/hotels/${hotelId}`,
     HOTEL_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/menu`,
     ORDERS: "/vendor/orders",

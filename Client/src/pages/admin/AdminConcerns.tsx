@@ -8,6 +8,8 @@ import {
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 
+import Pagination from "../../components/common/Pagination";
+
 interface ErrorResponse {
   message?: string;
 }
@@ -21,6 +23,12 @@ const AdminConcerns = () => {
   const [selectedConcern, setSelectedConcern] = useState<ConcernItem | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const [page, setPage] = useState(1);
+  const limit = 3;
+  const total = concerns.length;
+  const totalPages = Math.ceil(total / limit);
+  const displayedConcerns = concerns.slice((page - 1) * limit, page * limit);
 
   const fetchConcerns = useCallback(async () => {
     try {
@@ -87,15 +95,7 @@ const AdminConcerns = () => {
 
   const getPhotoUrl = (url?: string): string => {
     if (!url) return "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=600&q=80";
-    let cleanUrl = url;
-    if (cleanUrl.includes("savebite-bucket")) {
-      cleanUrl = cleanUrl.replace("savebite-bucket", "savebite-storage-ashika");
-    }
-    if (!cleanUrl.startsWith("http")) {
-      const base = import.meta.env.VITE_IMAGE_BASE_URL || "https://savebite-storage-ashika.s3.ap-south-1.amazonaws.com";
-      cleanUrl = `${base.replace(/\/$/, "")}/${cleanUrl}`;
-    }
-    return cleanUrl;
+    return url;
   };
 
   const renderExifBadge = (concern: ConcernItem) => {
@@ -132,12 +132,15 @@ const AdminConcerns = () => {
           </div>
 
         
-          <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-sm border border-gray-200">
+      <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-sm border border-gray-200">
             {(["ALL", "PENDING", "APPROVED", "REJECTED"] as FilterStatus[]).map((st) => (
               <button
                 key={st}
                 type="button"
-                onClick={() => setStatusFilter(st)}
+                onClick={() => {
+                  setStatusFilter(st);
+                  setPage(1);
+                }}
                 className={`rounded-xl px-4 py-1.5 text-xs font-bold transition ${
                   statusFilter === st
                     ? "bg-emerald-700 text-white shadow"
@@ -160,117 +163,131 @@ const AdminConcerns = () => {
             <p className="text-gray-500 font-medium">No order concerns found in '{statusFilter}' status.</p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {concerns.map((c) => {
-              const orderIdStr =
-                typeof c.orderId === "object" ? c.orderId._id : c.orderId;
-              const shortOrderId = `ORD-${orderIdStr.slice(-5).toUpperCase()}`;
-              const photoUrl = getPhotoUrl(c.photoUrl);
+          <>
+            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {displayedConcerns.map((c) => {
+                const orderIdStr =
+                  typeof c.orderId === "object" ? c.orderId._id : c.orderId;
+                const shortOrderId = `ORD-${orderIdStr.slice(-5).toUpperCase()}`;
+                const photoUrl = getPhotoUrl(c.photoUrl);
 
-              return (
-                <div
-                  key={c._id}
-                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1"
-                >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{shortOrderId}</span>
-                        {renderExifBadge(c)}
+                return (
+                  <div
+                    key={c._id}
+                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1"
+                  >
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-gray-900">{shortOrderId}</span>
+                          {renderExifBadge(c)}
+                        </div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                            c.status === "approved"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              : c.status === "rejected"
+                              ? "bg-rose-50 text-rose-700 border border-rose-100"
+                              : "bg-amber-50 text-amber-700 border border-amber-100"
+                          }`}
+                        >
+                          {c.status}
+                        </span>
                       </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                          c.status === "approved"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                            : c.status === "rejected"
-                            ? "bg-rose-50 text-rose-700 border border-rose-100"
-                            : "bg-amber-50 text-amber-700 border border-amber-100"
-                        }`}
-                      >
-                        {c.status}
-                      </span>
-                    </div>
-
-                   
-                    <div className="mb-4">
-                      <p className="text-sm font-semibold text-gray-900">{c.customerId?.name || "Unknown Customer"}</p>
-                      <p className="text-xs text-gray-500">{c.customerId?.email}</p>
-                    </div>
-
-                 
-                    <div className="relative overflow-hidden rounded-2xl bg-gray-50 aspect-video">
-                      <img
-                        src={photoUrl}
-                        alt="Evidence"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=600&q=80";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      <a
-                        href={photoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="absolute bottom-3 right-3 translate-y-4 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-900 opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white group-hover:translate-y-0 group-hover:opacity-100"
-                      >
-                        View Full Image ↗
-                      </a>
-                    </div>
 
                     
-                    <div className="mt-4 space-y-2 rounded-xl bg-gray-50/80 p-3 text-[11px] text-gray-600 border border-gray-100">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-medium whitespace-nowrap">Capture Time:</span>
-                        <span className="font-semibold text-gray-900 text-right">
-                          {c.photoCapturedAt ? formatDateTime(c.photoCapturedAt) : "N/A"}
-                        </span>
+                      <div className="mb-4">
+                        <p className="text-sm font-semibold text-gray-900">{c.customerId?.name || "Unknown Customer"}</p>
+                        <p className="text-xs text-gray-500">{c.customerId?.email}</p>
                       </div>
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-medium whitespace-nowrap">Pickup Window:</span>
-                        <span className="font-semibold text-gray-900 text-right">
-                          {formatDateTime(c.pickupWindowStart)} — {formatDateTime(c.pickupWindowEnd)}
-                        </span>
-                      </div>
-                    </div>
-
-                
-                    <div className="mt-5">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Concern Details</h4>
-                      <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                        "{c.reason}"
-                      </p>
-                    </div>
 
                   
-                    {c.adminNote && (
-                      <div className="mt-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Admin Note</h4>
-                        <p className="text-sm text-gray-600 italic">
-                          {c.adminNote}
+                      <div className="relative overflow-hidden rounded-2xl bg-gray-50 aspect-video">
+                        <img
+                          src={photoUrl}
+                          alt="Evidence"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=600&q=80";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        <a
+                          href={photoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="absolute bottom-3 right-3 translate-y-4 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-900 opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white group-hover:translate-y-0 group-hover:opacity-100"
+                        >
+                          View Full Image ↗
+                        </a>
+                      </div>
+
+                      
+                      <div className="mt-4 space-y-2 rounded-xl bg-gray-50/80 p-3 text-[11px] text-gray-600 border border-gray-100">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-medium whitespace-nowrap">Capture Time:</span>
+                          <span className="font-semibold text-gray-900 text-right">
+                            {c.photoCapturedAt ? formatDateTime(c.photoCapturedAt) : "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-medium whitespace-nowrap">Pickup Window:</span>
+                          <span className="font-semibold text-gray-900 text-right">
+                            {formatDateTime(c.pickupWindowStart)} — {formatDateTime(c.pickupWindowEnd)}
+                          </span>
+                        </div>
+                      </div>
+
+                  
+                      <div className="mt-5">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Concern Details</h4>
+                        <p className="text-sm text-gray-700 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                          "{c.reason}"
                         </p>
+                      </div>
+
+                    
+                      {c.adminNote && (
+                        <div className="mt-3">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Admin Note</h4>
+                          <p className="text-sm text-gray-600 italic">
+                            {c.adminNote}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+              
+                    {c.status === "pending" && (
+                      <div className="p-4 pt-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedConcern(c)}
+                          className="w-full rounded-2xl bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                        >
+                          Review & Take Action
+                        </button>
                       </div>
                     )}
                   </div>
-
-             
-                  {c.status === "pending" && (
-                    <div className="p-4 pt-0">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedConcern(c)}
-                        className="w-full rounded-2xl bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-                      >
-                        Review & Take Action
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  limit={limit}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
         )}
 
         {/* Decision Modal */}
