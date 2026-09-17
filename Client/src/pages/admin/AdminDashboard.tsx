@@ -42,6 +42,7 @@ const AdminDashboard = () => {
 
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [liveMetrics, setLiveMetrics] = useState<{ customers: number; vendors: number; admins: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,6 +62,22 @@ const AdminDashboard = () => {
       }
     };
     fetchData();
+
+    // Fetch live metrics periodically
+    const fetchLiveMetrics = async () => {
+      try {
+        // dynamically import the service function
+        const { getAdminLiveMetrics } = await import("../../services/admin.service");
+        const metrics = await getAdminLiveMetrics();
+        setLiveMetrics(metrics);
+      } catch (error) {
+        console.error("Failed to fetch live metrics", error);
+      }
+    };
+    fetchLiveMetrics(); // Initial fetch
+    const interval = setInterval(fetchLiveMetrics, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
@@ -185,6 +202,30 @@ const AdminDashboard = () => {
             </div>
             <p className="mt-4 text-sm text-gray-500">Pending Applications</p>
             <h4 className="mt-1 text-3xl font-bold text-gray-900">{overview?.pendingApplications || 0}</h4>
+          </div>
+        </section>
+
+        {/* Live Overview */}
+        <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
+              Live Overview
+            </h3>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+              <p className="text-sm font-medium text-green-800">Active Customers</p>
+              <h4 className="mt-2 text-2xl font-bold text-green-900">{liveMetrics?.customers || 0}</h4>
+            </div>
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <p className="text-sm font-medium text-blue-800">Active Vendors</p>
+              <h4 className="mt-2 text-2xl font-bold text-blue-900">{liveMetrics?.vendors || 0}</h4>
+            </div>
+            <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
+              <p className="text-sm font-medium text-purple-800">Active Admins</p>
+              <h4 className="mt-2 text-2xl font-bold text-purple-900">{liveMetrics?.admins || 0}</h4>
+            </div>
           </div>
         </section>
 

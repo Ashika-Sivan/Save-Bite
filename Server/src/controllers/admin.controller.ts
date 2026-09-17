@@ -136,4 +136,13 @@ export class AdminController {
       result,
     );
   });
+  getLiveMetrics = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const result = await this._adminService.getLiveMetrics();
+    ResponseHelper.success(
+      res,
+      StatusCode.OK,
+      "Live metrics fetched successfully",
+      result,
+    );
+  });
 }

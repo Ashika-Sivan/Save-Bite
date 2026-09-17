@@ -36,11 +36,16 @@ export const initSocket = (httpServer: HttpServer) => {
 
     io.on("connection", async (socket: Socket) => {
         const userId = socket.data.userId;
-        Logger.info(`User connected to socket: ${userId} with socketId: ${socket.id}`);
+        const role = socket.data.role;
+        const setName = role === "vendor" ? "online:vendors" : role === "admin" ? "online:admins" : "online:customers";
+        
+        Logger.info(`User connected to socket: ${userId} with socketId: ${socket.id} (Role: ${role})`);
         
         try {
             // Store the mapping in Redis for 24 hours
             await redisClient.getClient().setEx(`socket:${userId}`, 86400, socket.id);
+            // Track the active user in their respective role Set
+            await redisClient.getClient().sAdd(setName, userId);
             
             // Update user location if provided
             if (socket.data.latitude !== undefined && socket.data.longitude !== undefined) {
@@ -60,6 +65,7 @@ export const initSocket = (httpServer: HttpServer) => {
             Logger.info(`User disconnected from socket: ${userId}`);
             try {
                 await redisClient.getClient().del(`socket:${userId}`);
+                await redisClient.getClient().sRem(setName, userId);
             } catch (err) {
                 Logger.error("Redis Error deleting socket:", err);
             }
