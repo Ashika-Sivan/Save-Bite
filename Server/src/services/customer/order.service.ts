@@ -305,14 +305,21 @@ export class OrderService implements IOrderService {
     
     try {
         const io = getIO();
-        const vendorSocketId = await getUserSocketId(updatedOrder.vendorId.toString());
-        if (vendorSocketId) {
-            io.to(vendorSocketId).emit("new_order", {
-                title: "🎉 New Order Received!",
-                body: `Order #${updatedOrder._id.toString().slice(-5).toUpperCase()} has just been placed.`,
-                link: "/vendor/orders",
-                orderId: updatedOrder._id.toString()
-            });
+        
+        // The socket is registered using the user's ID (ownerId), not the vendor document ID
+        const { Vendor } = await import("../../models/vendor/vendor.model");
+        const vendor = await Vendor.findById(updatedOrder.vendorId);
+        
+        if (vendor && vendor.ownerId) {
+            const vendorSocketId = await getUserSocketId(vendor.ownerId.toString());
+            if (vendorSocketId) {
+                io.to(vendorSocketId).emit("new_order", {
+                    title: "🎉 New Order Received!",
+                    body: `Order #${updatedOrder._id.toString().slice(-5).toUpperCase()} has just been placed.`,
+                    link: "/vendor/orders",
+                    orderId: updatedOrder._id.toString()
+                });
+            }
         }
     } catch (socketError) {
         console.error("Failed to emit new_order socket event:", socketError);
