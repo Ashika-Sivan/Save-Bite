@@ -69,7 +69,7 @@ const CustomerHeader = () => {
 
         // Get saved placeName or start without one
         const currentLocStr = localStorage.getItem("customerLocation");
-        let currentLoc = currentLocStr ? JSON.parse(currentLocStr) : null;
+        const currentLoc = currentLocStr ? JSON.parse(currentLocStr) : null;
 
         const loc: CustomerLocation = {
           latitude: lat,
