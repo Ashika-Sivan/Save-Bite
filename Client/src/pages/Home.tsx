@@ -581,19 +581,22 @@ export default function Home() {
                     alt={hotel.hotelName} 
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
                   />
-                  {hotel.distanceInMeters !== undefined && (
-                    <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1 rounded-lg bg-black/40 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
-                        <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
-                      </svg>
-                      {(hotel.distanceInMeters / 1000).toFixed(1)} km
-                    </div>
-                  )}
+
                 </div>
 
                 <div className="flex flex-1 flex-col p-5">
                   <h4 className="text-xl font-display font-bold text-brand-dark transition-colors group-hover:text-brand-primary">{hotel.hotelName}</h4>
-                  <p className="mt-1 text-sm font-medium text-brand-dark/60 line-clamp-1">{hotel.place}</p>
+                  <div className="mt-1 flex items-center justify-between text-sm font-medium text-brand-dark/60">
+                    <span className="line-clamp-1">{hotel.place}</span>
+                    {hotel.distanceInMeters !== undefined && (
+                      <span className="flex items-center gap-1 shrink-0 text-brand-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                          <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
+                        </svg>
+                        {(hotel.distanceInMeters / 1000).toFixed(1)} km away
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="mt-4 flex flex-1 items-end justify-between">
                     <div>
