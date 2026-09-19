@@ -59,9 +59,7 @@ const MyOrdersPage = () => {
         loadOrders();
     }, []);
 
-    useEffect(() => {
-        setPage(1);
-    }, [activeTab]);
+
 
     const activeOrders = orders.filter(
         (order) =>
@@ -331,7 +329,10 @@ const MyOrdersPage = () => {
                 <div className="mt-8 flex items-center gap-3">
                     <button
                         type="button"
-                        onClick={() => setActiveTab("active")}
+                        onClick={() => {
+                            setActiveTab("active");
+                            setPage(1);
+                        }}
                         className={`rounded-full px-6 py-2.5 text-sm font-bold transition-all backdrop-blur-md shadow-sm ${activeTab === "active"
                                 ? "bg-brand-primary text-white border border-brand-primary/20"
                                 : "border border-brand-primary/20 bg-white/40 text-brand-dark hover:bg-white/60"
@@ -341,7 +342,10 @@ const MyOrdersPage = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setActiveTab("previous")}
+                        onClick={() => {
+                            setActiveTab("previous");
+                            setPage(1);
+                        }}
                         className={`rounded-full px-6 py-2.5 text-sm font-bold transition-all backdrop-blur-md shadow-sm ${activeTab === "previous"
                                 ? "bg-brand-primary text-white border border-brand-primary/20"
                                 : "border border-brand-primary/20 bg-white/40 text-brand-dark hover:bg-white/60"

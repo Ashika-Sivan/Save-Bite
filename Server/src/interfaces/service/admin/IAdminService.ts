@@ -18,4 +18,6 @@ export interface IAdminService {
     getDashboardOverview(): Promise<any>;
     getRevenueChartData(): Promise<any>;
     getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<any>>;
+    getLiveMetrics(): Promise<{ customers: number; vendors: number; admins: number }>;
+    getAdvancedChartsData(): Promise<{ orderStatusDistribution: any[], topVendors: any[] }>;
 }

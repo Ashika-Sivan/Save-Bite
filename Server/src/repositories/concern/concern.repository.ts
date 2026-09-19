@@ -36,7 +36,7 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("orderId");
   }
 
-  async updateConcernStatus(concernId: string,status: string,adminNote?: string, resolvedAt?: Date ): Promise<IConcern | null> {
+  async updateConcernStatus(concernId: string, status: string, adminNote?: string, resolvedAt?: Date): Promise<IConcern | null> {
     const updateData: UpdateQuery<IConcern> = { status };
     if (adminNote !== undefined) updateData.adminNote = adminNote;
     if (resolvedAt) updateData.resolvedAt = resolvedAt;
@@ -47,6 +47,6 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("orderId");
   }
 
-  
-  
+
+
 }

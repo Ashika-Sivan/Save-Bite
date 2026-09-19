@@ -9,8 +9,10 @@ import adminRoute from "./routes/admin.routes"
 import customerBrowseRouter from "./routes/customerBrowse.routes"
 import orderRouter from "./routes/order.routes"
 import concernRoutes from "./routes/concern.routes"
+import userWalletRoutes from "./routes/userWallet.routes"
 import adminNotificationRoutes from "./routes/adminNotification.routes"
 import customerNotificationRoutes from "./routes/customerNotification.routes"
+import vendorNotificationRoutes from "./routes/vendorNotification.routes"
 import reviewRoutes from "./routes/review.routes"
 import adminReviewRoutes from "./routes/adminReview.routes"
 import adminTransactionRoutes from "./routes/adminTransaction.routes"
@@ -75,6 +77,8 @@ export default class App {
     this.app.use(ROUTES.BASE.ADMIN, adminRoute)
     this.app.use(ROUTES.BASE.CUSTOMER, customerBrowseRouter)
     this.app.use(ROUTES.BASE.CUSTOMER_NOTIFICATIONS, customerNotificationRoutes)
+    this.app.use(ROUTES.BASE.VENDOR_NOTIFICATIONS, vendorNotificationRoutes)
+    this.app.use(ROUTES.BASE.CUSTOMER_WALLET, userWalletRoutes)
     this.app.use(ROUTES.BASE.ORDERS, orderRouter)
     this.app.use(ROUTES.BASE.CONCERNS, concernRoutes)
     this.app.use(ROUTES.BASE.REVIEWS, reviewRoutes)

@@ -10,7 +10,7 @@ const hotelRepository = new HotelRepository();
 const customerBrowseService = new CustomerBrowseService(hotelRepository);
 const customerBrowseController = new CustomerBrowseController(customerBrowseService);
 
-customerBrowseRouter.get(ROUTES.CUSTOMER.LIVE_HOTELS, authMiddleware.authenticate, authMiddleware.authorize("user"), customerBrowseController.getLiveHotels.bind(customerBrowseController));
-customerBrowseRouter.get(ROUTES.CUSTOMER.LIVE_HOTEL_MENU, authMiddleware.authenticate, authMiddleware.authorize("user"), customerBrowseController.getLiveHotelMenu.bind(customerBrowseController));
+customerBrowseRouter.get(ROUTES.CUSTOMER.LIVE_HOTELS, customerBrowseController.getLiveHotels.bind(customerBrowseController));
+customerBrowseRouter.get(ROUTES.CUSTOMER.LIVE_HOTEL_MENU, customerBrowseController.getLiveHotelMenu.bind(customerBrowseController));
 
 export default customerBrowseRouter;

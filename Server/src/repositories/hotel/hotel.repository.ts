@@ -256,9 +256,7 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
     };
 }
 
-async findLiveHotelMenu(
-    query: ILiveHotelMenuQuery
-): Promise<ILiveHotelMenuRepositoryResult | null> {
+async findLiveHotelMenu( query: ILiveHotelMenuQuery): Promise<ILiveHotelMenuRepositoryResult | null> {
     const {
         hotelId,
         startOfDay,

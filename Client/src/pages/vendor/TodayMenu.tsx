@@ -474,7 +474,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
                                         item{menu.items.length === 1 ? "" : "s"}
                                     </span>
                                 </div>
-                                {menu && !menu.isLive && (
+                                {menu && (
                                     <button
                                         onClick={() => setShowAddModal(true)}
                                         className="flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-800 shadow-sm"
@@ -516,7 +516,7 @@ const [isUpdatingItem, setIsUpdatingItem] =useState(false);
             </div>
 
             {/* Modals placed outside main container for proper fixed positioning */}
-            {showAddModal && menu && !menu.isLive && (
+            {showAddModal && menu && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-900/60 p-4 pt-[10vh] pb-[10vh] backdrop-blur-sm">
                     <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-xl max-h-full overflow-y-auto">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-gray-50/95 p-6 backdrop-blur-sm">

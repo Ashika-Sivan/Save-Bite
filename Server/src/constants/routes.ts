@@ -12,6 +12,8 @@ export const ROUTES = {
     CONCERNS: "/api/concerns",
     REVIEWS: "/api/reviews",
     CUSTOMER_NOTIFICATIONS: "/api/customer/notifications",
+    VENDOR_NOTIFICATIONS: "/api/vendor/notifications",
+    CUSTOMER_WALLET: "/api/customer/wallet",
     METRICS: "/metrics",
   },
   AUTH: {
@@ -57,6 +59,10 @@ export const ROUTES = {
   CUSTOMER: {
     LIVE_HOTELS: "/live-hotels",
     LIVE_HOTEL_MENU: "/live-hotels/:hotelId/menu",
+  },
+
+  CUSTOMER_WALLET: {
+    GET_WALLET: "/",
   },
 
   ORDER: {

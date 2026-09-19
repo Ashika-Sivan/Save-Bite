@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Menu, X, MapPin, User, LogOut, ChevronDown, Home, ShoppingBag, LayoutDashboard } from "lucide-react";
+import { Menu, X, MapPin, User, LogOut, ChevronDown, Home, ShoppingBag, LayoutDashboard, Wallet } from "lucide-react";
 
 import type { AppDispatch, RootState } from "../../redux/store";
 import { clearCredentials } from "../../redux/authSlice";
 import { clearCart } from "../../redux/cartSlice";
 import { logout } from "../../services/auth.service";
+import { reverseGeoCode } from "../../services/location.service";
 import BellNotification from "./BellNotification";
 
 interface CustomerLocation {
   latitude: number;
   longitude: number;
+  placeName?: string;
 }
 
 const CustomerHeader = () => {
@@ -48,7 +50,10 @@ const CustomerHeader = () => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const handleUseCurrentLocation = (): void => {
+  const [watchId, setWatchId] = useState<number | null>(null);
+  const lastGeocodeRef = useRef<{lat: number, lon: number, time: number} | null>(null);
+
+  const startTracking = (): void => {
     if (!navigator.geolocation) {
       toast.error("Location is not supported by your browser");
       return;
@@ -56,46 +61,122 @@ const CustomerHeader = () => {
 
     setIsGettingLocation(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    const id = navigator.geolocation.watchPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const now = Date.now();
+
+        // Get saved placeName or start without one
+        const currentLocStr = localStorage.getItem("customerLocation");
+        const currentLoc = currentLocStr ? JSON.parse(currentLocStr) : null;
+
         const loc: CustomerLocation = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude: lat,
+          longitude: lon,
+          placeName: currentLoc?.placeName,
         };
+
+        const lastGeo = lastGeocodeRef.current;
+        const needsGeocode = !loc.placeName || 
+          (lastGeo && (Math.abs(lastGeo.lat - lat) > 0.002 || Math.abs(lastGeo.lon - lon) > 0.002) && (now - lastGeo.time > 10000));
+
+        if (needsGeocode) {
+           try {
+              const res = await reverseGeoCode(lat, lon);
+              const shortName = res.address?.neighbourhood || res.address?.suburb || res.address?.village || res.address?.town || res.address?.city || res.display_name.split(',')[0];
+              loc.placeName = shortName;
+              lastGeocodeRef.current = { lat, lon, time: now };
+           } catch(e) {
+              console.error("Geocoding failed", e);
+           }
+        }
 
         setCustomerLocation(loc);
         localStorage.setItem("customerLocation", JSON.stringify(loc));
         setIsGettingLocation(false);
-        toast.success("Location set successfully");
-        setIsMobileMenuOpen(false);
+
+        // Only show toast on first successful fetch
+        if (!watchId && !lastGeo) {
+            toast.success("Live location tracking started");
+        }
       },
       (locationError) => {
         console.error("Unable to get location:", locationError);
         setIsGettingLocation(false);
         toast.error("Please allow location access");
+        stopTracking();
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000,
+        maximumAge: 0,
       }
     );
+    
+    setWatchId(id);
+    setIsMobileMenuOpen(false);
   };
 
-  const handleLogout = async (): Promise<void> => {
-    try {
-      await logout();
-      dispatch(clearCredentials());
-      dispatch(clearCart());
-      localStorage.removeItem("customerLocation");
-      setIsMenuOpen(false);
-      setIsMobileMenuOpen(false);
-      toast.success("Logged out successfully");
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error("Logout failed:", error);
-      toast.error("Logout failed. Please try again.");
+  const stopTracking = (): void => {
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        setWatchId(null);
     }
+    setCustomerLocation(null);
+    localStorage.removeItem("customerLocation");
+    lastGeocodeRef.current = null;
+    toast.success("Live location tracking stopped");
+  };
+
+  useEffect(() => {
+    return () => {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+    };
+  }, [watchId]);
+
+  const handleLogout = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium text-gray-900">
+            Are you sure you want to logout?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition"
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await logout();
+                  dispatch(clearCredentials());
+                  dispatch(clearCart());
+                  localStorage.removeItem("customerLocation");
+                  setIsMenuOpen(false);
+                  setIsMobileMenuOpen(false);
+                  toast.success("Logged out successfully");
+                  navigate("/", { replace: true });
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                  toast.error("Logout failed. Please try again.");
+                }
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
   };
 
   const handleNavClick = (path: string) => {
@@ -158,15 +239,27 @@ const CustomerHeader = () => {
               <span className={`absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-brand-primary transition-transform duration-300 ease-out group-hover:scale-x-100 ${isActive("/") ? "scale-x-100" : ""}`}></span>
             </button>
             
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
-              disabled={isGettingLocation}
-              className="flex items-center gap-1.5 rounded-full border border-brand-primary/20 bg-brand-primary/5 px-4 py-2 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-primary/10 disabled:opacity-50"
-            >
-              <MapPin size={16} />
-              {isGettingLocation ? "Locating..." : customerLocation ? "Location On" : "Set Location"}
-            </button>
+            <div className="flex flex-col items-end">
+              <button
+                type="button"
+                onClick={watchId ? stopTracking : startTracking}
+                disabled={isGettingLocation}
+                className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  watchId 
+                    ? "border-green-500/20 bg-green-500/5 text-green-600 hover:bg-green-500/10" 
+                    : "border-brand-primary/20 bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10"
+                }`}
+              >
+                <MapPin size={16} />
+                {isGettingLocation 
+                  ? "Tracking..." 
+                  : watchId && customerLocation?.placeName 
+                    ? customerLocation.placeName 
+                    : watchId 
+                      ? "Location On" 
+                      : "Live Location"}
+              </button>
+            </div>
 
             {user && (
               <>
@@ -248,6 +341,13 @@ const CustomerHeader = () => {
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-dark transition hover:bg-brand-light hover:text-brand-primary"
                       >
                         <User size={16} /> My Profile
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsMenuOpen(false); handleNavClick("/wallet"); }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-dark transition hover:bg-brand-light hover:text-brand-primary"
+                      >
+                        <Wallet size={16} /> My Wallet
                       </button>
                       {user.role === "vendor" && (
                         <button
@@ -395,15 +495,27 @@ const CustomerHeader = () => {
 
               {/* Actions */}
               <div className="space-y-3 pt-2">
-                <button
-                  onClick={handleUseCurrentLocation}
-                  disabled={isGettingLocation}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-brand-primary/40 bg-brand-primary/20 backdrop-blur-md px-4 py-4 text-left text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-primary/30 disabled:opacity-50 animate-wave-flow"
-                  style={{ animationDelay: '0.55s' }}
-                >
-                  <MapPin size={20} />
-                  {isGettingLocation ? "Locating..." : customerLocation ? "Update Location" : "Set My Location"}
-                </button>
+                <div>
+                  <button
+                    onClick={watchId ? stopTracking : startTracking}
+                    disabled={isGettingLocation}
+                    className={`flex w-full items-center gap-3 rounded-2xl border backdrop-blur-md px-4 py-4 text-left text-sm font-bold shadow-lg transition-all disabled:opacity-50 animate-wave-flow ${
+                      watchId 
+                        ? "border-green-500/40 bg-green-500/20 text-white hover:bg-green-500/30" 
+                        : "border-brand-primary/40 bg-brand-primary/20 text-white hover:bg-brand-primary/30"
+                    }`}
+                    style={{ animationDelay: '0.55s' }}
+                  >
+                    <MapPin size={20} />
+                    {isGettingLocation 
+                      ? "Tracking..." 
+                      : watchId && customerLocation?.placeName 
+                        ? `Live: ${customerLocation.placeName}` 
+                        : watchId 
+                          ? "Stop Live Tracking" 
+                          : "Start Live Location"}
+                  </button>
+                </div>
 
                 {user && (
                   <button

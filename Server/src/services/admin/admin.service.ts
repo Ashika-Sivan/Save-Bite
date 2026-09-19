@@ -18,6 +18,8 @@ import { IAdminUserListDTO } from "../../dtos/user.dto";
 import { toAdminUserListDTO } from "../../mappers/user.mapper";
 import { IPaginatedResult, IPaginationOptions } from "../../types/pagination.types";
 import { IOrderRepository } from "../../interfaces/repository/IOrderRepository";
+import { PaymentStatus } from "../../interfaces/models/IOrder.model";
+import { redisClient } from "../../config/redis";
 
 export class AdminService implements IAdminService {
     constructor(
@@ -284,6 +286,67 @@ export class AdminService implements IAdminService {
             page: options?.page || 1,
             limit: options?.limit || 10,
             totalPages
+        };
+    }
+
+    async getLiveMetrics(): Promise<{ customers: number; vendors: number; admins: number }> {
+        const client = redisClient.getClient();
+        const customers = await client.sCard("online:customers");
+        const vendors = await client.sCard("online:vendors");
+        const admins = await client.sCard("online:admins");
+        
+        return {
+            customers,
+            vendors,
+            admins
+        };
+    }
+
+    async getAdvancedChartsData(): Promise<{ orderStatusDistribution: any[], topVendors: any[] }> {
+        // 1. Order Status Distribution (Pie Chart)
+        const orderStatusData = await this._orderRespository.aggregateOrders([
+            {
+                $group: {
+                    _id: "$orderStatus",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    name: "$_id",
+                    value: "$count",
+                    _id: 0
+                }
+            }
+        ]);
+
+        // 2. Top 5 Vendors by Revenue (Bar Chart)
+        const topVendorsData = await this._orderRespository.aggregateOrders([
+            { $match: { paymentStatus: PaymentStatus.PAID } },
+            { $group: { _id: "$vendorId", revenue: { $sum: "$totalAmount" } } },
+            { $sort: { revenue: -1 } },
+            { $limit: 5 },
+            { 
+                $lookup: { 
+                    from: "vendors", 
+                    localField: "_id", 
+                    foreignField: "_id", 
+                    as: "vendor" 
+                } 
+            },
+            { $unwind: "$vendor" },
+            { 
+                $project: { 
+                    name: "$vendor.businessInfo.businessName", 
+                    revenue: 1,
+                    _id: 0
+                } 
+            }
+        ]);
+
+        return {
+            orderStatusDistribution: orderStatusData,
+            topVendors: topVendorsData
         };
     }
 }

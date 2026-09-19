@@ -19,6 +19,7 @@ export const APP_ROUTES = {
     PAYMENT_SUCCESS_ORDER: (orderId: string) => `/payment-success?orderId=${orderId}`,
     MY_ORDERS: "/orders",
     PROFILE: "/profile",
+    WALLET: "/wallet",
     FOOD_DETAILS: (hotelId: string, itemId: string) => `/customer/restaurants/${hotelId}/menu/${itemId}`
   },
 

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import React from "react";
 import { addNotification, removeNotificationByHotelId, setNotifications } from "../redux/notificationSlice";
 import { CustomerNotificationService } from "../services/customerNotification.service";
+import { VendorNotificationService } from "../services/vendorNotification.service";
 
 interface RootState {
   auth: {
@@ -49,6 +50,22 @@ export const useSocket = () => {
           dispatch(setNotifications(normalized));
         })
         .catch((err) => console.error("Failed to fetch initial notifications:", err));
+    } else if (user.role === "vendor") {
+      VendorNotificationService.fetchNotifications()
+        .then((notifications) => {
+          const normalized = notifications.map(n => ({
+            id: n.id,
+            title: n.title,
+            body: n.body,
+            link: n.link,
+            hotelId: n.hotelId || "system",
+            vendorId: n.vendorId || "system",
+            read: n.read,
+            createdAt: new Date(n.createdAt).getTime()
+          }));
+          dispatch(setNotifications(normalized));
+        })
+        .catch((err) => console.error("Failed to fetch vendor notifications:", err));
     }
 
     // Connect to the Socket.io server
@@ -75,6 +92,46 @@ export const useSocket = () => {
       if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
       }
+    });
+
+    // Listen for the "new_order" push notification (Vendor Side)
+    socket.on("new_order", (data: { id?: string; title: string; body: string; link: string; orderId: string }) => {
+      // Dispatch action to save notification
+      dispatch(addNotification({
+        id: data.id,
+        title: data.title,
+        body: data.body,
+        link: "", // Removed redirection link
+        hotelId: "system",
+        vendorId: "system",
+      }));
+
+      // Show native browser push notification if permitted
+      if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification(data.title, {
+          body: data.body,
+          icon: "/favicon.ico", 
+        });
+
+        // Removed onclick redirection
+        notification.onclick = () => {
+          window.focus();
+        };
+      }
+      
+      // Show a toast notification
+      toast.success(
+        React.createElement("div", { className: "flex flex-col gap-1" },
+          React.createElement("h4", { className: "font-bold text-gray-900" }, data.title),
+          React.createElement("p", { className: "text-sm text-gray-600" }, data.body)
+          // Removed View Order anchor tag
+        ),
+        {
+          id: data.orderId, // Prevent duplicate toast
+          duration: 10000,
+          position: "top-right",
+        }
+      );
     });
 
     // Listen for the "business_live" push notification
@@ -107,6 +164,7 @@ export const useSocket = () => {
           }, "Order Now!")
         ),
         {
+          id: data.hotelId, // Prevent duplicate toast
           duration: 10000,
           position: "top-center",
         }
@@ -116,7 +174,8 @@ export const useSocket = () => {
    //triggr by backend cronjob
     socket.on("broadcast_notification", (data: { id?: string; title: string; body: string; link?: string; type?: string; targetRole?: string; createdAt?: string }) => {
       // Filter out notifications not meant for this user's role
-      if (data.targetRole && data.targetRole !== "all" && data.targetRole !== user.role) {
+      const expectedRole = user.role === "user" ? "customer" : user.role;
+      if (data.targetRole && data.targetRole !== "all" && data.targetRole !== expectedRole && data.targetRole !== user.role) {
         return;
       }
 
@@ -124,7 +183,7 @@ export const useSocket = () => {
       dispatch(addNotification({
         title: data.title,
         body: data.body,
-        link: linkUrl,
+        link: user.role === "vendor" ? "" : linkUrl,
         hotelId: "system",
         vendorId: "system",
       }));
@@ -136,7 +195,9 @@ export const useSocket = () => {
         });
         notification.onclick = () => {
           window.focus();
-          window.location.href = linkUrl;
+          if (user.role !== "vendor") {
+            window.location.href = linkUrl;
+          }
         };
       }
 
@@ -144,12 +205,15 @@ export const useSocket = () => {
         React.createElement("div", { className: "flex flex-col gap-1" },
           React.createElement("h4", { className: "font-bold text-gray-900" }, data.title),
           React.createElement("p", { className: "text-sm text-gray-600" }, data.body),
-          React.createElement("a", {
+          user.role !== "vendor" ? React.createElement("a", {
             href: linkUrl,
             className: "mt-2 inline-block rounded-md bg-green-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-green-600 w-fit"
-          }, "View Food Deals 🍕")
+          }, "View Food Deals 🍕") : null
         ),
-        { duration: 8000 }
+        { 
+          id: data.id || data.title, // Prevent duplicate toast
+          duration: 8000 
+        }
       );
     });
 
@@ -158,8 +222,12 @@ export const useSocket = () => {
       dispatch(removeNotificationByHotelId(data.hotelId));
     });
 
-   
     return () => {
+      socket.off("connect");
+      socket.off("new_order");
+      socket.off("business_live");
+      socket.off("broadcast_notification");
+      socket.off("business_live_ended");
       socket.disconnect();
       socketRef.current = null;
     };

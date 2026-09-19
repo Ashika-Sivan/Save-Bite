@@ -22,34 +22,27 @@ interface PickupWindowFormProps {
 }
 
 /*
- * Converts an ISO date from the backend
- * into the format required by an HTML
- * datetime-local input.
+ * Extracts local time (HH:mm) from an ISO date
  */
-const toDateTimeLocal = (
+const toTimeLocal = (
     value?: string
 ): string => {
-    if (!value) {
-        return ""
-    }
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+};
 
-    const date = new Date(value)
-
-    if (Number.isNaN(date.getTime())) {
-        return ""
-    }
-
-    const timezoneOffset =
-        date.getTimezoneOffset() *
-        60 *
-        1000
-
-    return new Date(
-        date.getTime() - timezoneOffset
-    )
-        .toISOString()
-        .slice(0, 16)
-}
+const createDateFromTime = (timeStr: string): Date => {
+    if (!timeStr) return new Date(NaN);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date(); // today
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+};
 
 const formatTime = (
     date: Date
@@ -71,10 +64,10 @@ const PickupWindowForm = ({
     onSubmit,
 }: PickupWindowFormProps) => {
     const [startTime, setStartTime] =
-        useState(() => toDateTimeLocal(initialStartTime))
+        useState(() => toTimeLocal(initialStartTime))
 
     const [endTime, setEndTime] =
-        useState(() => toDateTimeLocal(initialEndTime))
+        useState(() => toTimeLocal(initialEndTime))
 
     const [prevInitial, setPrevInitial] = useState({
         initialStartTime,
@@ -86,12 +79,12 @@ const PickupWindowForm = ({
         prevInitial.initialEndTime !== initialEndTime
     ) {
         setPrevInitial({ initialStartTime, initialEndTime })
-        setStartTime(toDateTimeLocal(initialStartTime))
-        setEndTime(toDateTimeLocal(initialEndTime))
+        setStartTime(toTimeLocal(initialStartTime))
+        setEndTime(toTimeLocal(initialEndTime))
     }
 
     const endDate = endTime
-        ? new Date(endTime)
+        ? createDateFromTime(endTime)
         : null
 
     const orderCutoffTime =
@@ -116,10 +109,10 @@ const PickupWindowForm = ({
         }
 
         const startDate =
-            new Date(startTime)
+            createDateFromTime(startTime)
 
         const selectedEndDate =
-            new Date(endTime)
+            createDateFromTime(endTime)
 
         if (
             Number.isNaN(
@@ -196,7 +189,7 @@ const PickupWindowForm = ({
                         <div className="group relative">
                             <input
                                 id="pickupStartTime"
-                                type="datetime-local"
+                                type="time"
                                 value={startTime}
                                 onChange={(event) => setStartTime(event.target.value)}
                                 disabled={isSubmitting}
@@ -232,7 +225,7 @@ const PickupWindowForm = ({
                         <div className="group relative">
                             <input
                                 id="pickupEndTime"
-                                type="datetime-local"
+                                type="time"
                                 value={endTime}
                                 onChange={(event) => setEndTime(event.target.value)}
                                 disabled={isSubmitting}

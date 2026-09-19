@@ -9,7 +9,7 @@ import { catchAsync } from "../utils/catchAsync";
 
 export class DailyMenuController {
     constructor(private readonly _dailyMenuService: IDailyMenuService) { }
-
+//how initially the menu comntainer and this is for security purpose
     createMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         const ownerId = req.user?.userId;
         const hotelId = req.params.hotelId;
@@ -101,7 +101,7 @@ export class DailyMenuController {
             throw new AppError("invalid menu ID", StatusCode.BAD_REQUEST)
         }
         const _menu = await this._dailyMenuService.updatePickupWindow(ownerId, menuId, req.body);
-        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.PICKUP_WINDOW_UPDATED)
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.PICKUP_WINDOW_UPDATED, _menu)
     });
     updateMenuItem = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         const ownerId = req.user?.userId
@@ -113,7 +113,7 @@ export class DailyMenuController {
             throw new AppError("invalid menu or item ID", StatusCode.BAD_REQUEST)
         }
         const _menu = await this._dailyMenuService.updateMenuItem(ownerId, menuId, itemId, req.body)
-        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.ITEM_UPDATED)
+        ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.ITEM_UPDATED, _menu)
     });
     usePreviousMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         const ownerId = req.user?.userId

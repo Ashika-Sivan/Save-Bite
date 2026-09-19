@@ -38,7 +38,7 @@ export const API_ROUTES = {
   CUSTOMER: {
     LIVE_HOTELS: "/customer/live-hotels",
     LIVE_HOTEL_MENU: (hotelId: string) => `/customer/live-hotels/${hotelId}/menu`,
-   
+    WALLET: "/customer/wallet",
   },
 
   ADMIN: {
@@ -59,6 +59,7 @@ export const API_ROUTES = {
     TRANSACTIONS_VENDORS: "/admin/transactions/vendors",
     TRANSACTIONS_RECENT: "/admin/transactions/recent",
     TRANSACTIONS_REFUNDS: "/admin/transactions/refunds",
+    TRIGGER_AUTO_REFUNDS: "/admin/trigger-auto-refunds",
   },
   ORDER:{
     CREATE_CHECKOUT:"/orders/checkout",

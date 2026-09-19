@@ -24,9 +24,7 @@ export interface IOrderItemResponseDTO{
 }
 export interface ICheckoutResponseDTO {
     orderId: string
-
     clientSecret: string
-
     totalAmount: number
     currency: string
 }

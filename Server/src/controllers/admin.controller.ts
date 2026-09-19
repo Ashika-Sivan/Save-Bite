@@ -136,4 +136,22 @@ export class AdminController {
       result,
     );
   });
+  getLiveMetrics = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const result = await this._adminService.getLiveMetrics();
+    ResponseHelper.success(
+      res,
+      StatusCode.OK,
+      "Live metrics fetched successfully",
+      result,
+    );
+  });
+  getAdvancedCharts = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const result = await this._adminService.getAdvancedChartsData();
+    ResponseHelper.success(
+      res,
+      StatusCode.OK,
+      "Advanced charts data fetched successfully",
+      result,
+    );
+  });
 }

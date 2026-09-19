@@ -1,4 +1,4 @@
-import { ClientSession, Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";//used for mongodb objectid
 import { IVendorWallet } from "../../interfaces/models/IVendorWallet.model";
 import { IWalletTransaction, TransactionStatus, TransactionType } from "../../interfaces/models/IWalletTransaction.model";
 import { ICreateTransactionData, IWalletRepository } from "../../interfaces/repository/IWalletRepository";
@@ -34,12 +34,7 @@ export class WalletRepository extends BaseRepository<IVendorWallet> implements I
         return await VendorWallet.findOne({ vendorId });
     }
 
-    async creditVendorWallet(
-        vendorId: Types.ObjectId,
-        vendorAmount: number,
-        commissionAmount: number,
-        session?: ClientSession
-    ): Promise<IVendorWallet | null> {
+    async creditVendorWallet( vendorId: Types.ObjectId, vendorAmount: number, commissionAmount: number, session?: ClientSession): Promise<IVendorWallet | null> {
         const options: Record<string, unknown> = {
             new: true,
             runValidators: true,
@@ -61,10 +56,7 @@ export class WalletRepository extends BaseRepository<IVendorWallet> implements I
         );
     }
 
-    async createTransaction(
-        data: ICreateTransactionData,
-        session?: ClientSession
-    ): Promise<IWalletTransaction> {
+    async createTransaction(data: ICreateTransactionData,session?: ClientSession): Promise<IWalletTransaction> {
         const options = session ? { session } : {};
         const transaction = new WalletTransaction({
             walletId: data.walletId,
@@ -91,6 +83,6 @@ export class WalletRepository extends BaseRepository<IVendorWallet> implements I
     async transactionExistsForOrder(orderId: Types.ObjectId, session?: ClientSession): Promise<boolean> {
         const query = WalletTransaction.exists({ orderId });
         const existing = session ? await query.session(session) : await query;
-        return existing !== null;//check if a ledger recod already exist for order.
+        return existing !== null;
     }
 }

@@ -55,8 +55,38 @@ export default function Home() {
 
   const handleAddToCartFromHome = (item: DisplayMenuItem) => {
     if (!user) {
-      toast.error("Please log in to add items to your cart");
-      navigate("/login");
+      toast.custom(
+        (currentToast) => (
+          <div className="w-full max-w-sm rounded-[2rem] border border-gray-200 bg-white p-5 shadow-lg">
+            <h3 className="font-display font-semibold text-gray-900">
+              Authentication Required
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Please login to add items to your cart and continue ordering.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => toast.dismiss(currentToast.id)}
+                className="rounded-full border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toast.dismiss(currentToast.id)
+                  navigate("/login")
+                }}
+                className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary/90"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: Infinity, position: "top-center" }
+      );
       return;
     }
 
@@ -156,7 +186,7 @@ export default function Home() {
   useEffect(() => {
     const loadLiveHotels = async () => {
       await Promise.resolve();
-      if (user?.role !== "user") {
+      if (user && user.role !== "user") {
         setHotels([]);
         setMenus([]);
         setIsLoading(false);
@@ -513,22 +543,7 @@ export default function Home() {
             </div>
           )}
           
-          {!user && !isLoading && (
-            <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/5 text-brand-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-display font-bold text-brand-dark">Unlock Live Deals</h3>
-              <p className="mt-2 text-brand-dark/70 font-medium">Log in to browse the restaurants currently offering discounted surplus food near you.</p>
-              <button onClick={() => navigate("/login")} className="mt-6 rounded-full bg-brand-primary px-8 py-3 font-bold text-white transition hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/20">
-                Log In
-              </button>
-            </div>
-          )}
-          
-          {user && !isLoading && !error && visibleHotels.length === 0 && (
+          {!isLoading && !error && visibleHotels.length === 0 && (
             <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-8 w-8">
@@ -604,7 +619,7 @@ export default function Home() {
             </div>
           </div>
 
-          {!isLoading && user && visibleItems.length === 0 && (
+          {!isLoading && visibleItems.length === 0 && (
             <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
               <h3 className="text-lg font-bold text-gray-900">Nothing here</h3>
               <p className="mt-2 text-gray-500">No specific menu items match your search.</p>

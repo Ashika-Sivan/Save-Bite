@@ -128,3 +128,8 @@ export const getAdminRefundReports = async (
   const response = await api.get(API_ROUTES.ADMIN.TRANSACTIONS_REFUNDS, { params });
   return response.data?.data || response.data;
 };
+
+export const triggerAutoRefunds = async (): Promise<{ message: string }> => {
+  const response = await api.post(API_ROUTES.ADMIN.TRIGGER_AUTO_REFUNDS);
+  return response.data;
+};

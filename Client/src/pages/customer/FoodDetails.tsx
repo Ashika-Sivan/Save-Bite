@@ -25,6 +25,7 @@ const formatTime = (value: string): string => {
 
 const FoodDetails = () => {
     const navigate = useNavigate();
+    const user = useSelector((state: RootState) => state.auth.user);
     const dispatch = useDispatch<AppDispatch>();
     const { hotelId, itemId } = useParams<{ hotelId: string; itemId: string }>();
 
@@ -81,6 +82,41 @@ const FoodDetails = () => {
     };
 
     const handleAddToCart = () => {
+        if (!user) {
+            toast.custom(
+                (currentToast) => (
+                    <div className="w-full max-w-sm rounded-[2rem] border border-gray-200 bg-white p-5 shadow-lg">
+                        <h3 className="font-display font-semibold text-gray-900">
+                            Authentication Required
+                        </h3>
+                        <p className="mt-2 text-sm text-gray-600">
+                            Please login to add items to your cart and continue ordering.
+                        </p>
+                        <div className="mt-5 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => toast.dismiss(currentToast.id)}
+                                className="rounded-full border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    toast.dismiss(currentToast.id)
+                                    navigate("/login")
+                                }}
+                                className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary/90"
+                            >
+                                Login
+                            </button>
+                        </div>
+                    </div>
+                ),
+                { duration: Infinity, position: "top-center" }
+            );
+            return;
+        }
         if (!menu || !foodItem) return;
 
         const payload: AddToCartPayload = {
