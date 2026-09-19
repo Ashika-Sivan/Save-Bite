@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   getAdminRefundReports,
+  triggerAutoRefunds,
   type RefundReportResponse,
 } from "../../services/adminTransaction.service";
 import toast from "react-hot-toast";
@@ -24,6 +25,7 @@ const AdminRefunds = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [isTriggering, setIsTriggering] = useState(false);
 
   // Search Debouncing
   useEffect(() => {
@@ -59,6 +61,19 @@ const AdminRefunds = () => {
     toast.success("Refund data refreshed");
   };
 
+  const handleTriggerRefunds = async () => {
+    try {
+      setIsTriggering(true);
+      const res = await triggerAutoRefunds();
+      toast.success(res.message || "Auto-refunds triggered successfully!");
+      fetchRefunds(); // Refresh the table after triggering
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to trigger auto-refunds");
+    } finally {
+      setIsTriggering(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -75,6 +90,15 @@ const AdminRefunds = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleTriggerRefunds}
+              disabled={isTriggering}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 shadow-sm transition hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RotateCcw size={16} className={isTriggering ? "animate-spin" : ""} />
+              Trigger Auto-Refunds
+            </button>
             <button
               type="button"
               onClick={handleRefresh}

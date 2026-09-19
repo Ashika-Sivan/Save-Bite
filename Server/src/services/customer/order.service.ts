@@ -16,12 +16,15 @@ import mongoose from "mongoose";
 import { toOrderResponseDTO } from "../../mappers/order.mapper";
 import { getIO, getUserSocketId } from "../../config/socket";
 
+import { IUserWalletService } from "../../interfaces/service/wallet/IUserWalletService";
+
 export class OrderService implements IOrderService {
     constructor(
         private readonly _orderRepository: IOrderRepository,
         private readonly _dailyMenuRepository: IDailyMenuRepository,
         private readonly _vendorRepository?: IVendorRepository,
-        private readonly _walletRepository?: IWalletRepository
+        private readonly _walletRepository?: IWalletRepository,
+        private readonly _userWalletService?: IUserWalletService
     ) { }
 
      private async generateUniquePickupCode(session?:ClientSession):Promise<string>{
@@ -308,21 +311,50 @@ export class OrderService implements IOrderService {
         
         // The socket is registered using the user's ID (ownerId), not the vendor document ID
         const { Vendor } = await import("../../models/vendor/vendor.model");
+        const { NotificationModel } = await import("../../models/notification/notification.model");
         const vendor = await Vendor.findById(updatedOrder.vendorId);
         
         if (vendor && vendor.ownerId) {
+            const title = "🎉 New Order Received!";
+            const body = `Order #${updatedOrder._id.toString().slice(-5).toUpperCase()} has just been placed.`;
+            const link = "/vendor/orders";
+
+            // Save notification in database
+            const notification = await NotificationModel.create({
+                userId: vendor.ownerId,
+                targetRole: "vendor",
+                title,
+                body,
+                type: "SYSTEM",
+                link,
+            });
+
             const vendorSocketId = await getUserSocketId(vendor.ownerId.toString());
             if (vendorSocketId) {
                 io.to(vendorSocketId).emit("new_order", {
-                    title: "🎉 New Order Received!",
-                    body: `Order #${updatedOrder._id.toString().slice(-5).toUpperCase()} has just been placed.`,
-                    link: "/vendor/orders",
+                    id: notification._id.toString(),
+                    title,
+                    body,
+                    link,
                     orderId: updatedOrder._id.toString()
                 });
             }
         }
     } catch (socketError) {
         console.error("Failed to emit new_order socket event:", socketError);
+    }
+    
+    if (this._userWalletService) {
+        try {
+            await this._userWalletService.logDebit(
+                order.customerId.toString(),
+                order.totalAmount,
+                `Payment for Order #${updatedOrder._id.toString().substring(19).toUpperCase()}`,
+                updatedOrder._id.toString()
+            );
+        } catch (err) {
+            console.error("Failed to log payment transaction:", err);
+        }
     }
     }
 
@@ -541,6 +573,19 @@ export class OrderService implements IOrderService {
                 // Update order status to AUTO_REFUNDED
                 await this._orderRepository.updateOrderStatus(order._id.toString(), OrderStatus.AUTO_REFUNDED);
                 
+                if (this._userWalletService) {
+                    try {
+                        await this._userWalletService.logCredit(
+                            order.customerId.toString(),
+                            refundAmount,
+                            `Auto-refund (70%) for uncollected Order #${order._id.toString().substring(19).toUpperCase()}`,
+                            order._id.toString()
+                        );
+                    } catch (err) {
+                        console.error("Failed to log auto-refund transaction:", err);
+                    }
+                }
+
                 refundedCount++;
             } catch (error) {
                 // We log and continue so one failing refund doesn't break the whole batch
@@ -577,16 +622,25 @@ export class OrderService implements IOrderService {
             throw new AppError("Cancellation grace period of 5 minutes has expired", StatusCode.BAD_REQUEST);
         }
 
-        if (order.pickupWindow?.startTime && now >= order.pickupWindow.startTime.getTime()) {
-            throw new AppError("Orders cannot be cancelled once the pickup window has started", StatusCode.BAD_REQUEST);
-        }
-
         if (order.stripePaymentIntentId) {
             try {
                 await stripe.refunds.create({
                     payment_intent: order.stripePaymentIntentId,
                     reason: "requested_by_customer"
                 });
+
+                if (this._userWalletService) {
+                    try {
+                        await this._userWalletService.logCredit(
+                            order.customerId.toString(),
+                            order.totalAmount,
+                            `Refund for cancelled Order #${order._id.toString().substring(19).toUpperCase()}`,
+                            order._id.toString()
+                        );
+                    } catch (err) {
+                        console.error("Failed to log refund transaction:", err);
+                    }
+                }
             } catch (error: unknown) {
                 console.error("Stripe refund failed during cancellation:", error);
                 throw new AppError(`Refund failed: ${error instanceof Error ? error.message : "Unknown error"}`, StatusCode.INTERNAL_SERVER_ERROR);

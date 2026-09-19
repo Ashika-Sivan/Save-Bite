@@ -61,6 +61,7 @@ const getImageUrl = (
 
 const LiveHotelMenuPage = () => {
     const navigate = useNavigate()
+    const user = useSelector((state: RootState) => state.auth.user)
 
     const dispatch =
         useDispatch<AppDispatch>()
@@ -141,11 +142,13 @@ const LiveHotelMenuPage = () => {
                     }
 
                     // Check review eligibility
-                    try {
-                        const canReviewRes = await checkCanReviewHotel(hotelId)
-                        setCanReview(canReviewRes.canReview)
-                    } catch (cErr) {
-                        console.error("Failed to check review eligibility:", cErr)
+                    if (user) {
+                        try {
+                            const canReviewRes = await checkCanReviewHotel(hotelId)
+                            setCanReview(canReviewRes.canReview)
+                        } catch (cErr) {
+                            console.error("Failed to check review eligibility:", cErr)
+                        }
                     }
                 } catch (requestError) {
                     console.error(
@@ -254,6 +257,50 @@ const LiveHotelMenuPage = () => {
     const handleAddToCart = (
         item: LiveMenuItem
     ): void => {
+        if (!user) {
+            toast.custom(
+                (currentToast) => (
+                    <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
+                        <h3 className="font-semibold text-gray-900">
+                            Authentication Required
+                        </h3>
+
+                        <p className="mt-2 text-sm text-gray-600">
+                            Please login to add items to your cart and continue ordering.
+                        </p>
+
+                        <div className="mt-5 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    toast.dismiss(currentToast.id)
+                                }
+                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    toast.dismiss(currentToast.id)
+                                    navigate("/login")
+                                }}
+                                className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+                            >
+                                Login
+                            </button>
+                        </div>
+                    </div>
+                ),
+                {
+                    duration: Infinity,
+                    position: "top-center",
+                }
+            )
+            return;
+        }
+
         if (!menu) {
             return
         }

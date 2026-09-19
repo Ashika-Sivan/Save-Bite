@@ -61,12 +61,11 @@ export class DailyMenuService implements IDailyMenuService {
 
         }
 
-        const todayStart = new Date();//current date:-Aug 3,2026-6.30 pm
-        todayStart.setHours(0, 0, 0, 0)//Aug 3,2026-12.00 am(change time to mid night)this is actually exact beginig of today
+        const todayStart = new Date();//today
+        todayStart.setHours(0, 0, 0, 0)
 
-
-        const tomorrowStart = new Date(todayStart);//which is to find the begining of tomorrow.
-        tomorrowStart.setDate(tomorrowStart.getDate() + 1)//current day + next day:-aug-3 to aug-4
+        const tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1)//tomorrow
 
         const existingMenu =
             await this._dailyMenuRepository
@@ -110,12 +109,7 @@ export class DailyMenuService implements IDailyMenuService {
         return toDailyMenuResponseDTO(menu)
     }
 
-    async addMenuItem(
-        ownerId: string,
-        menuId: string,
-        data: IAddDailyMenuItemDTO,
-        imageFile: Express.Multer.File
-    ): Promise<IDailyMenuResponseDTO> {
+    async addMenuItem(ownerId: string,menuId: string,data: IAddDailyMenuItemDTO,imageFile: Express.Multer.File): Promise<IDailyMenuResponseDTO> {
         if (!Types.ObjectId.isValid(menuId)) {
             throw new AppError(
                 DAILY_MENU_MESSAGES.INVALID_ID,
@@ -335,7 +329,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         try {
             const [longitude, latitude] = hotel.location.coordinates;
-            // Find users within 5km (5000 meters)
+            // Find users within 5km 
             const nearbyUsers = await this._userRepository.findUsersWithinRadius(longitude, latitude, 5000);
 
             const { getIO, getUserSocketId } = await import("../../config/socket");
@@ -347,7 +341,7 @@ export class DailyMenuService implements IDailyMenuService {
                 const notificationBody = `${hotel.hotelName} just went live with surplus food near you!`;
                 const notificationLink = `/customer/restaurants/${hotel._id}/menu`;
 
-                // Save to persistent database
+//save to persistnt db 
                 await this._notificationRepository.create({
                     userId: user._id,
                     targetRole: "customer",
@@ -570,7 +564,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (pickupStartTime >= cutoffTime) {
             throw new AppError(
-                "food availability time must be before the order cutoff time",
+                "The pickup window must be at least 30 minutes long to allow customers time to order.",
                 StatusCode.BAD_REQUEST
             )
         }

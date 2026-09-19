@@ -44,6 +44,7 @@ import CheckoutPage from "../pages/customer/CheckoutPage";
 import PaymentSuccessPage from "../pages/customer/PaymentSuccessPage";
 import MyOrdersPage from "../pages/customer/MyOrdersPage";
 import CustomerProfile from "../pages/customer/CustomerProfile";
+import TransactionHistoryPage from "../pages/customer/TransactionHistoryPage";
 import CustomerLayout from "../components/layouts/CustomerLayout";
 
 import AdminConcerns from "../pages/admin/AdminConcerns";
@@ -54,13 +55,16 @@ import AdminTransactions from "../pages/admin/AdminTransactions";
 import AdminRefunds from "../pages/admin/AdminRefunds";
 import AdminSettings from "../pages/admin/AdminSettings";
 
+import CustomerRoute from "./CustomerRoute";
+
 export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
 
-                <Route element={<CustomerLayout />}>
-                    <Route path={APP_ROUTES.PUBLIC.HOME} element={<Home />} />
+                <Route element={<CustomerRoute />}>
+                    <Route element={<CustomerLayout />}>
+                        <Route path={APP_ROUTES.PUBLIC.HOME} element={<Home />} />
 
                     <Route
                         path={APP_ROUTES.CUSTOMER.HOME}
@@ -73,20 +77,12 @@ export default function AppRoutes() {
 
                     <Route
                         path={APP_ROUTES.CUSTOMER.LIVE_MENU(":hotelId")}
-                        element={
-                            <ProtectedRoute>
-                                <LiveHotelMenuPage />
-                            </ProtectedRoute>
-                        }
+                        element={<LiveHotelMenuPage />}
                     />
 
                     <Route
                         path="/customer/restaurants/:hotelId/menu/:itemId"
-                        element={
-                            <ProtectedRoute>
-                                <FoodDetails />
-                            </ProtectedRoute>
-                        }
+                        element={<FoodDetails />}
                     />
 
                     <Route
@@ -133,6 +129,16 @@ export default function AppRoutes() {
                             </ProtectedRoute>
                         }
                     />
+
+                    <Route
+                        path={APP_ROUTES.CUSTOMER.WALLET}
+                        element={
+                            <ProtectedRoute>
+                                <TransactionHistoryPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    </Route>
                 </Route>
 
                 {/* AUTH ROUTES */}

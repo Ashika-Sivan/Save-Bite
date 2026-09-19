@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { AppDispatch } from "../../redux/store";
 import { clearCart } from "../../redux/cartSlice";
 import { verifyPayment, type Order } from "../../services/order.service";
+import toast from "react-hot-toast";
 
 const PaymentSuccessPage = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +38,7 @@ const PaymentSuccessPage = () => {
 
                 if (currentOrder.paymentStatus === "paid") {
                     dispatch(clearCart());
+                    toast.success("Payment verified successfully!");
                     setIsChecking(false);
                     return;
                 }

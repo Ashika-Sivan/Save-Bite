@@ -51,10 +51,10 @@ const notificationSlice = createSlice({
       // Remove duplicates
       state.liveHotelIds = [...new Set(liveHotels)];
     },
-    addNotification: (state, action: PayloadAction<Omit<NotificationItem, 'id' | 'read' | 'createdAt'>>) => {
+    addNotification: (state, action: PayloadAction<Omit<NotificationItem, 'id' | 'read' | 'createdAt'> & { id?: string }>) => {
       const newNotification: NotificationItem = {
         ...action.payload,
-        id: Math.random().toString(36).substring(2, 9),
+        id: action.payload.id || Math.random().toString(36).substring(2, 9),
         read: false,
         createdAt: Date.now(),
       };

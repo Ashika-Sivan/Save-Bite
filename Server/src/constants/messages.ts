@@ -172,3 +172,7 @@ export const REVIEW_MESSAGES = {
   REVIEW_STATUS_FETCHED: "Review status fetched",
   ELIGIBILITY_STATUS_FETCHED: "Eligibility status fetched",
 } as const;
+
+export const WALLET_MESSAGES = {
+  FETCHED_SUCCESS: "Wallet fetched successfully",
+} as const;

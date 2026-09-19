@@ -1,4 +1,5 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
+import { AuthRequest } from "../types/authRequest";
 import { IConcernService } from "../interfaces/service/concern/IConcern.service";
 import { StatusCode } from "../constants/statusCode";
 import { AppError } from "../errors/AppError";
@@ -6,11 +7,10 @@ import { catchAsync } from "../utils/catchAsync";
 export class ConcernController {
   constructor(private _concernService: IConcernService) { }
 
-  raiseConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  raiseConcern = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const orderId = req.params.orderId as string;
     const { reason } = req.body;
-    const user = (req as unknown as { user: { userId?: string; id?: string } }).user;
-    const customerId = (user?.userId || user?.id) as string;
+    const customerId = req.user?.userId as string;
 
     if (!req.file) {
       throw new AppError("Photo evidence is required to raise a concern", StatusCode.BAD_REQUEST);
@@ -38,7 +38,7 @@ export class ConcernController {
     });
   });
 
-  getAllConcerns = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAllConcerns = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const { status } = req.query;
 
     const concerns = await this._concernService.getAllConcerns(status as string);
@@ -49,7 +49,7 @@ export class ConcernController {
     });
   });
 
-  getConcernById = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getConcernById = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const concern = await this._concernService.getConcernById(concernId);
 
@@ -63,7 +63,7 @@ export class ConcernController {
     });
   });
 
-  approveConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  approveConcern = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const { adminNote } = req.body;
 
@@ -76,7 +76,7 @@ export class ConcernController {
     });
   });
 
-  rejectConcern = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  rejectConcern = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const concernId = req.params.concernId as string;
     const { adminNote } = req.body;
 

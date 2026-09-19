@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import VendorSidebar from "./VendorSidebar";
 import { Menu } from "lucide-react";
+import BellNotification from "../customer/BellNotification";
 
 const VendorLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,7 +26,7 @@ const VendorLayout = () => {
         <VendorSidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
      
         <div className="flex items-center justify-between bg-white p-4 border-b border-gray-200 md:hidden flex-shrink-0 z-30">
           <div className="flex items-center gap-2">
@@ -34,9 +35,19 @@ const VendorLayout = () => {
             </div>
             <span className="font-bold text-green-700">SaveBite Vendor</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600 focus:outline-none">
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-4">
+            <BellNotification />
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600 focus:outline-none">
+              <Menu size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:flex items-center justify-end bg-white p-4 border-b border-gray-200 flex-shrink-0 z-30">
+          <div className="flex items-center gap-4">
+            <BellNotification />
+          </div>
         </div>
 
       

@@ -12,6 +12,15 @@ export default function ProtectedRoute({children}:ProtectedRouteProps) {
     if(!user){
         return <Navigate to="/login" replace/>
     }
+
+    if (user.role === 'vendor') {
+        return <Navigate to="/vendor/dashboard" replace/>
+    }
+
+    if (user.role === 'admin') {
+        return <Navigate to="/admin/dashboard" replace/>
+    }
+
   return children
     
 }
