@@ -94,6 +94,7 @@ const CustomerHeader = () => {
 
         setCustomerLocation(loc);
         localStorage.setItem("customerLocation", JSON.stringify(loc));
+        window.dispatchEvent(new Event("customerLocationUpdated"));
         setIsGettingLocation(false);
 
         // Only show toast on first successful fetch
@@ -125,6 +126,7 @@ const CustomerHeader = () => {
     }
     setCustomerLocation(null);
     localStorage.removeItem("customerLocation");
+    window.dispatchEvent(new Event("customerLocationUpdated"));
     lastGeocodeRef.current = null;
     toast.success("Live location tracking stopped");
   };

@@ -163,7 +163,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [customerLocation] =
+  const [customerLocation, setCustomerLocation] =
     useState<CustomerLocation | null>(() => {
       const savedLocation = localStorage.getItem(
         "customerLocation"
@@ -173,6 +173,23 @@ export default function Home() {
         ? JSON.parse(savedLocation)
         : null;
     });
+
+  useEffect(() => {
+    const handleLocationUpdate = () => {
+      const savedLocation = localStorage.getItem("customerLocation");
+      setCustomerLocation(savedLocation ? JSON.parse(savedLocation) : null);
+    };
+
+    window.addEventListener("customerLocationUpdated", handleLocationUpdate);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "customerLocation") handleLocationUpdate();
+    });
+
+    return () => {
+      window.removeEventListener("customerLocationUpdated", handleLocationUpdate);
+      window.removeEventListener("storage", handleLocationUpdate);
+    };
+  }, []);
 
 
 
