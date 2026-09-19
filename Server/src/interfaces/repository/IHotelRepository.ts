@@ -31,7 +31,7 @@ export interface ILiveHotelRepositoryResult{
         endTime:Date;
     }
     availableItemCount:number;
-    distanceInMeter:number
+    distanceInMeters?:number;
 
 }
 export interface  ILiveHotelPaginatedResult{
