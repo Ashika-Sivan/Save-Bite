@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { reviewController, authMiddleware } from "../config/dependencies";
+import { validateRequest } from "../middlewares/validate.middleware";
+import { createReviewSchema } from "../validations/review.validations";
 
 const router = Router();
 
@@ -10,7 +12,7 @@ router.get("/hotel/:hotelId", reviewController.getHotelReviews.bind(reviewContro
 router.use(authMiddleware.authenticate);
 
 // Submit a review for a completed order
-router.post("/", reviewController.createReview.bind(reviewController));
+router.post("/", validateRequest(createReviewSchema), reviewController.createReview.bind(reviewController));
 
 // Check review status for an order
 router.get("/order/:orderId", reviewController.getReviewByOrder.bind(reviewController));

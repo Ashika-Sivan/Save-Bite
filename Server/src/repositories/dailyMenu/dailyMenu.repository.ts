@@ -59,9 +59,7 @@ export class DailyMenuRepository extends BaseRepository<IDailyMenu>implements ID
             }
         })
     }
-    async updatePickupWindow(menuId: string, vendorId: Types.ObjectId, pickupWindow: IPickupWindowUpdateData
-        
-    ): Promise<IDailyMenu | null> {
+    async updatePickupWindow(menuId: string, vendorId: Types.ObjectId, pickupWindow: IPickupWindowUpdateData): Promise<IDailyMenu | null> {
         return DailyMenu.findOneAndUpdate({_id:new Types.ObjectId(menuId),vendorId:vendorId
             ,isLive:false
         },

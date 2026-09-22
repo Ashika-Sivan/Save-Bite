@@ -12,10 +12,11 @@ export interface ReviewConcernDTO {
 }
 
 export interface IConcernResponseDTO {
+  _id: string;
   id: string;
-  orderId: string;
-  customerId: string;
-  vendorId: string;
+  orderId: string | any;
+  customerId: string | any;
+  vendorId: string | any;
   reason: string;
   photoUrl: string;
   photoCapturedAt: string | null;

@@ -10,7 +10,6 @@ import { uploadToS3 } from "../../utils/uploadToS3";
 import { AppError } from "../../errors/AppError";
 import { StatusCode } from "../../constants/statusCode";
 import { VENDOR_MESSAGES } from "../../constants/messages";
-import { validateVendorVertification } from "../../validations/vendor.validations";
 
 export class VendorService implements IVendorService {
     constructor(private vendorRepository: IVendorRepository) {}
@@ -47,7 +46,7 @@ export class VendorService implements IVendorService {
             }
         }
 
-        validateVendorVertification(data.verification);
+
 
         const businessImage = files.businessImage?.[0];
         const gstCertificate = files.gstCertificate?.[0];
@@ -148,7 +147,7 @@ export class VendorService implements IVendorService {
             );
         }
 
-        validateVendorVertification(data.verification);
+
 
         const businessImage = files.businessImage?.[0];
         const gstCertificate = files.gstCertificate?.[0];

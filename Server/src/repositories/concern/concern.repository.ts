@@ -28,7 +28,7 @@ export class ConcernRepository extends BaseRepository<IConcern> implements IConc
       .populate("orderId");
   }
 
-  async findAll(filter: Record<string, unknown> = {}): Promise<IConcern[]> {
+  async findAll(filter: Record<string, unknown> = {}): Promise<IConcern[]> {//key must be string and value can be unknown
     return await Concern.find(filter)
       .sort({ createdAt: -1 })
       .populate("customerId", "name email phone")

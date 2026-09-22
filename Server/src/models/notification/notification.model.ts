@@ -13,17 +13,46 @@ export interface INotification extends Document {
 
 const NotificationSchema: Schema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    targetRole: { type: String, enum: ["all", "customer", "vendor"], default: "all" },
-    title: { type: String, required: true },
-    body: { type: String, required: true },
-    type: {
-      type: String,
-      enum: ["MEAL_REMINDER", "PROMOTIONAL", "SYSTEM", "ORDER_STATUS"],
-      default: "MEAL_REMINDER",
+      userId: { 
+        type: Schema.Types.ObjectId,
+        ref: "User", 
+        default: null 
+      },
+
+      targetRole: 
+      { type: String, 
+        enum: ["all", "customer", "vendor"], 
+        default: "all" 
+      },
+
+      title: { 
+        type: String, 
+        required: true
     },
-    link: { type: String, default: "/home" },
-    read: { type: Boolean, default: false },
+
+
+      body: {
+        type: String,
+          required: true 
+      },
+
+
+      type: {
+        type: String,
+        enum: ["MEAL_REMINDER", "PROMOTIONAL", "SYSTEM", "ORDER_STATUS"],
+        default: "MEAL_REMINDER",
+      },
+
+      link: { type: String, 
+        default: "/home" 
+      },
+      
+      read: {
+      type: Boolean, 
+        default: false 
+      },
+
+
   },
   { timestamps: true }
 );

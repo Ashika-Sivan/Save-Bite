@@ -52,10 +52,6 @@ export class DailyMenuService implements IDailyMenuService {
         const pickupStartTime = new Date(data.pickupStartTime)
         const pickupEndTime = new Date(data.pickupEndTime)
 
-        if (Number.isNaN(pickupStartTime.getTime()) || Number.isNaN(pickupEndTime.getTime())) {
-            throw new AppError(DAILY_MENU_MESSAGES.INVALID_PICKUP_TIME, StatusCode.BAD_REQUEST)
-        }
-
         if (pickupStartTime >= pickupEndTime) {
             throw new AppError(DAILY_MENU_MESSAGES.END_TIME_AFTER_START, StatusCode.BAD_REQUEST)
 
@@ -78,7 +74,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (existingMenu) {
             throw new AppError(
-                "today's menu already exists for this hotel",
+                DAILY_MENU_MESSAGES.TODAY_MENU_ALREADY_EXISTS,
                 StatusCode.BAD_REQUEST
             )
         }
@@ -118,7 +114,7 @@ export class DailyMenuService implements IDailyMenuService {
         }
 
         if (!imageFile) {
-            throw new AppError(DAILY_MENU_MESSAGES.INVALID_ID, StatusCode.BAD_REQUEST)
+            throw new AppError(DAILY_MENU_MESSAGES.IMAGE_REQUIRED, StatusCode.BAD_REQUEST)
         }
 
         const vendor =
@@ -128,14 +124,14 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!vendor) {
             throw new AppError(
-                "Vendor account not found",
+                VENDOR_MESSAGES.VENDOR_NOT_FOUND,
                 StatusCode.NOT_FOUND
             );
         }
 
         if (vendor.status !== VendorStatus.APPROVED) {
             throw new AppError(
-                "Only approved vendors can add menu items",
+                DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_ADD,
                 StatusCode.FORBIDDEN
             );
         }
@@ -147,41 +143,6 @@ export class DailyMenuService implements IDailyMenuService {
         const stockQuantity = Number(data.stockQuantity)
 
 
-        if (!itemName) {
-            throw new AppError(
-                "Item name is required",
-                StatusCode.BAD_REQUEST
-            );
-        }
-
-        if (
-            !Object.values(MenuUnitType).includes(
-                data.unitType
-            )
-        ) {
-            throw new AppError(
-                "Invalid menu unit type",
-                StatusCode.BAD_REQUEST
-            );
-        }
-
-        if (
-            !Number.isFinite(originalPrice) ||
-            !Number.isFinite(discountedPrice)
-        ) {
-            throw new AppError(
-                "Prices must be valid numbers",
-                StatusCode.BAD_REQUEST
-            );
-        }
-
-        if (originalPrice <= 0 || discountedPrice <= 0) {
-            throw new AppError(
-                "Prices must be greater than zero",
-                StatusCode.BAD_REQUEST
-            );
-        }
-
         if (discountedPrice >= originalPrice) {
             throw new AppError(
                 DAILY_MENU_MESSAGES.DISCOUNT_LOWER,
@@ -189,12 +150,7 @@ export class DailyMenuService implements IDailyMenuService {
             );
         }
 
-        if (!Number.isInteger(stockQuantity) || stockQuantity <= 0) {
-            throw new AppError(
-                "Stock quantity must be a positive whole number",
-                StatusCode.BAD_REQUEST
-            );
-        }
+
 
         const uploadResult = await uploadToS3(imageFile, "menu-items");
         const itemImageKey = uploadResult.key
@@ -226,7 +182,7 @@ export class DailyMenuService implements IDailyMenuService {
         const vendor = await this._vendorRepository.findByOwnerId(ownerId);
 
         if (!vendor) {
-            throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         if (
@@ -234,7 +190,7 @@ export class DailyMenuService implements IDailyMenuService {
             VendorStatus.APPROVED
         ) {
             throw new AppError(
-                "Only approved vendors can go live",
+                DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_LIVE,
                 StatusCode.FORBIDDEN
             );
         }
@@ -255,7 +211,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (menu.isLive) {
             throw new AppError(
-                "Menu is already live",
+                DAILY_MENU_MESSAGES.MENU_ALREADY_LIVE,
                 StatusCode.BAD_REQUEST
             );
         }
@@ -269,7 +225,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!hotel || !hotel.isActive) {
             throw new AppError(
-                "Cannot go live with an inactive hotel",
+                DAILY_MENU_MESSAGES.CANNOT_GO_LIVE_INACTIVE,
                 StatusCode.BAD_REQUEST
             );
         }
@@ -283,7 +239,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!hasAvailableItem) {
             throw new AppError(
-                "Add at least one available item with stock before going live",
+                DAILY_MENU_MESSAGES.ADD_AT_LEAST_ONE_ITEM,
                 StatusCode.BAD_REQUEST
             );
         }
@@ -295,7 +251,7 @@ export class DailyMenuService implements IDailyMenuService {
             menu.pickupWindow.startTime
         ) {
             throw new AppError(
-                "Cannot go live before the configured food availability time",
+                DAILY_MENU_MESSAGES.CANNOT_GO_LIVE_BEFORE_TIME,
                 StatusCode.BAD_REQUEST
             );
         }
@@ -306,7 +262,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (currentTime >= cutoffTime) {
             throw new AppError(
-                "Cannot go live because ordering has already closed",
+                DAILY_MENU_MESSAGES.CANNOT_GO_LIVE_ORDERING_CLOSED,
                 StatusCode.BAD_REQUEST
             );
         }
@@ -321,7 +277,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!updatedMenu) {
             throw new AppError(
-                "Unable to update menu live status",
+                DAILY_MENU_MESSAGES.UNABLE_TO_UPDATE_LIVE,
                 StatusCode.NOT_FOUND
             );
         }
@@ -377,7 +333,7 @@ export class DailyMenuService implements IDailyMenuService {
         }
         const vendor = await this._vendorRepository.findByOwnerId(ownerId)
         if (!vendor) {
-            throw new AppError('vendor account not found', StatusCode.NOT_FOUND)
+            throw new AppError(VENDOR_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND)
         }
         if (vendor.status !== VendorStatus.APPROVED) {
             throw new AppError(DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_VIEW, StatusCode.FORBIDDEN)
@@ -475,7 +431,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (vendor.status !== VendorStatus.APPROVED) {
             throw new AppError(
-                "only approved vendors can update the pickup window",
+                DAILY_MENU_MESSAGES.ONLY_APPROVED_VENDOR_UPDATE_WINDOW,
                 StatusCode.FORBIDDEN
             )
         }
@@ -488,11 +444,11 @@ export class DailyMenuService implements IDailyMenuService {
                 )
 
         if (!menu) {
-            throw new AppError("menu not found or access denied", StatusCode.NOT_FOUND)
+            throw new AppError(DAILY_MENU_MESSAGES.NOT_FOUND_OR_ACCESS_DENIED, StatusCode.NOT_FOUND)
         }
 
         if (menu.isLive) {
-            throw new AppError("end the live session before changing the pickup window", StatusCode.BAD_REQUEST)
+            throw new AppError(DAILY_MENU_MESSAGES.END_LIVE_BEFORE_CHANGING_WINDOW, StatusCode.BAD_REQUEST)
 
 
 
@@ -500,7 +456,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!data) {
             throw new AppError(
-                "pickup-window data is required",
+                DAILY_MENU_MESSAGES.PICKUP_WINDOW_REQUIRED,
                 StatusCode.BAD_REQUEST
             )
         }
@@ -511,19 +467,7 @@ export class DailyMenuService implements IDailyMenuService {
         const pickupEndTime =
             new Date(data.pickupEndTime)
 
-        if (
-            Number.isNaN(
-                pickupStartTime.getTime()
-            ) ||
-            Number.isNaN(
-                pickupEndTime.getTime()
-            )
-        ) {
-            throw new AppError(
-                DAILY_MENU_MESSAGES.INVALID_PICKUP_TIME,
-                StatusCode.BAD_REQUEST
-            )
-        }
+
 
         if (pickupStartTime >= pickupEndTime) {
             throw new AppError(
@@ -548,7 +492,7 @@ export class DailyMenuService implements IDailyMenuService {
             pickupEndTime > endOfDay
         ) {
             throw new AppError(
-                "pickup window must end by midnight",
+                DAILY_MENU_MESSAGES.PICKUP_WINDOW_MIDNIGHT,
                 StatusCode.BAD_REQUEST
             )
         }
@@ -564,14 +508,14 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (pickupStartTime >= cutoffTime) {
             throw new AppError(
-                "The pickup window must be at least 30 minutes long to allow customers time to order.",
+                DAILY_MENU_MESSAGES.PICKUP_WINDOW_30_MINS,
                 StatusCode.BAD_REQUEST
             )
         }
 
         if (now >= cutoffTime) {
             throw new AppError(
-                "pickup closing time must be more than 30 minutes from now",
+                DAILY_MENU_MESSAGES.PICKUP_CLOSING_30_MINS,
                 StatusCode.BAD_REQUEST
             )
         }
@@ -589,7 +533,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!updatedMenu) {
             throw new AppError(
-                "unable to update the pickup window",
+                DAILY_MENU_MESSAGES.UNABLE_UPDATE_PICKUP_WINDOW,
                 StatusCode.BAD_REQUEST
             )
         }
@@ -628,7 +572,7 @@ export class DailyMenuService implements IDailyMenuService {
         const existingItem = menu.items.find((item) => item._id.toString() == itemId)
         if (!existingItem) {
             throw new AppError(
-                "Menu item not found",
+                DAILY_MENU_MESSAGES.MENU_ITEM_NOT_FOUND,
                 StatusCode.NOT_FOUND
             );
         }
@@ -637,53 +581,14 @@ export class DailyMenuService implements IDailyMenuService {
             ...data,
         };
         if (data.itemName !== undefined) {
-            const itemName = data.itemName.trim();
-
-            if (!itemName) {
-                throw new AppError(
-                    "Item name cannot be empty",
-                    StatusCode.BAD_REQUEST
-                );
-            }
-
-            updateData.itemName = itemName;
-        }
-
-        if (data.unitType !== undefined && !Object.values(MenuUnitType).includes(data.unitType)) {
-            throw new AppError(DAILY_MENU_MESSAGES.INVALID_UNIT_TYPE, StatusCode.BAD_REQUEST)
+            updateData.itemName = data.itemName.trim();
         }
 
         const originalPrice = data.originalPrice ?? existingItem.originalPrice;
         const discountedPrice = data.discountedPrice ?? existingItem.discountedPrice;
 
-        if (!Number.isFinite(originalPrice) || !Number.isFinite(discountedPrice) || originalPrice <= 0 || discountedPrice <= 0) {
-            throw new AppError(DAILY_MENU_MESSAGES.PRICE_GREATER_THAN_ZERO, StatusCode.BAD_REQUEST)
-        }
-
         if (discountedPrice >= originalPrice) {
             throw new AppError(DAILY_MENU_MESSAGES.DISCOUNT_LOWER, StatusCode.BAD_REQUEST)
-        }
-        if (
-            data.stockQuantity !== undefined &&
-            (
-                !Number.isInteger(data.stockQuantity) ||
-                data.stockQuantity < 0
-            )
-        ) {
-            throw new AppError(
-                "Stock quantity must be a non-negative whole number",
-                StatusCode.BAD_REQUEST
-            );
-        }
-
-        if (
-            data.isAvailable !== undefined &&
-            typeof data.isAvailable !== "boolean"
-        ) {
-            throw new AppError(
-                "Availability must be true or false",
-                StatusCode.BAD_REQUEST
-            );
         }
         /*
         here automatically mark  the item unavailable when stock becom e0
@@ -697,7 +602,7 @@ export class DailyMenuService implements IDailyMenuService {
 
         if (!updatedMenu) {
             throw new AppError(
-                "Unable to update the menu item",
+                DAILY_MENU_MESSAGES.UNABLE_UPDATE_MENU_ITEM,
                 StatusCode.NOT_FOUND
             );
         }

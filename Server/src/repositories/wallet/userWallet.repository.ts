@@ -39,14 +39,7 @@ export class UserWalletRepository implements IUserWalletRepository {
         return wallet;
     }
 
-    async createTransaction(
-        walletId: string,
-        amount: number,
-        type: UserWalletTransactionType,
-        description: string,
-        orderId?: string,
-        session?: ClientSession
-    ): Promise<IUserWalletTransaction> {
+    async createTransaction(walletId: string, amount: number, type: UserWalletTransactionType, description: string, orderId?: string, session?: ClientSession): Promise<IUserWalletTransaction> {
         const transaction = new UserWalletTransaction({
             walletId,
             amount,

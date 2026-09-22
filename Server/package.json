@@ -53,6 +53,7 @@
     "stripe": "^22.4.0",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
-    "winston-loki": "^6.1.7"
+    "winston-loki": "^6.1.7",
+    "zod": "^4.6.5"
   }
 }

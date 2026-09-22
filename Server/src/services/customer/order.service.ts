@@ -36,31 +36,31 @@ export class OrderService implements IOrderService {
                 return pickupCode
             }
         }
-        throw new AppError('unable to generate a unique pickup code',StatusCode.BAD_REQUEST)
+        throw new AppError(ORDER_MESSAGES.UNIQUE_PICKUP_CODE_FAILED,StatusCode.BAD_REQUEST)
     }
 
 
     async createCheckout(customerId: string, data: ICreateCheckoutDTO): Promise<ICheckoutResponseDTO> {
         if (!Types.ObjectId.isValid(customerId)) {
-            throw new AppError("Invalid customer ID", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.INVALID_CUSTOMER_ID, StatusCode.BAD_REQUEST);
         }
 
         if (!data || !Types.ObjectId.isValid(data.menuId)) {
-            throw new AppError("Invalid menu ID", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.INVALID_MENU_ID, StatusCode.BAD_REQUEST);
         }
 
         if (!Array.isArray(data.items) || data.items.length === 0) {
-            throw new AppError("Add at least one item to the cart", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.EMPTY_CART, StatusCode.BAD_REQUEST);
         }
 
         const menu = await this._dailyMenuRepository.findById(data.menuId);
 
         if (!menu) {
-            throw new AppError("Menu not found", StatusCode.NOT_FOUND);
+            throw new AppError(ORDER_MESSAGES.MENU_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         if (!menu.isLive) {
-            throw new AppError("This menu is currently unavailable", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.MENU_UNAVAILABLE, StatusCode.BAD_REQUEST);
         }
        
 
@@ -70,11 +70,11 @@ export class OrderService implements IOrderService {
         const orderCutoffTime: Date = new Date(pickupClosingTime.getTime() - 30 * 60 * 1000);
 
         if (now < foodAvailableTime) {
-            throw new AppError("Ordering has not started yet", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.ORDERING_NOT_STARTED, StatusCode.BAD_REQUEST);
         }
 
         if (now >= orderCutoffTime) {
-            throw new AppError("Ordering has already closed", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.ORDERING_CLOSED, StatusCode.BAD_REQUEST);
         }
 
         const uniqueItemIds: Set<string> = new Set<string>();//prevent duplicate id
@@ -83,15 +83,15 @@ export class OrderService implements IOrderService {
 
         for (const requestedItem of data.items) {
             if (!Types.ObjectId.isValid(requestedItem.itemId)) {//validate item id
-                throw new AppError("Invalid item ID", StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.INVALID_ITEM_ID, StatusCode.BAD_REQUEST);
             }
 
             if (!Number.isInteger(requestedItem.quantity) || requestedItem.quantity < 1) {//validate quantity
-                throw new AppError("Item quantity must be a positive whole number", StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.INVALID_QUANTITY, StatusCode.BAD_REQUEST);
             }
 
             if (uniqueItemIds.has(requestedItem.itemId)) {
-                throw new AppError("The same item cannot be added more than once", StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.DUPLICATE_ITEM, StatusCode.BAD_REQUEST);
             }
 
             uniqueItemIds.add(requestedItem.itemId);
@@ -99,15 +99,15 @@ export class OrderService implements IOrderService {
             const menuItem = menu.items.find((item) => item._id.toString() === requestedItem.itemId);//find actual item inside menu
 
             if (!menuItem) {
-                throw new AppError("An item in your cart is no longer available", StatusCode.NOT_FOUND);
+                throw new AppError(ORDER_MESSAGES.ITEM_UNAVAILABLE, StatusCode.NOT_FOUND);
             }
 
             if (!menuItem.isAvailable || menuItem.stockQuantity < 1) {
-                throw new AppError(`${menuItem.itemName} is unavailable`, StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.ITEM_OUT_OF_STOCK(menuItem.itemName), StatusCode.BAD_REQUEST);
             }
 
             if (requestedItem.quantity > menuItem.stockQuantity) {
-                throw new AppError(`Only ${menuItem.stockQuantity} ${menuItem.itemName} available`, StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.INSUFFICIENT_STOCK(menuItem.stockQuantity, menuItem.itemName), StatusCode.BAD_REQUEST);
             }
 
             const price: number = menuItem.discountedPrice;
@@ -170,7 +170,7 @@ export class OrderService implements IOrderService {
         });
 
         if (!paymentIntent.client_secret) {
-            throw new AppError("Unable to create payment", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.PAYMENT_CREATE_FAILED, StatusCode.BAD_REQUEST);
         }
 
         const updatedOrder = await this._orderRepository.updatePaymentIntent(
@@ -180,7 +180,7 @@ export class OrderService implements IOrderService {
         );
 
         if (!updatedOrder) {
-            throw new AppError("Unable to connect payment to order", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.PAYMENT_CONNECT_FAILED, StatusCode.BAD_REQUEST);
         }
 
         return {
@@ -193,24 +193,24 @@ export class OrderService implements IOrderService {
 
     async getOrderById(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
         if(!Types.ObjectId.isValid(customerId)||!Types.ObjectId.isValid(orderId)){
-            throw new AppError("invalid orderId",StatusCode.BAD_REQUEST)
+            throw new AppError(ORDER_MESSAGES.INVALID_ORDER_ID,StatusCode.BAD_REQUEST)
         }
 
         const order=await this._orderRepository.findByIdAndCustomerId(orderId,new Types.ObjectId(customerId))
         if(!order){
-            throw new AppError("order not found",StatusCode.NOT_FOUND)
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND,StatusCode.NOT_FOUND)
         }
         return toOrderResponseDTO(order)
     }
 
     async verifyPayment(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
         if (!Types.ObjectId.isValid(customerId) || !Types.ObjectId.isValid(orderId)) {
-            throw new AppError("Invalid order ID", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.INVALID_ORDER_ID, StatusCode.BAD_REQUEST);
         }
 
         const order = await this._orderRepository.findByIdAndCustomerId(orderId, new Types.ObjectId(customerId));
         if (!order) {
-            throw new AppError("Order not found", StatusCode.NOT_FOUND);
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         // Already paid — return immediately
@@ -233,7 +233,7 @@ export class OrderService implements IOrderService {
             // Re-fetch the updated order
             const updatedOrder = await this._orderRepository.findByIdAndCustomerId(orderId, new Types.ObjectId(customerId));
             if (!updatedOrder) {
-                throw new AppError("Order not found after payment verification", StatusCode.NOT_FOUND);
+                throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND_AFTER_PAYMENT, StatusCode.NOT_FOUND);
             }
             return toOrderResponseDTO(updatedOrder);
         }
@@ -243,7 +243,7 @@ export class OrderService implements IOrderService {
 
     async getMyOrders(customerId: string): Promise<IOrderResponseDTO[]> {
         if (!Types.ObjectId.isValid(customerId)) {
-            throw new AppError("Invalid customer ID", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.INVALID_CUSTOMER_ID, StatusCode.BAD_REQUEST);
         }
 
         const orders = await this._orderRepository.findAllByCustomerId(new Types.ObjectId(customerId));
@@ -253,13 +253,13 @@ export class OrderService implements IOrderService {
 
     async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {//function actevely talk stripe to check
     if (!paymentIntentId) {
-        throw new AppError("Payment Intent ID is required", StatusCode.BAD_REQUEST);
+        throw new AppError(ORDER_MESSAGES.INVALID_PAYMENT_INTENT, StatusCode.BAD_REQUEST);
     }
 
     const order = await this._orderRepository.findByPaymentIntentId(paymentIntentId);
 
     if (!order) {
-        throw new AppError("Order not found for this payment", StatusCode.NOT_FOUND);
+        throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND_FOR_PAYMENT, StatusCode.NOT_FOUND);
     }
 
     if (order.paymentStatus === PaymentStatus.PAID && order.orderStatus === OrderStatus.PLACED) {
@@ -270,7 +270,7 @@ export class OrderService implements IOrderService {
         order.paymentStatus !== PaymentStatus.PENDING ||
         order.orderStatus !== OrderStatus.PENDING_PAYMENT
     ) {
-        throw new AppError("Order is not waiting for payment", StatusCode.BAD_REQUEST);
+        throw new AppError(ORDER_MESSAGES.ORDER_NOT_WAITING_PAYMENT, StatusCode.BAD_REQUEST);
     }
 
     const updatedMenu = await this._dailyMenuRepository.decrementItemStock(
@@ -283,7 +283,7 @@ export class OrderService implements IOrderService {
 
     if (!updatedMenu) {
         throw new AppError(
-            "Unable to place the order because one or more items have insufficient stock",
+            ORDER_MESSAGES.UNABLE_TO_PLACE,
             StatusCode.BAD_REQUEST
         );
     }
@@ -303,7 +303,7 @@ export class OrderService implements IOrderService {
     );
 
     if (!updatedOrder) {
-        throw new AppError("Unable to mark the order as paid", StatusCode.BAD_REQUEST);
+        throw new AppError(ORDER_MESSAGES.UNABLE_TO_MARK_PAID, StatusCode.BAD_REQUEST);
     }
     
     try {
@@ -360,7 +360,7 @@ export class OrderService implements IOrderService {
 
     async handlePaymentFailed(paymentIntentId: string): Promise<void> {
             if (!paymentIntentId) {
-                throw new AppError("Payment Intent ID is required", StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.INVALID_PAYMENT_INTENT, StatusCode.BAD_REQUEST);
             }
 
             await this._orderRepository.markPaymentFailed(paymentIntentId);
@@ -368,18 +368,18 @@ export class OrderService implements IOrderService {
 
     async redeemPickupCode(ownerId: string, dto: IRedeemPickupCodeDTO): Promise<IRedeemPickupCodeResponseDTO> {
         if (!dto || typeof dto.pickupCode !== "string" || !dto.pickupCode.trim()) {
-            throw new AppError("Pickup code is required", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.PICKUP_CODE_REQUIRED, StatusCode.BAD_REQUEST);
         }
 
         const normalizedCode = dto.pickupCode.trim();
 
         if (!this._vendorRepository) {
-            throw new AppError("Vendor repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+            throw new AppError(ORDER_MESSAGES.VENDOR_REPO_NOT_CONFIGURED, StatusCode.INTERNAL_SERVER_ERROR);
         }
 
         const vendor = await this._vendorRepository.findByOwnerId(ownerId);
         if (!vendor || vendor.status !== VendorStatus.APPROVED) {
-            throw new AppError("Only approved vendors can redeem pickup codes", StatusCode.FORBIDDEN);
+            throw new AppError(ORDER_MESSAGES.ONLY_APPROVED_VENDORS_REDEEM, StatusCode.FORBIDDEN);
         }
 
         const order = await this._orderRepository.findByPickupCode(normalizedCode);
@@ -397,17 +397,17 @@ export class OrderService implements IOrderService {
 
         if (order.orderStatus === OrderStatus.COLLECTED) {
             throw new AppError(
-                `Pickup code has already been redeemed${order.collectedAt ? " on " + new Date(order.collectedAt).toLocaleString() : ""}.`,
+                ORDER_MESSAGES.PICKUP_CODE_ALREADY_REDEEMED(order.collectedAt ? " on " + new Date(order.collectedAt).toLocaleString() : ""),
                 StatusCode.BAD_REQUEST
             );
         }
 
         if (order.orderStatus === OrderStatus.EXPIRED || (order.pickupWindow?.endTime && new Date() > new Date(order.pickupWindow.endTime))) {
-            throw new AppError("Order pickup window has expired.", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.PICKUP_WINDOW_EXPIRED, StatusCode.BAD_REQUEST);
         }
 
         if (order.orderStatus === OrderStatus.CANCELLED) {
-            throw new AppError("This order was cancelled.", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.ORDER_CANCELLED, StatusCode.BAD_REQUEST);
         }
 
         if (order.orderStatus !== OrderStatus.PLACED) {
@@ -426,12 +426,12 @@ export class OrderService implements IOrderService {
 
                 const alreadySettled = await this._walletRepository.transactionExistsForOrder(order._id, session);
                 if (alreadySettled) {
-                    throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
+                    throw new AppError(ORDER_MESSAGES.WALLET_SETTLEMENT_PROCESSED, StatusCode.BAD_REQUEST);
                 }
 
                 const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date(), session);
                 if (!result) {
-                    throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+                    throw new AppError(ORDER_MESSAGES.UNABLE_TO_REDEEM, StatusCode.BAD_REQUEST);
                 }
                 updatedOrder = result;
 
@@ -479,7 +479,7 @@ export class OrderService implements IOrderService {
         } else {
             const result = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
             if (!result) {
-                throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+                throw new AppError(ORDER_MESSAGES.UNABLE_TO_REDEEM, StatusCode.BAD_REQUEST);
             }
             updatedOrder = result;
         }
@@ -492,17 +492,17 @@ export class OrderService implements IOrderService {
 
     private async executeSettlementWithoutTransaction(order: IOrder): Promise<IRedeemPickupCodeResponseDTO> {
         if (!this._walletRepository) {
-            throw new AppError("Wallet repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+            throw new AppError(ORDER_MESSAGES.WALLET_REPO_NOT_CONFIGURED, StatusCode.INTERNAL_SERVER_ERROR);
         }
 
         const alreadySettled = await this._walletRepository.transactionExistsForOrder(order._id);
         if (alreadySettled) {
-            throw new AppError("Order wallet settlement has already been processed.", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.WALLET_SETTLEMENT_PROCESSED, StatusCode.BAD_REQUEST);
         }
 
         const updatedOrder = await this._orderRepository.markOrderCollected(order._id.toString(), new Date());
         if (!updatedOrder) {
-            throw new AppError("Unable to redeem pickup code", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.UNABLE_TO_REDEEM, StatusCode.BAD_REQUEST);
         }
 
         const wallet = await this._walletRepository.getOrCreateWallet(order.vendorId);
@@ -529,45 +529,45 @@ export class OrderService implements IOrderService {
 
     async getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]> {
         if (!ownerId) {
-            throw new AppError("Vendor not authenticated", StatusCode.UNAUTHORIZED);
+            throw new AppError(ORDER_MESSAGES.VENDOR_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
 
         if (!this._vendorRepository) {
-            throw new AppError("Vendor repository not configured", StatusCode.INTERNAL_SERVER_ERROR);
+            throw new AppError(ORDER_MESSAGES.VENDOR_REPO_NOT_CONFIGURED, StatusCode.INTERNAL_SERVER_ERROR);
         }
 
         const vendor = await this._vendorRepository.findByOwnerId(ownerId);
         if (!vendor) {
-            throw new AppError("Vendor account not found", StatusCode.NOT_FOUND);
+            throw new AppError(ORDER_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         const orders = await this._orderRepository.findAllByVendorId(vendor._id);
         return orders.map((order) => toOrderResponseDTO(order));
     }
-
+    //refund
     async processAutoRefunds(): Promise<number> {
-        // Find orders placed > 24 hours ago that are still in "PLACED" state
+    
         const date24HoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const oldOrders = await this._orderRepository.findPlacedOrdersOlderThan(date24HoursAgo);
 
-        let refundedCount = 0;
+        let refundedCount = 0;//chevk whether refund has complted 
 
         for (const order of oldOrders) {
             try {
                 if (!order.stripePaymentIntentId) {
-                    continue; // Should not happen for PLACED orders, but safety check
+                    continue; 
                 }
 
-                // 70% refund for no-show
+                // 70% refund
                 const refundRatio = 0.70;
                 const refundAmount = Number((order.totalAmount * refundRatio).toFixed(2));
                 const refundAmountInPaise = Math.round(refundAmount * 100);
 
-                // Talk to stripe to issue refund
+                
                 await stripe.refunds.create({
                     payment_intent: order.stripePaymentIntentId,
                     amount: refundAmountInPaise,
-                    reason: "requested_by_customer" // best approximation for no-show refund
+                    reason: "requested_by_customer" 
                 });
 
                 // Update order status to AUTO_REFUNDED
@@ -598,30 +598,33 @@ export class OrderService implements IOrderService {
 
     async cancelOrder(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
         if (!Types.ObjectId.isValid(customerId) || !Types.ObjectId.isValid(orderId)) {
-            throw new AppError("Invalid order ID", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.INVALID_ORDER_ID, StatusCode.BAD_REQUEST);
         }
 
         const order = await this._orderRepository.findByIdAndCustomerId(orderId, new Types.ObjectId(customerId));
         if (!order) {
-            throw new AppError("Order not found", StatusCode.NOT_FOUND);
+            throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
         if (order.orderStatus !== OrderStatus.PLACED) {
-            throw new AppError(`Cannot cancel order in status: ${order.orderStatus}`, StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.CANNOT_CANCEL_STATUS(order.orderStatus), StatusCode.BAD_REQUEST);
         }
 
         if (order.paymentStatus !== PaymentStatus.PAID) {
-            throw new AppError("Only paid orders can be cancelled", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.ONLY_PAID_CANCELLED, StatusCode.BAD_REQUEST);
         }
+
+      
 
         const now = Date.now();
         const orderTime = order.createdAt.getTime();
-        const diffMinutes = (now - orderTime) / (1000 * 60);
+        const diffMinutes = (now - orderTime) / (1000 * 60);//calcul of time 5
 
         if (diffMinutes > 5) {
-            throw new AppError("Cancellation grace period of 5 minutes has expired", StatusCode.BAD_REQUEST);
+            throw new AppError(ORDER_MESSAGES.CANCEL_GRACE_EXPIRED, StatusCode.BAD_REQUEST);
         }
 
+        //refund operatios
         if (order.stripePaymentIntentId) {
             try {
                 await stripe.refunds.create({
@@ -656,7 +659,7 @@ export class OrderService implements IOrderService {
 
         const updatedOrder = await this._orderRepository.updateOrderStatus(order._id.toString(), OrderStatus.CANCELLED);
         if (!updatedOrder) {
-            throw new AppError("Failed to update order status", StatusCode.INTERNAL_SERVER_ERROR);
+            throw new AppError(ORDER_MESSAGES.UPDATE_STATUS_FAILED, StatusCode.INTERNAL_SERVER_ERROR);
         }
 
         return toOrderResponseDTO(updatedOrder);

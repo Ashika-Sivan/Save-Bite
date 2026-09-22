@@ -3,6 +3,8 @@ import { authMiddleware, dailyMenuController, vendorController, walletController
 import { ROUTES } from "../constants/routes";
 import { upload } from "../middlewares/upload.middleware";
 import hotelRouter from "./hotel.routes";
+import { validateRequest } from "../middlewares/validate.middleware";
+import { vendorVerificationSchema } from "../validations/vendor.validations";
 
 
 const router = Router();
@@ -20,6 +22,7 @@ router.post(
     { name: "panCard", maxCount: 1 },
     { name: "businessRegistrationCertificate", maxCount: 1 },
   ]),
+  validateRequest(vendorVerificationSchema),
   vendorController.registerVendor.bind(vendorController)
 );
 
@@ -34,6 +37,7 @@ router.post(
     { name: "panCard", maxCount: 1 },
     { name: "businessRegistrationCertificate", maxCount: 1 },
   ]),
+  validateRequest(vendorVerificationSchema),
   vendorController.reapplyVendor.bind(vendorController)
 );
 
@@ -42,12 +46,14 @@ router.get(ROUTES.VENDOR.STATUS,authMiddleware.authenticate,authMiddleware.autho
 
 router.get("/profile", authMiddleware.authenticate, authMiddleware.authorize("vendor"), vendorController.getVendorProfiles.bind(vendorController));
 
-router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.createMenu.bind(dailyMenuController))
-router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),upload.single('itemImage'),dailyMenuController.addMenuItem.bind(dailyMenuController))
+import { createMenuSchema, addMenuItemSchema, updatePickupWindowSchema, updateMenuItemSchema } from "../validations/dailyMenu.validations";
+
+router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(createMenuSchema),dailyMenuController.createMenu.bind(dailyMenuController))
+router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),upload.single('itemImage'),validateRequest(addMenuItemSchema),dailyMenuController.addMenuItem.bind(dailyMenuController))
 router.patch(ROUTES.VENDOR.GO_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.goLive.bind(dailyMenuController))
 router.get(ROUTES.VENDOR.GET_TODAY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.getTodayMenu.bind(dailyMenuController))
 router.patch(ROUTES.VENDOR.END_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.endLive.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.UPDATE_PICKUP_WINDOW,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.updatePickupWindow.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.UPDATE_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.updateMenuItem.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_PICKUP_WINDOW,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(updatePickupWindowSchema),dailyMenuController.updatePickupWindow.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(updateMenuItemSchema),dailyMenuController.updateMenuItem.bind(dailyMenuController))
 router.post(ROUTES.VENDOR.USE_PREVIOUS_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.usePreviousMenu.bind(dailyMenuController))
 export default router;

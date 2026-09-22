@@ -1,21 +1,20 @@
+import { z } from "zod";
 import { HOTEL_MESSAGES } from "../constants/messages";
-import { StatusCode } from "../constants/statusCode";
-import { ICreateHotelDTO } from "../dtos/hotel.dto";
-import { AppError } from "../errors/AppError";
 
-export const validateHotelData=(
-    data:ICreateHotelDTO
-):void=>{
-    if(
-        !data.hotelName?.trim()||
-        !data.businessType.trim()||
-        !data.place.trim()||
-        !data.address?.trim()
-    ){
-        throw new AppError(HOTEL_MESSAGES.INVALID_DATA,StatusCode.BAD_REQUEST);
-    }
-
-    if(!Number.isFinite(data.latitude)||!Number.isFinite(data.longitude)||data.latitude<-90||data.latitude>90||data.longitude<-100||data.longitude>180){
-        throw new AppError(HOTEL_MESSAGES.INVALID_LOCATION,StatusCode.BAD_REQUEST)
-    }
-}
+export const createHotelSchema = z.object({
+  body: z.object({
+    hotelName: z.string().trim().min(1, HOTEL_MESSAGES.INVALID_DATA),
+    businessType: z.string().trim().min(1, HOTEL_MESSAGES.INVALID_DATA),
+    place: z.string().trim().min(1, HOTEL_MESSAGES.INVALID_DATA),
+    address: z.string().trim().min(1, HOTEL_MESSAGES.INVALID_DATA),
+    // We expect latitude and longitude to be convertible to numbers
+    latitude: z.preprocess(
+      (val) => (val === "" || val === undefined ? Number.NaN : Number(val)),
+      z.number().min(-90, HOTEL_MESSAGES.INVALID_LOCATION).max(90, HOTEL_MESSAGES.INVALID_LOCATION)
+    ),
+    longitude: z.preprocess(
+      (val) => (val === "" || val === undefined ? Number.NaN : Number(val)),
+      z.number().min(-100, HOTEL_MESSAGES.INVALID_LOCATION).max(180, HOTEL_MESSAGES.INVALID_LOCATION)
+    ),
+  })
+});

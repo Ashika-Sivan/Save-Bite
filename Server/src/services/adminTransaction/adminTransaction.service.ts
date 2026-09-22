@@ -10,7 +10,7 @@ export class AdminTransactionService implements IAdminTransactionService {
         private _orderRepository: IOrderRepository,
         private _hotelRepository: IHotelRepository,
         private _walletTransactionRepository: IWalletTransactionRepository
-    ) {}
+    ) { }
 
     async getOverview(): Promise<any> {
         const totalsAggregation = await this._orderRepository.aggregateOrders([
@@ -54,16 +54,8 @@ export class AdminTransactionService implements IAdminTransactionService {
         };
     }
 
-    async getVendorBreakdown(
-        page: number,
-        limit: number,
-        search: string,
-        businessTypeFilter: string,
-        sortAdminEarned?: "desc" | "asc"
-    ): Promise<any> {
-        // Find distinct business types. 
-        // We will assume the hotel repo has a method for distinct or we can fetch all and get unique.
-        // For standard base repo, let's just fetch all and map to unique business types.
+    //total money earn by the vendor or total
+    async getVendorBreakdown(page: number,limit: number,search: string,businessTypeFilter: string,sortAdminEarned?: "desc" | "asc"): Promise<any> {
         const allHotels = await this._hotelRepository.findAll();
         const rawBusinessTypes = allHotels.map(h => h.businessType);
         const businessTypes = Array.from(new Set(rawBusinessTypes.filter(Boolean)));
@@ -92,23 +84,20 @@ export class AdminTransactionService implements IAdminTransactionService {
             if (item.vendorId) earningsMap.set(`vendor_${item.vendorId.toString()}`, item);
         });
 
-        // Filter hotels manually as we don't have populate in find query standard in IHotelRepository
+
         let filteredHotels = allHotels;
         if (businessTypeFilter && businessTypeFilter !== "ALL") {
             filteredHotels = filteredHotels.filter((h: IHotel) => h.businessType?.toLowerCase() === businessTypeFilter.toLowerCase());
         }
         if (search) {
-            filteredHotels = filteredHotels.filter((h: IHotel) => 
-                h.hotelName?.toLowerCase().includes(search.toLowerCase()) || 
+            filteredHotels = filteredHotels.filter((h: IHotel) =>
+                h.hotelName?.toLowerCase().includes(search.toLowerCase()) ||
                 h.place?.toLowerCase().includes(search.toLowerCase()) ||
                 h.businessType?.toLowerCase().includes(search.toLowerCase())
             );
         }
 
-        // We can't easily populate vendorId businessInfo here without a specific repo method,
-        // but for now we'll just return what we have (or we could fetch vendors if needed, but let's keep it simple).
-        // The original controller populated vendorId. 
-        
+
         let items = filteredHotels.map((hotel: IHotel) => {
             const hotelIdStr = hotel._id.toString();
             // Assuming vendorId is just an object ID string in the model when not populated
@@ -127,7 +116,7 @@ export class AdminTransactionService implements IAdminTransactionService {
                 hotelId: hotel._id,
                 vendorId: hotel.vendorId,
                 hotelName: hotel.hotelName,
-                businessName: hotel.hotelName, // simplified since we don't populate vendor
+                businessName: hotel.hotelName,
                 place: hotel.place,
                 businessType: hotel.businessType,
                 totalOrders: earnings.totalOrders,
@@ -158,12 +147,7 @@ export class AdminTransactionService implements IAdminTransactionService {
         };
     }
 
-    async getRecentTransactions(
-        page: number,
-        limit: number,
-        search: string,
-        statusFilter?: string
-    ): Promise<any> {
+    async getRecentTransactions(page: number, limit: number,search: string,statusFilter?: string): Promise<any> {
         const query: Record<string, unknown> = {};
 
         if (statusFilter && statusFilter !== "ALL") {
@@ -176,16 +160,16 @@ export class AdminTransactionService implements IAdminTransactionService {
             const hotelIds = matchingHotels.map((h: IHotel) => h._id.toString());
 
             query.search = search;
-            query.hotelIds = hotelIds; // Custom filter passed down, but for standard we will use findAllOrders
+            query.hotelIds = hotelIds;
         }
 
 
         const result = await this._orderRepository.findAllOrders({ page, limit, status: statusFilter !== "ALL" ? statusFilter : undefined });
 
         let orders = result.orders;
-        
+
         if (search) {
-            orders = orders.filter((order: IOrder) => 
+            orders = orders.filter((order: IOrder) =>
                 order.pickupCode?.toLowerCase().includes(search.toLowerCase()) ||
                 (order.hotelId as unknown as { hotelName?: string })?.hotelName?.toLowerCase().includes(search.toLowerCase())
             );
@@ -218,14 +202,10 @@ export class AdminTransactionService implements IAdminTransactionService {
         };
     }
 
-    async getRefundReport(
-        page: number,
-        limit: number,
-        search: string
-    ): Promise<any> {
+    async getRefundReport(page: number,limit: number,search: string): Promise<any> {
         // Find orders with refunded statuses
         const refundStatuses = ["resolved", "cancelled", "auto_refunded"];
-        
+
         const totalsAggregation = await this._orderRepository.aggregateOrders([
             {
                 $match: {
@@ -254,19 +234,18 @@ export class AdminTransactionService implements IAdminTransactionService {
 
         const totals = totalsAggregation[0] || { totalRefundedAmount: 0, totalRefundedTransactions: 0 };
 
-        // For pagination and search, fetch all matching orders and map
+
         let allOrders = await this._orderRepository.findAll();
         let refundedOrders = allOrders.filter(o => refundStatuses.includes(o.orderStatus));
 
         if (search) {
-            refundedOrders = refundedOrders.filter((order: IOrder) => 
+            refundedOrders = refundedOrders.filter((order: IOrder) =>
                 order._id.toString().toLowerCase().includes(search.toLowerCase()) ||
                 (order.customerId as unknown as { name?: string })?.name?.toLowerCase().includes(search.toLowerCase()) ||
                 (order.hotelId as unknown as { hotelName?: string })?.hotelName?.toLowerCase().includes(search.toLowerCase())
             );
         }
 
-        // Sort by most recent first
         refundedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         const totalItems = refundedOrders.length;
