@@ -4,6 +4,7 @@ export const API_ROUTES = {
   AUTH: {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
+    HOTEL_LOGIN: "/auth/hotel/login",
     LOGOUT: "/auth/logout",
     SEND_OTP: "/auth/send-otp",
     VERIFY_OTP: "/auth/verify-otp",
@@ -24,6 +25,10 @@ export const API_ROUTES = {
     STATUS: "/vendor/status",
     WALLET: "/vendor/wallet",
     HOTELS: "/vendor/hotels",
+    GET_SUB_VENDOR: (hotelId: string) => `/vendor/hotels/${hotelId}/sub-vendor`,
+    CREATE_SUB_VENDOR_CREDENTIALS: (hotelId: string) => `/vendor/hotels/${hotelId}/credentials`,
+    UPDATE_SUB_VENDOR_PERMISSIONS: (hotelId: string) => `/vendor/hotels/${hotelId}/permissions`,
+    UPDATE_SUB_VENDOR_PASSWORD: (hotelId: string) => `/vendor/hotels/${hotelId}/password`,
     HOTEL_BY_ID: (hotelId: string) => `/vendor/hotels/${hotelId}`,
     GET_TODAY_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/daily-menu/today`,
     CREATE_DAILY_MENU: (hotelId: string) => `/vendor/hotels/${hotelId}/daily-menu`,

@@ -10,8 +10,9 @@ import { IUser } from "../../models/user/user.model"
 import { IPaginationOptions } from "../../types/pagination.types"
 
 export interface IUserRepository{//user repo aayittolla any repository must have this methods
-    findByEmail(email:string):Promise<IUser|null>;//give me an email i will search for a user.reason used promise is db took time a lot.returns:IUser means user found
-    create(userData:Partial<IUser>):Promise<IUser>//create a new user.return :created user document.promise means this operation takes times
+    findByEmail(email:string):Promise<IUser|null>;
+    findByUsername(username:string):Promise<IUser|null>;
+    create(userData:Partial<IUser>):Promise<IUser>
     updateAuthenticationStatus(email:string,status:boolean):Promise<IUser|null>
     findById(userId:string):Promise<IUser|null>
     updateById(userId:string,updateData:Partial<IUser>):Promise<IUser|null>
@@ -22,4 +23,5 @@ export interface IUserRepository{//user repo aayittolla any repository must have
     countUsers(): Promise<number>;
     countBlockedUsers(): Promise<number>;
     getRecentUsers(limit: number): Promise<IUser[]>;
+    updateStatusByVendorId(vendorId: string, isActive: boolean): Promise<void>;
 }

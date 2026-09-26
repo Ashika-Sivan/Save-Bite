@@ -15,7 +15,8 @@ import {
   IForgotPasswordRequestDTO,
   IResetPasswordRequestDTO,
   ILoginServiceResult,
-  IUpdatePasswordRequestDTO
+  IUpdatePasswordRequestDTO,
+  IHotelLoginRequestDTO
 } from "../../dtos/auth.dto";
 import { IPasswordHasher } from "../../interfaces/service/auth/IPasswordHasher";
 import { IPasswordResetTokenService } from "../../interfaces/service/auth/IPasswordResetTokenService";
@@ -157,7 +158,7 @@ export class AuthService implements IAuthService {
     if (!passwordMatch) {
       Logger.error(`[LOGIN FAIL] Password mismatch for email: "${email}"`);
       throw new AppError(
-        AUTH_MESSAGES.INVALID_CREDENTIALS,
+        AUTH_MESSAGES.INVALID_PASSWORD,
         StatusCode.BAD_REQUEST
       );
     }
@@ -179,6 +180,50 @@ export class AuthService implements IAuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async hotelLogin(data: IHotelLoginRequestDTO): Promise<ILoginServiceResult> {
+    const { username, password } = data;
+
+    const user = await this._userRepository.findByUsername(username);
+
+    if (!user) {
+      Logger.error(`[HOTEL LOGIN FAIL] No user found with username: "${username}"`);
+      throw new AppError(AUTH_MESSAGES.INVALID_CREDENTIALS, StatusCode.BAD_REQUEST);
+    }
+
+    if (user.role !== "sub_vendor") {
+      throw new AppError("Invalid account type for this login", StatusCode.FORBIDDEN);
+    }
+
+    if (!user.isActive) {
+      throw new AppError(AUTH_MESSAGES.ACCESS_DENIED, StatusCode.FORBIDDEN);
+    }
+
+    if (!user.password) {
+      throw new AppError(AUTH_MESSAGES.INVALID_CREDENTIALS, StatusCode.BAD_REQUEST);
+    }
+
+    const passwordMatch = await this._passwordHasher.compare(password, user.password);
+
+    if (!passwordMatch) {
+      Logger.error(`[HOTEL LOGIN FAIL] Password mismatch for username: "${username}"`);
+      throw new AppError(AUTH_MESSAGES.INVALID_CREDENTIALS, StatusCode.BAD_REQUEST);
+    }
+
+    const payload = {
+      userId: user._id.toString(),
+      username: user.username,
+      role: user.role,
+      vendorId: user.vendorId?.toString(),
+      hotelId: user.hotelId?.toString(),
+      permissions: user.permissions
+    };
+
+    const accessToken = this._tokenService.generateAccessToken(payload);
+    const refreshToken = this._tokenService.generateRefreshToken(payload);
+
+    return { user, accessToken, refreshToken };
   }
 
   async googleLogin(idToken: string): Promise<ILoginServiceResult> {
@@ -240,11 +285,21 @@ export class AuthService implements IAuthService {
     }
     
 
-    const accessToken = this._tokenService.generateAccessToken({
+    const tokenPayload: any = {
       userId: user._id.toString(),
-      email: user.email,
       role: user.role,
-    });
+    };
+
+    if (user.role === 'sub_vendor') {
+      tokenPayload.username = user.username;
+      tokenPayload.vendorId = user.vendorId?.toString();
+      tokenPayload.hotelId = user.hotelId?.toString();
+      tokenPayload.permissions = user.permissions;
+    } else {
+      tokenPayload.email = user.email;
+    }
+
+    const accessToken = this._tokenService.generateAccessToken(tokenPayload);
 
     return {
       accessToken,
@@ -271,7 +326,7 @@ export class AuthService implements IAuthService {
       user._id.toString()
     );
 
-    await this._emailService.sendResetPasswordEmail(user.email, resetToken);
+    await this._emailService.sendResetPasswordEmail(user.email || "", resetToken, user.role);
 
     return {
       message: AUTH_MESSAGES.RESET_LINK_SENT,

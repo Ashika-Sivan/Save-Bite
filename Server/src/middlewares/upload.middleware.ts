@@ -60,3 +60,11 @@ export const upload = multer({
 
   fileFilter, 
 });
+export const vendorDocumentUpload = upload.fields([
+  { name: "businessImage", maxCount: 1 },
+  { name: "gstCertificate", maxCount: 1 },
+  { name: "fssaiCertificate", maxCount: 1 },
+  { name: "panCard", maxCount: 1 },
+  { name: "businessRegistrationCertificate", maxCount: 1 },
+]);
+
