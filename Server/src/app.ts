@@ -86,6 +86,12 @@ export default class App {
     // Prometheus metrics route
     this.app.get(ROUTES.BASE.METRICS, metricsEndpoint)
 
+    // Health check test route
+    this.app.get("/api/health", (req, res) => {
+      res.status(200).json({ status: "success", message: "SaveBite Backend is LIVE!" });
+    });
+
+
   }
 
   private errorHandler(): void {
