@@ -9,7 +9,8 @@ import {
   IForgotPasswordRequestDTO,
   IResetPasswordRequestDTO,
   ILoginServiceResult,
-  IUpdatePasswordRequestDTO
+  IUpdatePasswordRequestDTO,
+  IHotelLoginRequestDTO
 } from "../../../dtos/auth.dto"
 
 export interface IAuthService {
@@ -21,6 +22,8 @@ export interface IAuthService {
 
   login(data: ILoginRequestDTO): Promise<ILoginServiceResult>;
   
+  hotelLogin(data: IHotelLoginRequestDTO): Promise<ILoginServiceResult>;
+
   googleLogin(idToken: string): Promise<ILoginServiceResult>;
   
 

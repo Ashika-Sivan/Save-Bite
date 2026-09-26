@@ -4,6 +4,8 @@ import { getVendorHotels } from "../../services/hotel.service";
 import type { VendorDetailsType } from "../../types/vendor.types";
 import type { Hotel } from "../../types/hotel.types";
 import { Building2, MapPin, Receipt, CreditCard, Landmark, CheckCircle, Clock, XCircle, Info, FileText } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
 
 const fallbackRestaurantImage = "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800";
 
@@ -17,6 +19,8 @@ const getImageUrl = (imageKey?: string): string => {
 };
 
 export default function VendorProfile() {
+    const user = useSelector((state: RootState) => state.auth.user);
+    const isSubVendor = user?.role === "sub_vendor";
     const [mainProfile, setMainProfile] = useState<VendorDetailsType | null>(null);
     const [hotels, setHotels] = useState<Hotel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +116,7 @@ export default function VendorProfile() {
 
             <div className="flex-1 p-6 md:p-8">
                 <div className="mx-auto max-w-5xl space-y-8">
-                    
+
                     {/* Main Profile Section */}
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 mb-4 px-2">Primary Business (Registered Entity)</h2>
@@ -148,7 +152,7 @@ export default function VendorProfile() {
 
                             {/* Card Body */}
                             <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:p-8">
-                                
+
                                 {/* Business Details */}
                                 <div className="space-y-6">
                                     <div>
@@ -164,62 +168,66 @@ export default function VendorProfile() {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <h3 className="flex items-center gap-2 font-semibold text-gray-900 mb-4 border-b pb-2 mt-8">
-                                            <Landmark size={18} className="text-green-700" />
-                                            Banking Information
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Account Number</p>
-                                                <p className="text-gray-800 font-medium">{mainProfile.verification?.bankAccountNumber || "N/A"}</p>
-                                            </div>
-                                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">IFSC Code</p>
-                                                <p className="text-gray-800 font-medium">{mainProfile.verification?.ifscCode || "N/A"}</p>
+                                    {!isSubVendor && (
+                                        <div>
+                                            <h3 className="flex items-center gap-2 font-semibold text-gray-900 mb-4 border-b pb-2 mt-8">
+                                                <Landmark size={18} className="text-green-700" />
+                                                Banking Information
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Account Number</p>
+                                                    <p className="text-gray-800 font-medium">{mainProfile.verification?.bankAccountNumber || "N/A"}</p>
+                                                </div>
+                                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">IFSC Code</p>
+                                                    <p className="text-gray-800 font-medium">{mainProfile.verification?.ifscCode || "N/A"}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Verification Details */}
-                                <div>
-                                    <h3 className="flex items-center gap-2 font-semibold text-gray-900 mb-4 border-b pb-2">
-                                        <FileText size={18} className="text-green-700" />
-                                        Legal & Tax Details
-                                    </h3>
-                                    <div className="space-y-4 text-sm">
-                                        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                            <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
-                                                <Receipt size={20} />
+                                {!isSubVendor && (
+                                    <div>
+                                        <h3 className="flex items-center gap-2 font-semibold text-gray-900 mb-4 border-b pb-2">
+                                            <FileText size={18} className="text-green-700" />
+                                            Legal & Tax Details
+                                        </h3>
+                                        <div className="space-y-4 text-sm">
+                                            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                                                    <Receipt size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">GST Number</p>
+                                                    <p className="text-gray-900 font-bold">{mainProfile.verification?.gstNumber || "N/A"}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">GST Number</p>
-                                                <p className="text-gray-900 font-bold">{mainProfile.verification?.gstNumber || "N/A"}</p>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                            <div className="p-2 bg-amber-100 text-amber-700 rounded-lg">
-                                                <CreditCard size={20} />
+                                            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                <div className="p-2 bg-amber-100 text-amber-700 rounded-lg">
+                                                    <CreditCard size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">PAN Number</p>
+                                                    <p className="text-gray-900 font-bold">{mainProfile.verification?.panNumber || "N/A"}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">PAN Number</p>
-                                                <p className="text-gray-900 font-bold">{mainProfile.verification?.panNumber || "N/A"}</p>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                            <div className="p-2 bg-purple-100 text-purple-700 rounded-lg">
-                                                <FileText size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">FSSAI Number</p>
-                                                <p className="text-gray-900 font-bold">{mainProfile.verification?.fssaiNumber || "N/A"}</p>
+                                            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                <div className="p-2 bg-purple-100 text-purple-700 rounded-lg">
+                                                    <FileText size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">FSSAI Number</p>
+                                                    <p className="text-gray-900 font-bold">{mainProfile.verification?.fssaiNumber || "N/A"}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>

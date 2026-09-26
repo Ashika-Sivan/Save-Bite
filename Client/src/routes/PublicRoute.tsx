@@ -12,7 +12,7 @@ export default function PublicRoute({children}:PublicRouteProps){
         if (user.role === 'admin') {
             return <Navigate to="/admin/dashboard" replace/>
         }
-        if (user.role === 'vendor') {
+        if (user.role === 'vendor' || user.role === 'sub_vendor') {
             return <Navigate to="/vendor/dashboard" replace/>
         }
         return <Navigate to="/home" replace/>

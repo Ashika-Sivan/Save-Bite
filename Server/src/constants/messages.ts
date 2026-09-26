@@ -8,6 +8,7 @@ export const AUTH_MESSAGES = {
   EMAIL_EXISTS: "Email already exists",
   USER_NOT_FOUND: "User not found",
   INVALID_CREDENTIALS: "Invalid email or password",
+  INVALID_PASSWORD:"Invalid password",
   VERIFY_EMAIL_FIRST: "Please verify your email first",
   RESET_LINK_SENT: "Password reset link sent to your email",
   PASSWORD_RESET_SUCCESS: "Password reset successfully",

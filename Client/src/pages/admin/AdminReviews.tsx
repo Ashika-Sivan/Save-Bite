@@ -120,7 +120,7 @@ const AdminReviews = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
+    <div className="min-h-full bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
       <div className="mx-auto max-w-7xl space-y-6">
         
         {/* Header */}
@@ -137,12 +137,12 @@ const AdminReviews = () => {
 
         {/* Overview Metric Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Platform Reviews</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{stats.totalPlatformReviews}</p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Average Platform Rating</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-bold text-amber-600">{stats.platformAvgRating || "0.0"}</span>
@@ -150,12 +150,12 @@ const AdminReviews = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">5-Star Reviews</p>
             <p className="mt-2 text-3xl font-bold text-green-700">{stats.breakdown[5] || 0}</p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Filtered Items Count</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{total}</p>
           </div>

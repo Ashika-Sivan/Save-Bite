@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @theme {
   --font-display: "Playfair Display", serif;
@@ -19,5 +19,14 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight text-brand-dark;
+  }
+}
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

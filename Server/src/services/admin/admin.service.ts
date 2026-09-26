@@ -200,6 +200,12 @@ export class AdminService implements IAdminService {
             );
         }
 
+        // Also block/unblock all sub-vendors
+        await this._userRepository.updateStatusByVendorId(
+            vendorId,
+            newStatus === VendorStatus.APPROVED
+        );
+
         const updatedVendorWithPopulatedOwner = await this._vendorRepository.findByIdWithOwner(vendorId);
         if (!updatedVendorWithPopulatedOwner) {
             throw new AppError(
@@ -275,7 +281,8 @@ export class AdminService implements IAdminService {
         const { orders, total } = await this._orderRespository.findAllOrders({
             page: options?.page,
             limit: options?.limit,
-            status: options?.status
+            status: options?.status,
+            search: options?.search
         });
 
         const totalPages = Math.ceil(total / (options?.limit || 10));
@@ -337,12 +344,25 @@ export class AdminService implements IAdminService {
             { $unwind: "$vendor" },
             { 
                 $project: { 
-                    name: "$vendor.businessInfo.businessName", 
+                    name: { $ifNull: ["$vendor.businessInfo.businessName", "$vendor.businessName"] },
                     revenue: 1,
                     _id: 0
                 } 
             }
         ]);
+
+        if (topVendorsData.length < 5) {
+            const existingNames = topVendorsData.map((v: any) => v.name);
+            const { vendors } = await this._vendorRepository.findAllWithOwner({ limit: 10 });
+            for (const v of vendors) {
+                // @ts-ignore
+                const vName = v.businessInfo?.businessName || v.businessName || "Unknown";
+                if (!existingNames.includes(vName) && topVendorsData.length < 5) {
+                    topVendorsData.push({ name: vName, revenue: 0 });
+                    existingNames.push(vName);
+                }
+            }
+        }
 
         return {
             orderStatusDistribution: orderStatusData,

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import type { DailyMenuItem,MenuUnitType,UpdateDailyMenuItemData } from "../../services/menu.service";
 
 interface EditMenuItemFormProps {
@@ -45,6 +46,10 @@ const EditMenuItemForm = ({
     }
 
     const handleSubmit = async () => {
+        if (!itemName.trim()) {
+            toast.error("Item name is required");
+            return;
+        }
 
         await onSubmit({
             itemName: itemName.trim(),

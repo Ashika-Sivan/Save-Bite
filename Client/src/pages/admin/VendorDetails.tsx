@@ -56,7 +56,7 @@ const Section = ({
   title: string;
   children: ReactNode;
 }) => (
-  <section className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+  <section className="flex flex-col justify-between h-full rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
     <div className="mb-5 flex items-center gap-2">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
         {icon}
@@ -333,7 +333,7 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-emerald-50/40">
+      <div className="flex min-h-full items-center justify-center bg-emerald-50/40">
         <p className="text-sm text-gray-500">Loading vendor…</p>
       </div>
     );
@@ -341,7 +341,7 @@ useEffect(() => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-emerald-50/40 px-4">
+      <div className="flex min-h-full items-center justify-center bg-emerald-50/40 px-4">
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-6 py-4 text-sm text-rose-700">
           {error}
         </div>
@@ -351,14 +351,14 @@ useEffect(() => {
 
   if (!vendor) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-emerald-50/40">
+      <div className="flex min-h-full items-center justify-center bg-emerald-50/40">
         <p className="text-sm text-gray-500">Vendor not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-emerald-50/40 pb-16">
+    <div className="min-h-full bg-emerald-50/40 pb-16">
       {/* Header */}
       <div className="border-b border-emerald-100 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-6">

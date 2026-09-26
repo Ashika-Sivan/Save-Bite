@@ -6,7 +6,7 @@ const CustomerRoute = () => {
     const { user } = useSelector((state: RootState) => state.auth);
 
     if (user) {
-        if (user.role === "vendor") {
+        if (user.role === "vendor" || user.role === "sub_vendor") {
             return <Navigate to="/vendor/dashboard" replace />;
         }
         if (user.role === "admin") {

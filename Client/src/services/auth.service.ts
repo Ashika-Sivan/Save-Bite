@@ -88,3 +88,9 @@ export const updatePassword = async (data: {
     const response = await api.post(API_ROUTES.AUTH.UPDATE_PASSWORD, data);
     return response.data;
 };
+
+export const hotelLogin = async (loginData: { username: string; password: string }) => {
+    const response = await api.post(API_ROUTES.AUTH.HOTEL_LOGIN, loginData);
+    return response.data;
+};
+

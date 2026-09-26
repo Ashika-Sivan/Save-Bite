@@ -5,7 +5,7 @@ import StatusBadge from "../../components/common/StatusBadge";
 import { getAdminOrders } from "../../services/admin.service";
 import { downloadOrdersPDF } from "../../utils/pdfExporter";
 import toast from "react-hot-toast";
-import { Download } from "lucide-react";
+import { Download, Search } from "lucide-react";
 
 type StatusTab = "all" | "pending_payment" | "paid" | "collected" | "cancelled";
 
@@ -22,6 +22,8 @@ const LIMIT = 10;
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [tab, setTab] = useState<StatusTab>("all");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -36,6 +38,7 @@ const AdminOrders = () => {
         page,
         limit: LIMIT,
         status: tab === "all" ? undefined : tab,
+        search: debouncedSearch.trim() || undefined,
       });
       setOrders(result.items || []);
       setTotal(result.total || 0);
@@ -46,14 +49,23 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, tab]);
+  }, [page, tab, debouncedSearch]);
+
+  // Search Debouncing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     const loadData = async () => {
       await fetchOrders();
     };
     loadData();
-  }, [fetchOrders]);
+  }, [fetchOrders, debouncedSearch]);
 
   const handleTabChange = (key: StatusTab) => {
     setTab(key);
@@ -179,7 +191,8 @@ const AdminOrders = () => {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-center">
+        {/* Filters and Search Bar */}
+        <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 lg:flex-row lg:items-center">
           <div className="flex flex-wrap gap-2">
             {TABS.map((t) => (
               <button
@@ -195,6 +208,17 @@ const AdminOrders = () => {
                 {t.label}
               </button>
             ))}
+          </div>
+
+          <div className="relative w-full lg:w-72">
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Order ID or Pickup Code..."
+              className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+            />
           </div>
         </div>
 

@@ -32,8 +32,18 @@ export interface WalletSummaryData {
     transactions: WalletTransactionData[];
 }
 
-export const getVendorWalletSummary = async (): Promise<ApiResponse<WalletSummaryData>> => {
-    const response = await api.get<ApiResponse<WalletSummaryData>>(API_ROUTES.VENDOR.WALLET);
+export const getVendorWalletSummary = async (filters?: { startDate?: string; endDate?: string; sortDirection?: "asc" | "desc" }): Promise<ApiResponse<WalletSummaryData>> => {
+    let url = API_ROUTES.VENDOR.WALLET;
+    if (filters) {
+        const params = new URLSearchParams();
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+        if (filters.sortDirection) params.append("sortDirection", filters.sortDirection);
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+    }
+    const response = await api.get<ApiResponse<WalletSummaryData>>(url);
     return response.data;
 };
 

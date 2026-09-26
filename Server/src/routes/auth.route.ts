@@ -8,6 +8,7 @@ router.post( ROUTES.AUTH.REGISTER,authController.register.bind(authController));
 router.post(ROUTES.AUTH.RESEND_OTP,authController.resendOtp.bind(authController));
 router.post(ROUTES.AUTH.VERIFY_OTP,authController.verifyOtp.bind(authController));
 router.post(ROUTES.AUTH.LOGIN,authController.login.bind(authController));
+router.post(ROUTES.AUTH.HOTEL_LOGIN, authController.hotelLogin.bind(authController));
 router.post(ROUTES.AUTH.GOOGLE,authController.googleLogin.bind(authController));
 router.post(ROUTES.AUTH.LOGOUT,authController.logout.bind(authController));
 router.get(ROUTES.AUTH.GET_ME,authMiddleware.authenticate,authController.getMe.bind(authController));

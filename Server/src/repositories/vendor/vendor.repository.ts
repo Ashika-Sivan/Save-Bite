@@ -21,11 +21,21 @@ export class VendorRepository extends BaseRepository<IVendor> implements IVendor
     }
 
     async findByOwnerId(ownerId: string): Promise<IVendor | null> {
-        return await Vendor.findOne({ ownerId })
+        return await Vendor.findOne({
+            $or: [
+                { ownerId: ownerId },
+                { _id: Types.ObjectId.isValid(ownerId) ? ownerId : null }
+            ]
+        });
     }
 
     async findAllByOwnerId(ownerId: string): Promise<IVendor[]> {
-        return await Vendor.find({ ownerId })
+        return await Vendor.find({
+            $or: [
+                { ownerId: ownerId },
+                { _id: Types.ObjectId.isValid(ownerId) ? ownerId : null }
+            ]
+        });
     }
 
     async findAllWithOwner(options?: IPaginationOptions): Promise<{ vendors: IVendorWithOwner[]; total: number }> {

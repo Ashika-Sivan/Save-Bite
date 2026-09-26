@@ -11,11 +11,17 @@ export class WalletController {
     constructor(private readonly _walletService: IWalletService) { }
 
     getVendorWalletSummary = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
-        const summary = await this._walletService.getVendorWalletSummary(ownerId);
+        const { startDate, endDate, sortDirection } = req.query;
+        const filters = {
+             startDate: startDate ? new Date(startDate as string) : undefined,
+             endDate: endDate ? new Date(endDate as string) : undefined,
+             sortDirection: (sortDirection as 'asc' | 'desc') || undefined
+        };
+        const summary = await this._walletService.getVendorWalletSummary(ownerId, filters);
         ResponseHelper.success(res, StatusCode.OK, "Vendor wallet summary fetched successfully", summary);
     });
 }

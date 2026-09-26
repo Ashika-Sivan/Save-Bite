@@ -74,10 +74,20 @@ export class WalletRepository extends BaseRepository<IVendorWallet> implements I
         return await transaction.save(options);
     }
 
-    async getTransactionsByVendorId(vendorId: Types.ObjectId): Promise<IWalletTransaction[]> {
-        return await WalletTransaction.find({ vendorId })
+    async getTransactionsByVendorId(vendorId: Types.ObjectId, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IWalletTransaction[]> {
+        const query: any = { vendorId };
+
+        if (filters?.startDate || filters?.endDate) {
+            query.createdAt = {};
+            if (filters.startDate) query.createdAt.$gte = filters.startDate;
+            if (filters.endDate) query.createdAt.$lte = filters.endDate;
+        }
+
+        const sortOrder = filters?.sortDirection === 'asc' ? 1 : -1;
+
+        return await WalletTransaction.find(query)
             .populate("orderId", "totalAmount items createdAt")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: sortOrder });
     }
 
     async transactionExistsForOrder(orderId: Types.ObjectId, session?: ClientSession): Promise<boolean> {

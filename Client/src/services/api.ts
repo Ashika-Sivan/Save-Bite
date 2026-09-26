@@ -117,10 +117,18 @@ api.interceptors.response.use(
         }
 
         if (status === 403) {
-            toast.error(
-                message ||
-                    "You do not have permission to perform this action"
-            );
+            if (error.response?.data?.isBlocked) {
+                store.dispatch(clearCredentials());
+                toast.error(message || "Your account has been blocked.");
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 1000);
+            } else {
+                toast.error(
+                    message ||
+                        "You do not have permission to perform this action"
+                );
+            }
         } else if (status && status >= 500) {
             toast.error(
                 message ||

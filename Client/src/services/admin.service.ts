@@ -114,7 +114,7 @@ export const getAdminRevenueChart = async () => {
   return response.data?.data ?? response.data;
 };
 
-export const getAdminOrders = async (params?: { page?: number; limit?: number; status?: string }) => {
+export const getAdminOrders = async (params?: { page?: number; limit?: number; status?: string; search?: string }) => {
   const response = await api.get(API_ROUTES.ADMIN.ORDERS, { params });
   return response.data?.data ?? response.data;
 };

@@ -9,7 +9,7 @@ import { downloadTransactionsPDF } from "../../utils/pdfExporter";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
-import { Search, RefreshCw, DollarSign, Store, ShieldCheck, CreditCard, Download, ArrowUpDown, Filter } from "lucide-react";
+import { Search, DollarSign, Store, ShieldCheck, CreditCard, Download, ArrowUpDown, Filter } from "lucide-react";
 
 const AdminTransactions = () => {
   // Overview State
@@ -19,7 +19,7 @@ const AdminTransactions = () => {
     totalVendorEarnings: 0,
     totalTransactions: 0,
   });
-  const [isOverviewLoading, setIsOverviewLoading] = useState(true);
+
 
   // Vendor Breakdown State
   const [vendors, setVendors] = useState<VendorFinancialItem[]>([]);
@@ -43,16 +43,12 @@ const AdminTransactions = () => {
     return () => clearTimeout(handler);
   }, [vendorSearch]);
 
-  // Fetch Overview Data
   const fetchOverview = async () => {
     try {
-      setIsOverviewLoading(true);
       const data = await getAdminTransactionOverview();
       setOverview(data);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to load financial overview");
-    } finally {
-      setIsOverviewLoading(false);
     }
   };
 
@@ -88,11 +84,7 @@ const AdminTransactions = () => {
     fetchVendorBreakdown();
   }, [vendorPage, debouncedVendorSearch, businessTypeFilter, sortAdminEarned]);
 
-  const handleRefreshAll = () => {
-    fetchOverview();
-    fetchVendorBreakdown();
-    toast.success("Transaction data refreshed");
-  };
+
 
   const handleDownloadPDF = () => {
     if (vendors.length === 0 && overview.totalGrossSales === 0) {
@@ -110,7 +102,7 @@ const AdminTransactions = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
+    <div className="min-h-full bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
       <div className="mx-auto max-w-7xl space-y-6">
 
         {/* Header */}
@@ -133,15 +125,6 @@ const AdminTransactions = () => {
               <Download size={16} />
               Download PDF Report
             </button>
-
-            <button
-              type="button"
-              onClick={handleRefreshAll}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
-            >
-              <RefreshCw size={16} className={isOverviewLoading || isVendorsLoading ? "animate-spin text-green-700" : ""} />
-              Refresh
-            </button>
           </div>
         </div>
 
@@ -149,7 +132,7 @@ const AdminTransactions = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           
           {/* Card 1: Total Gross Sales */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between text-gray-500">
               <span className="text-xs font-semibold uppercase tracking-wider">Total Gross Sales</span>
               <DollarSign size={18} className="text-gray-400" />
@@ -161,7 +144,7 @@ const AdminTransactions = () => {
           </div>
 
           {/* Card 2: Admin Commission Earned */}
-          <div className="rounded-2xl border border-green-200 bg-green-50/60 p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-green-200 bg-green-50/60 p-5 shadow-sm">
             <div className="flex items-center justify-between text-green-800">
               <span className="text-xs font-semibold uppercase tracking-wider">Admin Earned (Commission)</span>
               <ShieldCheck size={18} className="text-green-600" />
@@ -178,7 +161,7 @@ const AdminTransactions = () => {
           </div>
 
           {/* Card 3: Vendor Net Earnings */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between text-gray-500">
               <span className="text-xs font-semibold uppercase tracking-wider">Total Vendor Earned</span>
               <Store size={18} className="text-blue-500" />
@@ -190,7 +173,7 @@ const AdminTransactions = () => {
           </div>
 
           {/* Card 4: Total Completed Transactions */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between text-gray-500">
               <span className="text-xs font-semibold uppercase tracking-wider">Successful Transactions</span>
               <CreditCard size={18} className="text-indigo-500" />

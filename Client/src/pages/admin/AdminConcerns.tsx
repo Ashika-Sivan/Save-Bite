@@ -21,6 +21,7 @@ const AdminConcerns = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("ALL");
   const [selectedConcern, setSelectedConcern] = useState<ConcernItem | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -121,7 +122,7 @@ const AdminConcerns = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10">
+    <div className="min-h-full bg-gray-50 p-6 md:p-10">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -174,7 +175,7 @@ const AdminConcerns = () => {
                 return (
                   <div
                     key={c._id}
-                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1"
+                    className="group flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1"
                   >
                     <div className="p-6">
                       {/* Header */}
@@ -214,14 +215,13 @@ const AdminConcerns = () => {
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                        <a
-                          href={photoUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => setViewingImage(photoUrl)}
                           className="absolute bottom-3 right-3 translate-y-4 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-900 opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white group-hover:translate-y-0 group-hover:opacity-100"
                         >
                           View Full Image ↗
-                        </a>
+                        </button>
                       </div>
 
                       
@@ -348,6 +348,26 @@ const AdminConcerns = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Viewer Modal */}
+        {viewingImage && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+            <div className="relative w-full max-w-4xl max-h-screen flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setViewingImage(null)}
+                className="absolute -top-12 right-0 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition backdrop-blur-md"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+              <img
+                src={viewingImage}
+                alt="Full size evidence"
+                className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
+              />
             </div>
           </div>
         )}

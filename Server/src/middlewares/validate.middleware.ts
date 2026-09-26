@@ -15,7 +15,7 @@ export const validateRequest = (schema: ZodTypeAny) => {
         } catch (error: any) {
             if (error instanceof ZodError) {
                 const zodError = error as any;
-                const errorMessage = zodError.errors.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ');
+                const errorMessage = zodError.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ');
                 next(new AppError(errorMessage, StatusCode.BAD_REQUEST));
             } else {
                 next(error);

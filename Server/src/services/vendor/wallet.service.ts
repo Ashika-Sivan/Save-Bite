@@ -13,7 +13,7 @@ export class WalletService implements IWalletService {
         private readonly _vendorRepository: IVendorRepository
     ) {}
 
-    async getVendorWalletSummary(ownerId: string): Promise<IWalletSummaryResponseDTO> {
+    async getVendorWalletSummary(ownerId: string, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IWalletSummaryResponseDTO> {
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
@@ -24,7 +24,7 @@ export class WalletService implements IWalletService {
         }
 
         const wallet = await this._walletRepository.getOrCreateWallet(vendor._id);
-        const transactions = await this._walletRepository.getTransactionsByVendorId(vendor._id);
+        const transactions = await this._walletRepository.getTransactionsByVendorId(vendor._id, filters);
 
         return toWalletSummaryResponseDTO(wallet, transactions);
     }

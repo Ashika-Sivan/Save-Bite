@@ -13,7 +13,7 @@ export default function ProtectedRoute({children}:ProtectedRouteProps) {
         return <Navigate to="/login" replace/>
     }
 
-    if (user.role === 'vendor') {
+    if (user.role === 'vendor' || user.role === 'sub_vendor') {
         return <Navigate to="/vendor/dashboard" replace/>
     }
 

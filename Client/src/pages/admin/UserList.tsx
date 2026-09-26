@@ -74,7 +74,7 @@ const UserList = () => {
 
   const handleBlockToggle = (user: UserDTO) => {
     const action = user.isActive ? "block" : "unblock";
-    
+
     toast.custom(
       (currentToast) => (
         <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
@@ -177,7 +177,7 @@ const UserList = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10">
+    <div className="min-h-full bg-[#f6faf5] p-6 md:p-10">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -188,7 +188,7 @@ const UserList = () => {
             View and manage registered users on SaveBite.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full sm:w-auto flex-1 sm:flex-none items-center gap-3">
           <div className="relative">
             <Search
               size={16}
@@ -199,17 +199,14 @@ const UserList = () => {
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search users..."
-              className="w-72 rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+              className="w-full sm:w-72 rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
             />
           </div>
-          <button className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800">
-            Export CSV
-          </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mt-6 flex w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1">
+      <div className="mt-6 flex w-full sm:w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -227,7 +224,7 @@ const UserList = () => {
       {/* Table */}
       <div className="mt-6">
         {loading ? (
-          <div className="rounded-2xl border border-gray-200 bg-white py-20 text-center text-gray-500">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white py-20 text-center text-gray-500">
             Loading users...
           </div>
         ) : error ? (

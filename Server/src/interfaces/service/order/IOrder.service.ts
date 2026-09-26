@@ -8,7 +8,7 @@ export interface IOrderService{
     handlePaymentSucceeded(paymentIntentId: string): Promise<void>;
     handlePaymentFailed(paymentIntentId: string): Promise<void>;
     redeemPickupCode(ownerId: string, dto: IRedeemPickupCodeDTO): Promise<IRedeemPickupCodeResponseDTO>;
-    getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]>;
+    getVendorOrders(ownerId: string, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IOrderResponseDTO[]>;
     processAutoRefunds(): Promise<number>;
     cancelOrder(customerId: string, orderId: string): Promise<IOrderResponseDTO>;
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
 import toast from "react-hot-toast";
 import {
   Clock,
@@ -9,7 +11,6 @@ import {
   RefreshCw,
   AlertTriangle,
   Sparkles,
-  ChevronDown,
   ShoppingBag,
   IndianRupee,
   TrendingUp,
@@ -25,7 +26,6 @@ import {
 } from "recharts";
 import { getVendorOrders, redeemPickupCode, type Order } from "../../services/order.service";
 import { getVendorHotels } from "../../services/hotel.service";
-import type { Hotel } from "../../types/hotel.types";
 import DataTable from "../../components/common/DataTable";
 import Pagination from "../../components/common/Pagination";
 
@@ -40,13 +40,21 @@ export default function VendorOrders() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const today = new Date().toISOString().split('T')[0];
   
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const user = useSelector((state: RootState) => state.auth.user);
+  
+  const [selectedHotelId] = useState<string | null>(() => {
+    if (user?.role === "sub_vendor") return user.hotelId || null;
+    return localStorage.getItem("vendorSelectedHotelId") || "ALL";
+  });
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const limit = 5;
@@ -59,8 +67,12 @@ export default function VendorOrders() {
 
   const fetchOrders = async (showRefreshToast = false) => {
     try {
-      if (showRefreshToast) setRefreshing(true);
-      const response = await getVendorOrders();
+      const filters = {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortDirection
+      };
+      const response = await getVendorOrders(filters);
       if (response.success && Array.isArray(response.data)) {
         setOrders(response.data);
         if (showRefreshToast) toast.success("Orders refreshed");
@@ -71,14 +83,17 @@ export default function VendorOrders() {
       toast.error(err?.response?.data?.message || "Failed to load orders");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     let isMounted = true;
     Promise.all([
-      getVendorOrders().catch(() => null),
+      getVendorOrders({
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortDirection
+      }).catch(() => null),
       getVendorHotels().catch(() => null)
     ])
       .then(([ordersRes, hotelsRes]) => {
@@ -87,8 +102,7 @@ export default function VendorOrders() {
             setOrders(ordersRes.data);
           }
           if (hotelsRes?.success && Array.isArray(hotelsRes?.data) && hotelsRes.data.length > 0) {
-            setHotels(hotelsRes.data);
-            setSelectedHotelId(hotelsRes.data[0]._id);
+            // we no longer override selectedHotelId here. We rely on localStorage.
           }
         }
       })
@@ -107,7 +121,8 @@ export default function VendorOrders() {
     return () => {
       isMounted = false;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Initial load only, user must click "Apply Filters" to refetch or we can add deps. Let's keep it empty to match original, and apply will call fetchOrders.
 
   const handleOpenRedeemModal = (order: Order) => {
     setSelectedOrder(order);
@@ -151,7 +166,7 @@ export default function VendorOrders() {
   };
 
   const filteredOrders = orders.filter((order) => {
-    if (selectedHotelId && order.hotelId !== selectedHotelId) return false;
+    if (selectedHotelId && selectedHotelId !== "ALL" && order.hotelId !== selectedHotelId) return false;
     if (activeFilter === "PLACED" && order.orderStatus !== "placed") return false;
     if (activeFilter === "COLLECTED" && order.orderStatus !== "collected") return false;
     if (
@@ -171,7 +186,7 @@ export default function VendorOrders() {
     return true;
   });
 
-  const hotelOrders = selectedHotelId ? orders.filter((o) => o.hotelId === selectedHotelId) : orders;
+  const hotelOrders = selectedHotelId && selectedHotelId !== "ALL" ? orders.filter((o) => o.hotelId === selectedHotelId) : orders;
   const pendingCount = hotelOrders.filter((o) => o.orderStatus === "placed").length;
   const collectedCount = hotelOrders.filter((o) => o.orderStatus === "collected").length;
 
@@ -237,75 +252,30 @@ export default function VendorOrders() {
           </div>
 
           {/* Direct Verify Pickup Code Trigger */}
-          <button
-            onClick={() => {
-              setSelectedOrder(null);
-              setPickupCodeInput("");
-              setVerificationError(null);
-              // Open modal directly for manual code input
-              setSelectedOrder({ id: "manual" } as unknown as Order);
-            }}
-            className="flex shrink-0 items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-amber-600 transition"
-          >
-            <KeyRound size={18} />
-            Verify Pickup Code
-          </button>
+          {(!user || user.role !== "sub_vendor" || user.permissions?.includes("ACCEPT_ORDERS")) && (
+            <button
+              onClick={() => {
+                setSelectedOrder(null);
+                setPickupCodeInput("");
+                setVerificationError(null);
+                // Open modal directly for manual code input
+                setSelectedOrder({ id: "manual" } as unknown as Order);
+              }}
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-amber-600 transition"
+            >
+              <KeyRound size={18} />
+              Verify Pickup Code
+            </button>
+          )}
         </div>
 
         {/* Action Controls from old header */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => fetchOrders(true)}
-            disabled={refreshing}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-            Refresh
-          </button>
-          <div className="relative text-right z-10">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 hover:bg-gray-50 transition border border-gray-200 shadow-sm"
-            >
-              <div className="text-left">
-                <p className="font-semibold text-gray-800">
-                  {hotels.find((h) => h._id === selectedHotelId)?.hotelName || "Loading..."}
-                </p>
-                <span className="text-sm font-medium text-green-700">Approved</span>
-              </div>
-              <ChevronDown size={20} className="text-gray-500" />
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg">
-                <div className="p-2">
-                  {hotels.map((hotel) => (
-                    <button
-                      key={hotel._id}
-                      onClick={() => {
-                        setSelectedHotelId(hotel._id);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full rounded-lg px-4 py-2 text-left text-sm transition ${
-                        selectedHotelId === hotel._id
-                          ? "bg-green-50 text-green-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {hotel.hotelName}
-                    </button>
-                  ))}
-                  {hotels.length === 0 && (
-                    <p className="px-4 py-2 text-sm text-gray-500">No hotels found</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-            {/* Advanced Analytics & Quick Stats */}
-            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Advanced Analytics & Quick Stats */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Stats Column */}
               <div className="flex flex-col gap-4">
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex items-center justify-between">
@@ -433,6 +403,28 @@ export default function VendorOrders() {
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-sm text-gray-800 focus:border-green-600 focus:bg-white focus:outline-none transition"
                 />
               </div>
+            </div>
+
+            {/* Backend Date Filters */}
+            <div className="mt-4 flex flex-wrap items-center gap-4 border-b border-gray-200 pb-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 font-medium">Start Date:</label>
+                <input type="date" max={today} value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 font-medium">End Date:</label>
+                <input type="date" max={today} value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 font-medium">Sort By Date:</label>
+                <select value={sortDirection} onChange={e => setSortDirection(e.target.value as "asc" | "desc")} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm bg-white">
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+              <button onClick={() => fetchOrders()} className="px-4 py-1.5 bg-green-700 text-white rounded-lg text-sm font-semibold hover:bg-green-800 transition">
+                Apply Filters
+              </button>
             </div>
 
             {/* Orders List Section */}

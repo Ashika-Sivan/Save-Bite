@@ -11,7 +11,7 @@ export class VendorController {
     constructor(private _vendorService: IVendorService) { }
 
     registerVendor = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(
                 AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
@@ -33,7 +33,7 @@ export class VendorController {
         ResponseHelper.success(res, StatusCode.CREATED, VENDOR_MESSAGES.APPLICATION_SUBMITTED, vendor);
     });
     getVendorStatus = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(
                 AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
@@ -44,7 +44,7 @@ export class VendorController {
         ResponseHelper.success(res, StatusCode.OK, VENDOR_MESSAGES.STATUS_FETCHED, status);
     });
     getVendorProfiles = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(
                 AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
@@ -55,7 +55,7 @@ export class VendorController {
         ResponseHelper.success(res, StatusCode.OK, "Vendor profiles fetched successfully", profiles);
     });
     reapplyVendor = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(
                 AUTH_MESSAGES.USER_NOT_AUTHENTICATED,
