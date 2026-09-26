@@ -26,7 +26,7 @@ jobs:
             cd ~/Save-Bite
             
             # 2. Pull the latest code from the main branch
-            git pull origin main
+            git fetch origin main && git reset --hard origin/main
             
             # 3. Rebuild the backend and redis containers, and restart them
             # We specify 'backend' and 'redis' so it doesn't build the frontend or prometheus unless needed
