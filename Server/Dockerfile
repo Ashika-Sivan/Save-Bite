@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Build the TypeScript code
-RUN npm run build
+RUN NODE_OPTIONS=--max-old-space-size=2048 npm run build
 
 # Stage 2: Production environment
 FROM node:20-alpine
