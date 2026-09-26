@@ -51,10 +51,12 @@ export class AdminTransactionController {
         const page = Math.max(1, parseInt(req.query.page as string) || 1);
         const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
         const search = (req.query.search as string || "").trim();
+        const status = (req.query.status as string || "").trim();
         const refunds = await this._adminTransactionService.getRefundReport(
             page,
             limit,
-            search
+            search,
+            status
         );
         // Note: Reusing RECENT_TRANSACTIONS_FETCHED message or define a new one. I'll use a direct string or generic message if a specific one isn't available.
         ResponseHelper.success(res, StatusCode.OK, "Refund reports fetched successfully", refunds);

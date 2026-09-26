@@ -199,14 +199,14 @@ export default function VendorReapply() {
           </p>
         </div>
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between overflow-x-auto hide-scrollbar">
           {steps.map((item, index) => {
             const Icon = item.icon;
             const active = step === item.id;
             const completed = step > item.id;
 
             return (
-              <div key={item.id} className="flex flex-1 items-center">
+              <div key={item.id} className="flex flex-1 items-center min-w-fit px-2">
                 <div className="flex items-center gap-3">
                   <div
                     className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold ${active || completed

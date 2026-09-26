@@ -75,8 +75,18 @@ export const verifyPayment=async(orderId:string):Promise<ApiResponse<Order>>=>{
     return response.data
 }
 
-export const getVendorOrders = async (): Promise<ApiResponse<Order[]>> => {
-    const response = await api.get<ApiResponse<Order[]>>(API_ROUTES.ORDER.VENDOR_ORDERS);
+export const getVendorOrders = async (filters?: { startDate?: string; endDate?: string; sortDirection?: "asc" | "desc" }): Promise<ApiResponse<Order[]>> => {
+    let url = API_ROUTES.ORDER.VENDOR_ORDERS;
+    if (filters) {
+        const params = new URLSearchParams();
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+        if (filters.sortDirection) params.append("sortDirection", filters.sortDirection);
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+    }
+    const response = await api.get<ApiResponse<Order[]>>(url);
     return response.data;
 };
 

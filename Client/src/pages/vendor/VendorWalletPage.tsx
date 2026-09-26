@@ -13,51 +13,92 @@ import {
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import Pagination from "../../components/common/Pagination";
 import { getVendorWalletSummary, type WalletData, type WalletTransactionData } from "../../services/wallet.service";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
+import { getVendorOrders, type Order } from "../../services/order.service";
 
 export default function VendorWalletPage() {
 
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<WalletTransactionData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+
 
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const limit = 10;
 
-  const fetchWalletSummary = async (showToast = false) => {
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const today = new Date().toISOString().split('T')[0];
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [selectedHotelId] = useState<string | null>(() => {
+    if (user?.role === "sub_vendor") return user.hotelId || null;
+    return localStorage.getItem("vendorSelectedHotelId") || "ALL";
+  });
+  
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const applyFilters = async (showToast = false) => {
     try {
-      if (showToast) setRefreshing(true);
-      const res = await getVendorWalletSummary();
-      if (res.success && res.data) {
-        setWallet(res.data.wallet);
-        setTransactions(res.data.transactions);
-        if (showToast) toast.success("Wallet updated");
+      const filters = {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortDirection
+      };
+      const [walletRes, ordersRes] = await Promise.all([
+        getVendorWalletSummary(filters).catch(() => null),
+        getVendorOrders(filters).catch(() => null)
+      ]);
+      
+      if (walletRes?.success && walletRes.data) {
+        setWallet(walletRes.data.wallet);
+        setTransactions(walletRes.data.transactions);
       }
+      if (ordersRes?.success && Array.isArray(ordersRes.data)) {
+        setOrders(ordersRes.data);
+      }
+      if (showToast) toast.success("Wallet & Orders updated");
     } catch (error: unknown) {
-      console.error("Failed to load wallet:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err?.response?.data?.message || "Failed to load wallet details");
+      console.error("Failed to load wallet data:", error);
+      toast.error("Failed to apply filters");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
+
+
   useEffect(() => {
     let isMounted = true;
-    getVendorWalletSummary()
-      .then((res) => {
-        if (isMounted && res.success && res.data) {
-          setWallet(res.data.wallet);
-          setTransactions(res.data.transactions);
+    Promise.all([
+      getVendorWalletSummary({
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortDirection
+      }).catch(() => null),
+      getVendorOrders({
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        sortDirection
+      }).catch(() => null)
+    ])
+      .then(([res, ordersRes]) => {
+        if (isMounted) {
+          if (res?.success && res.data) {
+            setWallet(res.data.wallet);
+            setTransactions(res.data.transactions);
+          }
+          if (ordersRes?.success && Array.isArray(ordersRes.data)) {
+            setOrders(ordersRes.data);
+          }
         }
       })
       .catch((error: unknown) => {
         if (isMounted) {
-          console.error("Failed to load wallet:", error);
-          const err = error as { response?: { data?: { message?: string } } };
-          toast.error(err?.response?.data?.message || "Failed to load wallet details");
+          console.error("Failed to load wallet data:", error);
         }
       })
       .finally(() => {
@@ -68,19 +109,33 @@ export default function VendorWalletPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Initial load only, user must click "Apply" to refetch.
 
-  // Filter transactions based on search query
+  // Filter transactions based on hotel and search query
   const filteredTransactions = useMemo(() => {
-    if (!searchQuery.trim()) return transactions;
+    let txs = transactions;
+    if (selectedHotelId && selectedHotelId !== "ALL") {
+      const hotelOrderIds = new Set(orders.filter((o) => o.hotelId === selectedHotelId).map((o) => o.id));
+      txs = txs.filter((tx) => tx.orderId && hotelOrderIds.has(tx.orderId));
+    }
+
+    if (!searchQuery.trim()) return txs;
     const query = searchQuery.toLowerCase();
-    return transactions.filter(
+    return txs.filter(
       (tx) =>
         tx.description?.toLowerCase().includes(query) ||
         tx.orderId?.toLowerCase().includes(query) ||
         tx.status?.toLowerCase().includes(query)
     );
-  }, [transactions, searchQuery]);
+  }, [transactions, searchQuery, selectedHotelId, orders]);
+
+  const hotelTotalEarnings = useMemo(() => {
+    if (!selectedHotelId || selectedHotelId === "ALL") return wallet?.totalEarnings || 0;
+    return orders
+      .filter((o) => o.hotelId === selectedHotelId && o.orderStatus === "collected")
+      .reduce((sum, o) => sum + o.totalAmount * 0.9, 0);
+  }, [selectedHotelId, orders, wallet]);
 
   const total = filteredTransactions.length;
   const totalPages = Math.ceil(total / limit);
@@ -142,14 +197,6 @@ export default function VendorWalletPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => fetchWalletSummary(true)}
-            disabled={refreshing}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-            Refresh
-          </button>
           <div className="text-right hidden sm:block">
             <p className="font-semibold text-gray-800">Vendor Financials</p>
             <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
@@ -172,7 +219,7 @@ export default function VendorWalletPage() {
                   <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-700 to-emerald-900 p-6 text-white shadow-lg">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-green-200">
-                        Available Wallet Balance
+                        {selectedHotelId === "ALL" ? "Available Wallet Balance" : "Hotel Earnings"}
                       </span>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md">
                         <Wallet size={20} />
@@ -181,7 +228,7 @@ export default function VendorWalletPage() {
                     <div className="mt-4 flex items-baseline gap-1">
                       <span className="text-2xl font-bold">₹</span>
                       <h3 className="text-4xl font-extrabold tracking-tight">
-                        {wallet?.balance?.toFixed(2) || "0.00"}
+                        {selectedHotelId === "ALL" ? (wallet?.balance?.toFixed(2) || "0.00") : hotelTotalEarnings.toFixed(2)}
                       </h3>
                     </div>
                     <p className="mt-4 text-xs text-green-200/90 flex items-center gap-1">
@@ -194,7 +241,7 @@ export default function VendorWalletPage() {
                   <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                        Total Net Earnings (90%)
+                        {selectedHotelId === "ALL" ? "Total Net Earnings (90%)" : "Total Hotel Net Earnings (90%)"}
                       </span>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 text-green-700">
                         <TrendingUp size={20} />
@@ -203,7 +250,7 @@ export default function VendorWalletPage() {
                     <div className="mt-4 flex items-baseline gap-1">
                       <span className="text-xl font-bold text-gray-700">₹</span>
                       <h3 className="text-3xl font-bold text-gray-900">
-                        {wallet?.totalEarnings?.toFixed(2) || "0.00"}
+                        {selectedHotelId === "ALL" ? (wallet?.totalEarnings?.toFixed(2) || "0.00") : hotelTotalEarnings.toFixed(2)}
                       </h3>
                     </div>
                     <p className="mt-4 text-xs text-gray-500">Cumulative payout credited to date</p>
@@ -236,24 +283,38 @@ export default function VendorWalletPage() {
                       <h3 className="text-xl font-bold text-gray-900">Transaction History</h3>
                       <p className="text-xs text-gray-500 mt-0.5">Detailed audit trail of all settlement credits and payouts.</p>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                          type="text"
-                          placeholder="Search transactions..."
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setPage(1); // Reset page on search
-                          }}
-                          className="w-full sm:w-64 rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-                        />
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        {/* Backend Date Filters */}
+                        <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+                          <input type="date" max={today} value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-green-500" />
+                          <span className="text-gray-400">-</span>
+                          <input type="date" max={today} value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-green-500" />
+                          <select value={sortDirection} onChange={e => setSortDirection(e.target.value as "asc" | "desc")} className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs bg-white outline-none focus:border-green-500">
+                            <option value="desc">Newest</option>
+                            <option value="asc">Oldest</option>
+                          </select>
+                          <button onClick={() => applyFilters()} className="px-3 py-1.5 bg-green-700 text-white rounded-lg text-xs font-semibold hover:bg-green-800 transition">
+                            Apply
+                          </button>
+                        </div>
+                        
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                          <input
+                            type="text"
+                            placeholder="Search transactions..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                              setSearchQuery(e.target.value);
+                              setPage(1); // Reset page on search
+                            }}
+                            className="w-full sm:w-64 rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-2 rounded-xl border border-gray-200 whitespace-nowrap">
+                          {total} Transactions
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-2 rounded-xl border border-gray-200 whitespace-nowrap">
-                        {total} Transactions
-                      </span>
-                    </div>
                   </div>
 
                   {transactions.length === 0 ? (

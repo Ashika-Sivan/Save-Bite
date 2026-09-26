@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
 import { adminLogin } from "../../services/admin.service";
 import { useAppDispatch } from "../../hooks/reduxHooks";
 import { setCredentials } from "../../redux/authSlice";
+import adminBg from "../../assets/admin-bg-reference.jpg";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -16,15 +17,36 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
+    
+    setFormErrors({});
+    setError("");
+
+    const newErrors: { email?: string; password?: string } = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    
+    if (!password.trim()) {
+      newErrors.password = "Password is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      return;
+    }
 
     setLoading(true);
-    setError("");
 
     try {
       const response = await adminLogin({
@@ -86,111 +108,120 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#faf7ef] p-5">
-      <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
-
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-700 text-3xl text-white">
-            🍃
+    <div className="flex min-h-screen w-full bg-white font-sans">
+      {/* Left Section - Form */}
+      <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 lg:px-20 xl:px-32 2xl:px-40">
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo / Brand */}
+          <div className="mb-10 flex items-center gap-2">
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 text-xl text-white">
+               🍃
+             </div>
+             <span className="text-xl font-bold text-gray-800">SaveBite</span>
           </div>
 
-          <h1 className="text-3xl font-bold text-green-700">
-            SaveBite
+          <h1 className="mb-8 text-3xl font-bold text-gray-900">
+            Admin Login
           </h1>
 
-          <p className="mt-2 text-gray-500">
-            Admin Portal
-          </p>
-        </div>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* Email */}
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Email
-            </label>
-
-            <div className="relative">
-              <Mail
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            {/* Email */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-900">
+                Email address
+              </label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (formErrors.email) setFormErrors({ ...formErrors, email: "" });
+                }}
                 autoComplete="email"
-                className="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 outline-none transition focus:border-green-600"
+                className={`w-full rounded-lg border ${formErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#3E5C35] focus:ring-[#3E5C35]'} py-3.5 px-4 text-sm outline-none transition focus:ring-1`}
               />
+              {formErrors.email && (
+                <p className="mt-1 text-xs text-red-500">{formErrors.email}</p>
+              )}
             </div>
-          </div>
 
-          {/* Password */}
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Password
-            </label>
+            {/* Password */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-900">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (formErrors.password) setFormErrors({ ...formErrors, password: "" });
+                  }}
+                  autoComplete="current-password"
+                  className={`w-full rounded-lg border ${formErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#3E5C35] focus:ring-[#3E5C35]'} py-3.5 pl-4 pr-11 text-sm outline-none transition focus:ring-1`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {formErrors.password && (
+                <p className="mt-1 text-xs text-red-500">{formErrors.password}</p>
+              )}
+            </div>
 
-            <div className="relative">
-              <Lock
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-11 outline-none transition focus:border-green-600"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+            {/* Forgot Password Link */}
+            <div className="flex items-center justify-end mt-2">
+              <Link
+                to="/admin/forgot-password"
+                className="text-sm font-medium text-gray-500 hover:text-[#3E5C35] hover:underline"
               >
-                {showPassword ? (
-                  <EyeOff size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
-              </button>
+                Forgot password?
+              </Link>
             </div>
-          </div>
 
-          {/* Login Button */}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-6 w-full rounded-lg bg-[#3E5C35] py-3.5 text-sm font-semibold text-white transition hover:bg-[#2F4728] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? "Signing In..." : "Login"}
+            </button>
+          </form>
+
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-green-700 py-3 font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-green-500"
+            type="button"
+            onClick={() => navigate("/")}
+            className="mt-8 text-sm font-medium text-gray-400 transition hover:text-gray-700"
           >
-            {loading ? "Signing In..." : "Login"}
+            &larr; Back to Home
           </button>
-        </form>
+        </div>
+      </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="mt-6 w-full text-center text-sm text-green-700 hover:underline"
-        >
-          Back to Home
-        </button>
-
+      {/* Right Section - Image */}
+      <div className="hidden lg:block lg:w-1/2 p-6 h-screen">
+        <div className="h-full w-full overflow-hidden rounded-[2.5rem] bg-gray-100 relative">
+          <img
+            src={adminBg}
+            alt="Monstera leaves"
+            className="absolute right-0 h-full w-[200%] max-w-none object-cover object-right"
+          />
+        </div>
       </div>
     </div>
   );

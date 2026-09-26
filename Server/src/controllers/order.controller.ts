@@ -101,7 +101,7 @@ export class OrderController {
         res.status(StatusCode.OK).json({ recieved: true })
     });
     redeemPickupCode = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
@@ -109,11 +109,17 @@ export class OrderController {
         ResponseHelper.success(res, StatusCode.OK, result.message, result.order);
     });
     getVendorOrders = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
-        const orders = await this._orderService.getVendorOrders(ownerId);
+        const { startDate, endDate, sortDirection } = req.query;
+        const filters = {
+             startDate: startDate ? new Date(startDate as string) : undefined,
+             endDate: endDate ? new Date(endDate as string) : undefined,
+             sortDirection: (sortDirection as 'asc' | 'desc') || undefined
+        };
+        const orders = await this._orderService.getVendorOrders(ownerId, filters);
         ResponseHelper.success(res, StatusCode.OK, "Vendor orders fetched successfully", orders);
     });
     triggerAutoRefunds = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

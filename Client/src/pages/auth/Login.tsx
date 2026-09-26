@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 
-import { login, googleLogin, getVendorStatus } from "../../services/auth.service";
+import { login, hotelLogin, googleLogin, getVendorStatus } from "../../services/auth.service";
 import { setCredentials } from "../../redux/authSlice";
 import { APP_ROUTES } from "../../constants/appRoutes";
 
@@ -24,12 +24,12 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({
-    email: "",
+    identifier: "",
     password: "",
     general: "",
   });
@@ -48,22 +48,22 @@ export default function Login() {
   const handleRoleChange = (role: AuthRole) => {
     setActiveRole(role);
     setSearchParams({ role });
-    setErrors({ email: "", password: "", general: "" });
+    setErrors({ identifier: "", password: "", general: "" });
   };
 
   const validateForm = () => {
     const newErrors = {
-      email: "",
+      identifier: "",
       password: "",
       general: "",
     };
 
-    const email = form.email.trim();
+    const identifier = form.identifier.trim();
 
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
+    if (!identifier) {
+      newErrors.identifier = activeRole === "vendor" ? "Email or Username is required" : "Email is required";
+    } else if (activeRole === "customer" && !/^\S+@\S+\.\S+$/.test(identifier)) {
+      newErrors.identifier = "Please enter a valid email address";
     }
 
     if (!form.password) {
@@ -73,7 +73,7 @@ export default function Login() {
     }
 
     setErrors(newErrors);
-    return !newErrors.email && !newErrors.password;
+    return !newErrors.identifier && !newErrors.password;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,10 +101,22 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await login({
-        email: form.email.trim(),
-        password: form.password,
-      });
+      let response;
+      const identifier = form.identifier.trim();
+      
+      if (activeRole === "vendor" && !identifier.includes("@")) {
+          // If in vendor tab and input doesn't have '@', assume it's a sub-vendor username
+          response = await hotelLogin({
+              username: identifier,
+              password: form.password,
+          });
+      } else {
+          // Standard user/vendor email login
+          response = await login({
+              email: identifier,
+              password: form.password,
+          });
+      }
 
       const { user, accessToken } = response.data;
 
@@ -123,6 +135,11 @@ export default function Login() {
         })
       );
       toast.success("Login successful!");
+
+      if (user.role === "sub_vendor") {
+        navigate(APP_ROUTES.VENDOR.DASHBOARD, { replace: true });
+        return;
+      }
 
       // If user selected Vendor tab or is a vendor role
       if (activeRole === "vendor" || user.role === "vendor") {
@@ -290,26 +307,26 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-          {/* Email */}
+          {/* Identifier (Email or Username) */}
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
-              Email Address
+            <label htmlFor="identifier" className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+              {activeRole === "vendor" ? "Email or Username" : "Email Address"}
             </label>
             <input
-              id="email"
-              type="email"
-              name="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={form.email}
+              id="identifier"
+              type="text"
+              name="identifier"
+              autoComplete="username"
+              placeholder={activeRole === "vendor" ? "you@example.com or username" : "you@example.com"}
+              value={form.identifier}
               onChange={handleChange}
               className={`block w-full rounded-2xl border px-4 py-3.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${
-                errors.email
+                errors.identifier
                   ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500/20"
                   : "border-brand-primary/20 bg-white/50 focus:border-brand-primary focus:bg-white focus:ring-brand-primary/20"
               }`}
             />
-            {errors.email && <p className="animate-fade-in text-sm font-semibold text-red-600">{errors.email}</p>}
+            {errors.identifier && <p className="animate-fade-in text-sm font-semibold text-red-600">{errors.identifier}</p>}
           </div>
 
           {/* Password */}

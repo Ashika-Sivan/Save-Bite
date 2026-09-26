@@ -7,7 +7,7 @@ import {
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
-import { Search, RefreshCw, Undo2, RotateCcw } from "lucide-react";
+import { Search, Undo2, RotateCcw } from "lucide-react";
 
 const AdminRefunds = () => {
   const [data, setData] = useState<RefundReportResponse>({
@@ -25,6 +25,7 @@ const AdminRefunds = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isTriggering, setIsTriggering] = useState(false);
 
   // Search Debouncing
@@ -43,6 +44,7 @@ const AdminRefunds = () => {
         page,
         limit: 10,
         search: debouncedSearch.trim() || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
       });
       setData(res);
     } catch (err: any) {
@@ -54,12 +56,9 @@ const AdminRefunds = () => {
 
   useEffect(() => {
     fetchRefunds();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, statusFilter]);
 
-  const handleRefresh = () => {
-    fetchRefunds();
-    toast.success("Refund data refreshed");
-  };
+
 
   const handleTriggerRefunds = async () => {
     try {
@@ -75,7 +74,7 @@ const AdminRefunds = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
+    <div className="min-h-full bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
       <div className="mx-auto max-w-7xl space-y-6">
 
         {/* Header */}
@@ -99,14 +98,7 @@ const AdminRefunds = () => {
               <RotateCcw size={16} className={isTriggering ? "animate-spin" : ""} />
               Trigger Auto-Refunds
             </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
-            >
-              <RefreshCw size={16} className={isLoading ? "animate-spin text-green-700" : ""} />
-              Refresh
-            </button>
+
           </div>
         </div>
 
@@ -114,7 +106,7 @@ const AdminRefunds = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
           
           {/* Card 1: Total Refunded Amount */}
-          <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-rose-200 bg-rose-50/60 p-5 shadow-sm">
             <div className="flex items-center justify-between text-rose-800">
               <span className="text-xs font-semibold uppercase tracking-wider">Total Amount Refunded</span>
               <Undo2 size={18} className="text-rose-600" />
@@ -126,7 +118,7 @@ const AdminRefunds = () => {
           </div>
 
           {/* Card 2: Total Refunded Transactions */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between text-gray-500">
               <span className="text-xs font-semibold uppercase tracking-wider">Refunded Orders</span>
               <RotateCcw size={18} className="text-indigo-500" />
@@ -162,6 +154,23 @@ const AdminRefunds = () => {
                 placeholder="Search by Order ID, customer, or hotel..."
                 className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
               />
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Filter by Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full sm:w-auto rounded-lg border border-gray-200 bg-white py-2 px-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+              >
+                <option value="all">All Types</option>
+                <option value="resolved">Concern Resolved</option>
+                <option value="auto_refunded">No-show Auto Refund</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
           </div>
 

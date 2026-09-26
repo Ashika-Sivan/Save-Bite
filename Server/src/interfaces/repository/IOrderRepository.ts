@@ -70,13 +70,13 @@ export interface IOrderRepository {
     findById(orderId: string): Promise<IOrder | null>;
 
     updateOrderStatus(orderId: string, orderStatus: OrderStatus): Promise<IOrder | null>;
-    findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]>;
+    findAllByVendorId(vendorId: Types.ObjectId, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IOrder[]>;
     findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]>;
     countTotalOrders(): Promise<number>;
     
     getTotalRevenue(): Promise<number>;
     getRevenueLast7Days(): Promise<{ date: string; revenue: number; orders: number }[]>;
-    findAllOrders(filters?: { page?: number; limit?: number; status?: string }): Promise<{ orders: IOrder[], total: number }>;
+    findAllOrders(filters?: { page?: number; limit?: number; status?: string; search?: string }): Promise<{ orders: IOrder[], total: number }>;
     aggregateOrders(pipeline: any[]): Promise<any[]>;
     findAll(): Promise<IOrder[]>;
 }

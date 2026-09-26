@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { forgotPassword } from "../../services/auth.service";
+import { useSearchParams } from "react-router-dom";
 
 export default function ForgotPasswordPage() {
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role");
+  const loginUrl = role === "admin" ? "/admin/login" : "/login";
+
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +50,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <Link
-              to="/login"
+              to={loginUrl}
               className="inline-block text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors hover:underline"
             >
               Back to log in
@@ -80,7 +85,7 @@ export default function ForgotPasswordPage() {
 
             <p className="text-center text-sm font-medium text-brand-dark/70">
               Remember your password?{" "}
-              <Link to="/login" className="font-bold text-brand-primary hover:text-brand-secondary hover:underline transition-colors">
+              <Link to={loginUrl} className="font-bold text-brand-primary hover:text-brand-secondary hover:underline transition-colors">
                 Log in
               </Link>
             </p>

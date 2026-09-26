@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { Users, Store, UserCheck, Clock3, LogOut, IndianRupee, ShoppingBag } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell, LabelList } from "recharts";
 import { logout } from "../../services/auth.service";
 import { useAppDispatch } from "../../hooks/reduxHooks";
 import { clearCredentials } from "../../redux/authSlice";
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf7ef]">
+    <div className="min-h-full bg-[#faf7ef]">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-5 md:px-8">
         <div>
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
         {/* Statistics */}
         <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {/* Platform Revenue */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
                 <IndianRupee size={22} />
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Total Orders */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                 <ShoppingBag size={22} />
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Total Users */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
                 <Users size={22} />
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Pending Applications */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
                 <Clock3 size={22} />
@@ -249,7 +249,7 @@ const AdminDashboard = () => {
         {/* Advanced Charts Section */}
         <section className="mt-10 grid gap-5 lg:grid-cols-2">
           {/* Pie Chart: Order Status */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-6">
               Order Status Distribution
             </h3>
@@ -284,7 +284,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Bar Chart: Top 5 Vendors */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 mb-6">
               Top 5 Vendors by Revenue
             </h3>
@@ -296,7 +296,9 @@ const AdminDashboard = () => {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis />
                     <Tooltip cursor={{ fill: 'transparent' }} />
-                    <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue (₹)" />
+                    <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue (₹)" maxBarSize={60}>
+                      <LabelList dataKey="revenue" position="top" fill="#10b981" fontSize={12} formatter={(val: any) => `₹${val}`} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -346,7 +348,7 @@ const AdminDashboard = () => {
         {/* Recent Activity */}
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
           {/* Vendor applications */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Recent Vendor Applications</h3>
               <button
@@ -387,7 +389,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Registered users */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Recently Registered Users</h3>
               <button

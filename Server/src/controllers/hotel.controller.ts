@@ -12,7 +12,7 @@ export class HotelController {
     constructor(private _hotelService: IHotelService) { }
 
     createHotel = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
         }
@@ -33,7 +33,7 @@ export class HotelController {
         ResponseHelper.success(res, StatusCode.CREATED, HOTEL_MESSAGES.CREATED, hotel);
     });
     getVendorHotels = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
         }
@@ -41,7 +41,7 @@ export class HotelController {
         ResponseHelper.success(res, StatusCode.OK, HOTEL_MESSAGES.FETCHED, hotels)
     });
     getHotelById = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         const hotelIdParam = req.params.hotelId;
         const hotelId = Array.isArray(hotelIdParam) ? hotelIdParam[0] : hotelIdParam
         if (!ownerId) {

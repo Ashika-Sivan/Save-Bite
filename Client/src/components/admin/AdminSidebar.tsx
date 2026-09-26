@@ -10,8 +10,13 @@ import {
   AlertCircle,
   X,
   RotateCcw,
+  LogOut,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../hooks/reduxHooks";
+import { clearCredentials } from "../../redux/authSlice";
+import { logout } from "../../services/auth.service";
+import toast from "react-hot-toast";
 
 const menuItems = [
   {
@@ -71,6 +76,55 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar = ({ onClose }: AdminSidebarProps) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const performLogout = async () => {
+    try {
+      await logout();
+      dispatch(clearCredentials());
+      toast.success("Logged out successfully");
+      navigate("/admin/login");
+    } catch (error) {
+      toast.error("Logout failed. Please try again.");
+    }
+  };
+
+  const handleLogoutClick = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 min-w-[250px]">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="text-red-500" size={20} />
+            <span className="font-semibold text-gray-800">Confirm Logout</span>
+          </div>
+          <p className="text-sm text-gray-600">Are you sure you want to log out?</p>
+          <div className="flex gap-2 justify-end mt-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                performLogout();
+              }}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 5000,
+        position: "top-center",
+      }
+    );
+  };
+
   return (
     <aside className="flex min-h-screen w-64 flex-col border-r border-gray-200 bg-white shadow-xl md:shadow-none">
       <div className="flex items-center justify-between border-b border-gray-200 px-6 py-6">
@@ -113,6 +167,16 @@ const AdminSidebar = ({ onClose }: AdminSidebarProps) => {
           );
         })}
       </nav>
+
+      <div className="border-t border-gray-200 p-4">
+        <button
+          onClick={handleLogoutClick}
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 };

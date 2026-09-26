@@ -62,7 +62,7 @@ const AdminNotifications = () => {
       const res = await toggleNotificationSchedule(id);
       toast.success(res.message || "Schedule status updated");
       setSchedules((prev) =>
-        prev.map((s) => (s._id === id ? { ...s, isActive: !s.isActive } : s))
+        prev.map((s) => (s.id === id ? { ...s, isActive: !s.isActive } : s))
       );
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to update schedule");
@@ -90,7 +90,7 @@ const AdminNotifications = () => {
                 try {
                   await deleteNotificationSchedule(id);
                   toast.success("Schedule deleted successfully");
-                  setSchedules((prev) => prev.filter((s) => s._id !== id));
+                  setSchedules((prev) => prev.filter((s) => s.id !== id));
                 } catch (err: any) {
                   toast.error(err.response?.data?.message || "Failed to delete schedule");
                 }
@@ -174,7 +174,7 @@ const AdminNotifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
+    <div className="min-h-full bg-[#f6faf5] p-6 md:p-10 font-sans text-gray-800">
       <div className="mx-auto max-w-6xl space-y-6">
         
         {/* Clean Standard Header */}
@@ -198,7 +198,7 @@ const AdminNotifications = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1">
+        <div className="flex w-full sm:w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1">
           <button
             type="button"
             onClick={() => setActiveTab("schedules")}
@@ -232,7 +232,7 @@ const AdminNotifications = () => {
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-700 border-t-transparent" />
               </div>
             ) : schedules.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+              <div className="flex flex-col justify-between h-full rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
                 <p className="text-sm font-medium text-gray-500">No automated schedules configured yet.</p>
                 <button
                   type="button"
@@ -247,7 +247,7 @@ const AdminNotifications = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {displayedSchedules.map((s) => (
                     <div
-                      key={s._id}
+                      key={s.id}
                       className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300"
                     >
                       <div>
@@ -263,7 +263,7 @@ const AdminNotifications = () => {
                             </span>
                             <button
                               type="button"
-                              onClick={() => handleToggleSchedule(s._id)}
+                              onClick={() => handleToggleSchedule(s.id)}
                               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                                 s.isActive ? "bg-green-600" : "bg-gray-300"
                               }`}
@@ -302,7 +302,7 @@ const AdminNotifications = () => {
                       <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-3">
                         <button
                           type="button"
-                          onClick={() => handleDeleteSchedule(s._id)}
+                          onClick={() => handleDeleteSchedule(s.id)}
                           className="text-xs font-medium text-red-600 hover:text-red-700 transition"
                         >
                           Delete

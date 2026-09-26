@@ -202,9 +202,13 @@ export class AdminTransactionService implements IAdminTransactionService {
         };
     }
 
-    async getRefundReport(page: number,limit: number,search: string): Promise<any> {
+    async getRefundReport(page: number,limit: number,search: string, status?: string): Promise<any> {
         // Find orders with refunded statuses
-        const refundStatuses = ["resolved", "cancelled", "auto_refunded"];
+        let refundStatuses = ["resolved", "cancelled", "auto_refunded"];
+        
+        if (status && status !== "all" && refundStatuses.includes(status)) {
+            refundStatuses = [status];
+        }
 
         const totalsAggregation = await this._orderRepository.aggregateOrders([
             {

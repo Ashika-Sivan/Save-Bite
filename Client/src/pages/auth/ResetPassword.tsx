@@ -14,6 +14,8 @@ import { resetPassword } from "../../services/auth.service";
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const role = searchParams.get("role");
+  const loginUrl = role === "admin" ? "/admin/login" : "/login";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -123,7 +125,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         {/* Right panel */}
         <div className="p-8 sm:p-10 flex flex-col justify-center">
           <Link
-            to="/login"
+            to={loginUrl}
             className="mb-6 inline-flex w-fit items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand-dark/60 hover:text-brand-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -153,7 +155,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
               </p>
 
               <Link
-                to="/login"
+                to={loginUrl}
                 className="mt-8 grid h-12 w-full place-items-center rounded-full bg-brand-primary text-sm font-bold text-white shadow-lg shadow-brand-primary/30 transition-all hover:scale-105 hover:bg-brand-secondary active:scale-95"
               >
                 Continue to log in

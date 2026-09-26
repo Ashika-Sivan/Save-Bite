@@ -19,7 +19,11 @@ export const toWalletTransactionResponseDTO = (transaction: IWalletTransaction):
         id: transaction._id.toString(),
         walletId: transaction.walletId.toString(),
         vendorId: transaction.vendorId.toString(),
-        orderId: transaction.orderId ? transaction.orderId.toString() : "",
+        orderId: transaction.orderId 
+            ? (typeof transaction.orderId === 'object' && '_id' in (transaction.orderId as any)
+                ? (transaction.orderId as any)._id.toString() 
+                : transaction.orderId.toString()) 
+            : "",
         type: transaction.type,
         orderTotal: transaction.orderTotal,
         vendorAmount: transaction.vendorAmount,

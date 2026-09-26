@@ -18,7 +18,7 @@ const hotelController = new HotelController(hotelService);
 hotelRouter.post(
   ROUTES.HOTEL.CREATE,
   authMiddleware.authenticate,
-  authMiddleware.authorize("vendor"),
+  authMiddleware.authorize("vendor", "sub_vendor"),
   upload.single("hotelImage"),
   validateRequest(createHotelSchema),
   hotelController.createHotel.bind(hotelController),
@@ -26,13 +26,13 @@ hotelRouter.post(
 hotelRouter.get(
   ROUTES.HOTEL.GET_ALL,
   authMiddleware.authenticate,
-  authMiddleware.authorize("vendor"),
+  authMiddleware.authorize("vendor", "sub_vendor"),
   hotelController.getVendorHotels.bind(hotelController),
 );
 hotelRouter.get(
   ROUTES.HOTEL.GET_BY_ID,
   authMiddleware.authenticate,
-  authMiddleware.authorize("vendor"),
+  authMiddleware.authorize("vendor", "sub_vendor"),
   hotelController.getHotelById.bind(hotelController),
 );
 

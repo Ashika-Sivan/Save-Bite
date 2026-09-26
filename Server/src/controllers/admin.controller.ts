@@ -204,10 +204,12 @@ export class AdminController {
         ? parseInt(req.query.limit as string, 10)
         : 10;
       const status = req.query.status as string | undefined;
+      const search = req.query.search as string | undefined;
       const result = await this._adminService.getAllOrders({
         page,
         limit,
         status,
+        search,
       });
       ResponseHelper.success(
         res,

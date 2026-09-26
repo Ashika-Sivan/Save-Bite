@@ -11,7 +11,7 @@ export class DailyMenuController {
     constructor(private readonly _dailyMenuService: IDailyMenuService) { }
 //how initially the menu comntainer and this is for security purpose
     createMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         const hotelId = req.params.hotelId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -24,7 +24,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.CREATED, DAILY_MENU_MESSAGES.CREATED, menu)
     });
     addMenuItem = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         const menuId = req.params.menuId;
         if (!ownerId) {
             throw new AppError(
@@ -56,7 +56,7 @@ export class DailyMenuController {
         );
     });
     goLive = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId
+        const ownerId = req.user?.vendorId || req.user?.userId
         const menuId = req.params.menuId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -68,7 +68,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.GO_LIVE_SUCCESS, menu)
     });
     getTodayMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId
+        const ownerId = req.user?.vendorId || req.user?.userId
         const hotelId = req.params.hotelId
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -80,7 +80,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.TODAY_MENU_FETCHED, menu)
     });
     endLive = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId
+        const ownerId = req.user?.vendorId || req.user?.userId
         const menuId = req.params.menuId
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -92,7 +92,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.END_LIVE_SUCCESS, menu)
     });
     updatePickupWindow = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId;
+        const ownerId = req.user?.vendorId || req.user?.userId;
         const menuId = req.params.menuId;
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -104,7 +104,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.PICKUP_WINDOW_UPDATED, _menu)
     });
     updateMenuItem = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId
+        const ownerId = req.user?.vendorId || req.user?.userId
         const { menuId, itemId } = req.params
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)
@@ -116,7 +116,7 @@ export class DailyMenuController {
         ResponseHelper.success(res, StatusCode.OK, DAILY_MENU_MESSAGES.ITEM_UPDATED, _menu)
     });
     usePreviousMenu = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = req.user?.userId
+        const ownerId = req.user?.vendorId || req.user?.userId
         const menuId = req.params.menuId
         if (!ownerId) {
             throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED)

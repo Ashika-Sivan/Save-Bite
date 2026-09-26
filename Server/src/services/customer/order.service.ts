@@ -527,7 +527,7 @@ export class OrderService implements IOrderService {
         };
     }
 
-    async getVendorOrders(ownerId: string): Promise<IOrderResponseDTO[]> {
+    async getVendorOrders(ownerId: string, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IOrderResponseDTO[]> {
         if (!ownerId) {
             throw new AppError(ORDER_MESSAGES.VENDOR_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
         }
@@ -541,7 +541,7 @@ export class OrderService implements IOrderService {
             throw new AppError(ORDER_MESSAGES.VENDOR_NOT_FOUND, StatusCode.NOT_FOUND);
         }
 
-        const orders = await this._orderRepository.findAllByVendorId(vendor._id);
+        const orders = await this._orderRepository.findAllByVendorId(vendor._id, filters);
         return orders.map((order) => toOrderResponseDTO(order));
     }
     //refund

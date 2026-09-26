@@ -16,6 +16,7 @@ export interface IAdminTransactionService {
     getRefundReport(
         page: number,
         limit: number,
-        search: string
+        search: string,
+        status?: string
     ): Promise<any>;
 }

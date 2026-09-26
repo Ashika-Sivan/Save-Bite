@@ -11,7 +11,7 @@ interface RootState {
   auth: {
     user: {
       id: string;
-      role: "user" | "vendor" | "admin";
+      role: "user" | "vendor" | "admin" | "sub_vendor";
     } | null;
     accessToken: string | null;
   };

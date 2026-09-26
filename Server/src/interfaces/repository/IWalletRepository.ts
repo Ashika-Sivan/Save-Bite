@@ -25,6 +25,6 @@ export interface IWalletRepository {
         data: ICreateTransactionData,
         session?: ClientSession
     ): Promise<IWalletTransaction>;
-    getTransactionsByVendorId(vendorId: Types.ObjectId): Promise<IWalletTransaction[]>;
+    getTransactionsByVendorId(vendorId: Types.ObjectId, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IWalletTransaction[]>;
     transactionExistsForOrder(orderId: Types.ObjectId, session?: ClientSession): Promise<boolean>;
 }

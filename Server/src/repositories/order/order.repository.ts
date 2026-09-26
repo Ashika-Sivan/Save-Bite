@@ -1,4 +1,4 @@
-import { ClientSession, Types } from "mongoose";
+import mongoose, { ClientSession, Types } from "mongoose";
 import { IOrder, OrderStatus, PaymentStatus, SettlementStatus } from "../../interfaces/models/IOrder.model";
 import { IMarkOrderPaidData, IOrderCreateData, IOrderRepository } from "../../interfaces/repository/IOrderRepository";
 import { Order } from "../../models/order/order.model";
@@ -162,13 +162,23 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         );
     }
 
-    async findAllByVendorId(vendorId: Types.ObjectId): Promise<IOrder[]> {
-        return await Order.find({
+    async findAllByVendorId(vendorId: Types.ObjectId, filters?: { startDate?: Date, endDate?: Date, sortDirection?: 'asc' | 'desc' }): Promise<IOrder[]> {
+        const query: any = {
             vendorId,
             paymentStatus: { $ne: PaymentStatus.PENDING },
-        })
+        };
+
+        if (filters?.startDate || filters?.endDate) {
+            query.createdAt = {};
+            if (filters.startDate) query.createdAt.$gte = filters.startDate;
+            if (filters.endDate) query.createdAt.$lte = filters.endDate;
+        }
+
+        const sortOrder = filters?.sortDirection === 'asc' ? 1 : -1;
+
+        return await Order.find(query)
             .populate("hotelId", "hotelName")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: sortOrder });
     }
 
     async findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]> {//padi more than 24 hour ago but never came to pickup.
@@ -221,7 +231,7 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         }));
     }
 
-    async findAllOrders(filters?: { page?: number; limit?: number; status?: string }): Promise<{ orders: IOrder[], total: number }> {
+    async findAllOrders(filters?: { page?: number; limit?: number; status?: string; search?: string }): Promise<{ orders: IOrder[], total: number }> {
         const page = filters?.page || 1;
         const limit = filters?.limit || 10;
         const skip = (page - 1) * limit;
@@ -229,6 +239,32 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         const query: any = {};
         if (filters?.status) {
             query.orderStatus = filters.status;
+        }
+
+        if (filters?.search) {
+            const searchRegex = new RegExp(filters.search, 'i');
+            
+            // Find related documents to allow searching by customer name/email, vendor name, or hotel name
+            const [matchingUsers, matchingVendors, matchingHotels] = await Promise.all([
+                mongoose.model('User').find({ $or: [{ name: searchRegex }, { email: searchRegex }] }).select('_id'),
+                mongoose.model('vendor').find({ 'businessInfo.businessName': searchRegex }).select('_id'),
+                mongoose.model('hotel').find({ hotelName: searchRegex }).select('_id')
+            ]);
+
+            const userIds = matchingUsers.map(u => u._id);
+            const vendorIds = matchingVendors.map(v => v._id);
+            const hotelIds = matchingHotels.map(h => h._id);
+
+            query.$or = [
+                { pickupCode: searchRegex },
+                { customerId: { $in: userIds } },
+                { vendorId: { $in: vendorIds } },
+                { hotelId: { $in: hotelIds } }
+            ];
+            
+            if (Types.ObjectId.isValid(filters.search)) {
+                query.$or.push({ _id: new Types.ObjectId(filters.search) });
+            }
         }
 
         const [orders, total] = await Promise.all([

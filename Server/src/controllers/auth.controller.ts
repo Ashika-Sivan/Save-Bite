@@ -77,6 +77,26 @@ export class AuthController {
       accessToken,
     });
   });
+
+  hotelLogin = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      throw new AppError("Username and password are required", StatusCode.BAD_REQUEST);
+    }
+    const { user, accessToken, refreshToken } = await this._authService.hotelLogin({ username, password });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: env.REFRESH_COOKIE_MAX_AGE,
+      path: '/'
+    });
+    const userData = user ? toUserResponseDTO(user) : null;
+    ResponseHelper.success(res, StatusCode.OK, "Hotel login successful", {
+      user: userData,
+      accessToken,
+    });
+  });
   googleLogin = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { idToken } = req.body;
     if (!idToken) {

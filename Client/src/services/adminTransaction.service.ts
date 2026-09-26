@@ -120,6 +120,7 @@ export interface RefundReportParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
 }
 
 export const getAdminRefundReports = async (

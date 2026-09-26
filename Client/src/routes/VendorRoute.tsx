@@ -12,7 +12,7 @@ const VendorRoute=()=>{
     if(!accessToken||!user){
         return <Navigate to='/login' replace/>
     }
-    if(user.role!=="vendor"){
+    if(user.role !== "vendor" && user.role !== "sub_vendor"){
         return <Navigate to="/" replace/>
     }
     return <Outlet/>

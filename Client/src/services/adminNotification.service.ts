@@ -2,7 +2,7 @@ import api from "./api";
 import { API_ROUTES } from "../constants/apiRoutes";
 
 export interface NotificationSchedule {
-  _id: string;
+  id: string;
   name: string;
   title: string;
   body: string;
