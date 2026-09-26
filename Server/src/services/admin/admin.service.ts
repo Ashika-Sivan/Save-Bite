@@ -355,7 +355,7 @@ export class AdminService implements IAdminService {
             const existingNames = topVendorsData.map((v: any) => v.name);
             const { vendors } = await this._vendorRepository.findAllWithOwner({ limit: 10 });
             for (const v of vendors) {
-                // @ts-ignore
+                // @ts-expect-error type missing businessInfo
                 const vName = v.businessInfo?.businessName || v.businessName || "Unknown";
                 if (!existingNames.includes(vName) && topVendorsData.length < 5) {
                     topVendorsData.push({ name: vName, revenue: 0 });
