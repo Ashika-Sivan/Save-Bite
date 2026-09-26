@@ -6,7 +6,9 @@ interface User {
   email: string;
   phone?: string;
   isAuthenticated: boolean;
-  role:"user"|"vendor"|"admin"
+  role: "user" | "vendor" | "admin" | "sub_vendor";
+  hotelId?: string;
+  permissions?: string[];
 }
 //token:-redux authetication statte
 interface AuthState {
@@ -31,23 +33,23 @@ const authSlice = createSlice({//evrything related to authentication comes here
     //called afett the succesfull refresh tokne req
     //we only recieve a new access token from backend
     //existing user info unchanged
-    setAccessToken:(state,action)=>{
-        state.accessToken=action.payload//replace old access to new 
+    setAccessToken: (state, action) => {
+      state.accessToken = action.payload//replace old access to new 
     },
-    updateUser:(state,action)=>{
-      if(state.user){
-        state.user={...state.user,...action.payload}
+    updateUser: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload }
       }
     },
     clearCredentials: (state) => {//closed during the logout
       state.user = null;
       state.accessToken = null;
     },
-    
+
   },
 });
 
-export const { setCredentials,clearCredentials,setAccessToken,updateUser } = authSlice.actions;
+export const { setCredentials, clearCredentials, setAccessToken, updateUser } = authSlice.actions;
 export default authSlice.reducer;
 
 //it define the struture of the authenticatin statte  stored in the redux

@@ -14,22 +14,25 @@ const pointSchema = new Schema({
 
 export interface IUser extends Document{
     name:string,
-    email:string,
+    email?:string, // Optional for sub_vendors who login via username
+    username?:string, // Unique for sub_vendor login
     phone?:string,
-    password?:string, // Optional for Google Auth
+    password?:string,
     authProvider?: "local" | "google",
     isBusinessOwner:boolean,
     isAuthenticated:boolean,
     isActive:boolean,
     isAdmin:boolean,
     totalOrder:number|0,
-    role: "user" | "vendor" | "admin";
+    role: "user" | "vendor" | "admin" | "sub_vendor";
+    vendorId?: mongoose.Types.ObjectId; // Link to parent vendor
+    hotelId?: mongoose.Types.ObjectId; // Link to specific hotel
+    permissions?: string[]; // Array of assigned feature permissions
     location?: {
         type: "Point";
         coordinates: [number, number]; // [longitude, latitude]
     };
     createdAt:Date
-
 }
 
 const userSchema=new Schema<IUser>(
@@ -40,9 +43,16 @@ const userSchema=new Schema<IUser>(
         },
         email:{
             type:String,
-            required:true,
+            required: function() { return this.role !== 'sub_vendor'; },
             unique:true,
+            sparse:true,
             lowercase:true,
+            trim:true
+        },
+        username: {
+            type:String,
+            unique:true,
+            sparse:true,
             trim:true
         },
         password:{
@@ -75,8 +85,20 @@ const userSchema=new Schema<IUser>(
         },
         role:{
             type:String,
-            enum:["user",'vendor','admin'],
+            enum:["user",'vendor','admin','sub_vendor'],//add subbvendor
             default:'user',
+        },
+        vendorId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Vendor'
+        },
+        hotelId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Hotel'
+        },
+        permissions: {
+            type: [String],
+            default: []//create ,update..
         },
         location: {
             type: pointSchema,

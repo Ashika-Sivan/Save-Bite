@@ -5,23 +5,20 @@ import { upload } from "../middlewares/upload.middleware";
 import hotelRouter from "./hotel.routes";
 import { validateRequest } from "../middlewares/validate.middleware";
 import { vendorVerificationSchema } from "../validations/vendor.validations";
+import { createMenuSchema, addMenuItemSchema, updatePickupWindowSchema, updateMenuItemSchema } from "../validations/dailyMenu.validations";
+import { subVendorController } from "../config/dependencies";
+import { vendorDocumentUpload } from "../middlewares/upload.middleware";
 
 
 const router = Router();
 router.use("/hotels",hotelRouter)
-router.get(ROUTES.VENDOR.WALLET, authMiddleware.authenticate, authMiddleware.authorize("vendor"), walletController.getVendorWalletSummary.bind(walletController));
+router.get(ROUTES.VENDOR.WALLET, authMiddleware.authenticate, authMiddleware.authorize("vendor", "sub_vendor"), walletController.getVendorWalletSummary.bind(walletController));
 
 router.post(
   ROUTES.VENDOR.REGISTER,
   authMiddleware.authenticate,
   authMiddleware.authorize("user"),
-  upload.fields([
-    { name: "businessImage", maxCount: 1 },
-    { name: "gstCertificate", maxCount: 1 },
-    { name: "fssaiCertificate", maxCount: 1 },
-    { name: "panCard", maxCount: 1 },
-    { name: "businessRegistrationCertificate", maxCount: 1 },
-  ]),
+  vendorDocumentUpload,
   validateRequest(vendorVerificationSchema),
   vendorController.registerVendor.bind(vendorController)
 );
@@ -30,13 +27,7 @@ router.post(
   ROUTES.VENDOR.REAPPLY,
   authMiddleware.authenticate,
   authMiddleware.authorize("user"),
-  upload.fields([
-    { name: "businessImage", maxCount: 1 },
-    { name: "gstCertificate", maxCount: 1 },
-    { name: "fssaiCertificate", maxCount: 1 },
-    { name: "panCard", maxCount: 1 },
-    { name: "businessRegistrationCertificate", maxCount: 1 },
-  ]),
+  vendorDocumentUpload,
   validateRequest(vendorVerificationSchema),
   vendorController.reapplyVendor.bind(vendorController)
 );
@@ -44,16 +35,44 @@ router.post(
 router.get(ROUTES.VENDOR.STATUS,authMiddleware.authenticate,authMiddleware.authorize("user", "vendor"),vendorController.getVendorStatus.bind(vendorController));
 // when vendor making reg req check:- has already applied, application pending, was it approved, rejected?
 
-router.get("/profile", authMiddleware.authenticate, authMiddleware.authorize("vendor"), vendorController.getVendorProfiles.bind(vendorController));
+router.get("/profile", authMiddleware.authenticate, authMiddleware.authorize("vendor", "sub_vendor"), vendorController.getVendorProfiles.bind(vendorController));
 
-import { createMenuSchema, addMenuItemSchema, updatePickupWindowSchema, updateMenuItemSchema } from "../validations/dailyMenu.validations";
+router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),validateRequest(createMenuSchema),dailyMenuController.createMenu.bind(dailyMenuController))
+router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),upload.single('itemImage'),validateRequest(addMenuItemSchema),dailyMenuController.addMenuItem.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.GO_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),dailyMenuController.goLive.bind(dailyMenuController))
+router.get(ROUTES.VENDOR.GET_TODAY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),dailyMenuController.getTodayMenu.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.END_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),dailyMenuController.endLive.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_PICKUP_WINDOW,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),validateRequest(updatePickupWindowSchema),dailyMenuController.updatePickupWindow.bind(dailyMenuController))
+router.patch(ROUTES.VENDOR.UPDATE_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),validateRequest(updateMenuItemSchema),dailyMenuController.updateMenuItem.bind(dailyMenuController))
+router.post(ROUTES.VENDOR.USE_PREVIOUS_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor", "sub_vendor"),dailyMenuController.usePreviousMenu.bind(dailyMenuController))
 
-router.post(ROUTES.VENDOR.CREATE_DAILY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(createMenuSchema),dailyMenuController.createMenu.bind(dailyMenuController))
-router.post(ROUTES.VENDOR.ADD_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),upload.single('itemImage'),validateRequest(addMenuItemSchema),dailyMenuController.addMenuItem.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.GO_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.goLive.bind(dailyMenuController))
-router.get(ROUTES.VENDOR.GET_TODAY_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.getTodayMenu.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.END_LIVE,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.endLive.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.UPDATE_PICKUP_WINDOW,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(updatePickupWindowSchema),dailyMenuController.updatePickupWindow.bind(dailyMenuController))
-router.patch(ROUTES.VENDOR.UPDATE_DAILY_MENU_ITEM,authMiddleware.authenticate,authMiddleware.authorize("vendor"),validateRequest(updateMenuItemSchema),dailyMenuController.updateMenuItem.bind(dailyMenuController))
-router.post(ROUTES.VENDOR.USE_PREVIOUS_MENU,authMiddleware.authenticate,authMiddleware.authorize("vendor"),dailyMenuController.usePreviousMenu.bind(dailyMenuController))
+// Sub-Vendor Management Routes
+router.get(
+  ROUTES.VENDOR.GET_SUB_VENDOR,
+  authMiddleware.authenticate,
+  authMiddleware.authorize("vendor", "sub_vendor"),
+  subVendorController.getSubVendor.bind(subVendorController)
+);
+
+router.post(
+  ROUTES.VENDOR.SUB_VENDOR_CREDENTIALS,
+  authMiddleware.authenticate,
+  authMiddleware.authorize("vendor", "sub_vendor"),
+  subVendorController.createCredentials.bind(subVendorController)
+);
+
+router.put(
+  ROUTES.VENDOR.SUB_VENDOR_PERMISSIONS,
+  authMiddleware.authenticate,
+  authMiddleware.authorize("vendor", "sub_vendor"),
+  subVendorController.updatePermissions.bind(subVendorController)
+);
+
+router.put(
+  ROUTES.VENDOR.SUB_VENDOR_PASSWORD,
+  authMiddleware.authenticate,
+  authMiddleware.authorize("vendor", "sub_vendor"),
+  subVendorController.updatePassword.bind(subVendorController)
+);
+
 export default router;

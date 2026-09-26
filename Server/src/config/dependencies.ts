@@ -110,7 +110,7 @@ export const adminReviewController = new AdminReviewController(
 export const adminTransactionController = new AdminTransactionController(
   adminTransactionService,
 );
-export const authMiddleware = new AuthMiddleware(tokenService);
+export const authMiddleware = new AuthMiddleware(tokenService, userRepository);
 
 import { WalletService } from "../services/vendor/wallet.service";
 import { WalletController } from "../controllers/wallet.controller";
@@ -150,3 +150,15 @@ export const walletController = new WalletController(walletService);
 export const concernController = new ConcernController(concernService);
 export const customerNotificationController =
   new CustomerNotificationController(customerNotificationService);
+
+import { SubVendorService } from "../services/vendor/subVendor.service";
+import { SubVendorController } from "../controllers/subVendor.controller";
+
+const subVendorService = new SubVendorService(
+  userRepository,
+  hotelRepository,
+  vendorRepository,
+  passwordHasher
+);
+export const subVendorController = new SubVendorController(subVendorService);
+
