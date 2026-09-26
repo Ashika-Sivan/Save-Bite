@@ -3,6 +3,7 @@ import { IOrder, OrderStatus, PaymentStatus, SettlementStatus } from "../../inte
 import { IMarkOrderPaidData, IOrderCreateData, IOrderRepository } from "../../interfaces/repository/IOrderRepository";
 import { Order } from "../../models/order/order.model";
 import { BaseRepository } from "../base.repository";
+import { User } from "../../models/user/user.model";
 
 export class OrderRepository extends BaseRepository<IOrder> implements IOrderRepository {
     constructor() {
@@ -170,7 +171,7 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
             .sort({ createdAt: -1 });
     }
 
-    async findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]> {
+    async findPlacedOrdersOlderThan(date: Date): Promise<IOrder[]> {//padi more than 24 hour ago but never came to pickup.
         return await Order.find({
             orderStatus: OrderStatus.PLACED,
             createdAt: { $lt: date }
@@ -248,4 +249,5 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
     async aggregateOrders(pipeline: any[]): Promise<any[]> {
         return await this._model.aggregate(pipeline);
     }
+
 }

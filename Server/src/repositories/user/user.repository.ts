@@ -14,10 +14,10 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
     }
     async findByEmail(email: string): Promise<IUser | null> {
         return await User.findOne({ email }).select("+password")
+    }
 
-
-
-
+    async findByUsername(username: string): Promise<IUser | null> {
+        return await User.findOne({ username }).select("+password")
     }
     async updateAuthenticationStatus(email: string, status: boolean): Promise<IUser | null> {
         return await User.findOneAndUpdate(
@@ -114,6 +114,10 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
 
     async getRecentUsers(limit: number): Promise<IUser[]> {
         return await User.find().sort({ createdAt: -1 }).limit(limit).exec();
+    }
+
+    async updateStatusByVendorId(vendorId: string, isActive: boolean): Promise<void> {
+        await User.updateMany({ vendorId }, { isActive });
     }
 }
 

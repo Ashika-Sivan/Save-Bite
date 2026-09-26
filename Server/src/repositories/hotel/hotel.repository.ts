@@ -19,6 +19,10 @@ export class HotelRepository extends BaseRepository<IHotel> implements IHotelRep
             createdAt:-1,
         });
     }
+    
+    async findById(hotelId: string): Promise<IHotel | null> {
+        return await Hotel.findById(hotelId);
+    }
    async findByIdAndVendorId(hotelId: string, vendorId: string): Promise<IHotel | null> {
        return await Hotel.findOne({
         _id:hotelId,

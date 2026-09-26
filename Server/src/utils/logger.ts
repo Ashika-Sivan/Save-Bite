@@ -1,7 +1,7 @@
 import path from "path";
 import * as winston from "winston";
 import "winston-daily-rotate-file";
-// Import the Loki transport plugin we just installed
+
 import LokiTransport from "winston-loki";
 
 export interface ILogger {
@@ -32,16 +32,17 @@ export class WinstonLogger implements ILogger {
         );
 
         const transports: winston.transport[] = [
-            // This new transport tells Winston to send logs to our new Loki container over HTTP.
+            //transpot tell winston to send logs to loki container/server
             // When Docker runs, 'http://loki:3100' points directly to the Loki database container.
             new LokiTransport({
                 host: process.env.LOKI_URL || "http://loki:3100", // Address of our Loki server
                 labels: { app: "save-bite-backend" }, // Tags all logs with our app name so Grafana can filter them
-                json: true,                            
+                json: true,//send as json
                 format: winston.format.json(),
                 replaceTimestamp: true,
                 onConnectionError: (err) => console.error("Loki connection error:", err) // it will not crshn if loki down
             }),
+            //save data to local text file
             new winston.transports.DailyRotateFile({
                 dirname: logDirectory,
                 filename: "application-%DATE%.log",
@@ -106,5 +107,4 @@ export class WinstonLogger implements ILogger {
     }
 }
 
-// Export a default instance named Logger to maintain compatibility with existing code
 export const Logger: ILogger = new WinstonLogger();

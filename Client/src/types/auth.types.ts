@@ -3,5 +3,5 @@ export interface signupData{
     email:string;
     password:string;
     phone?:string
-    role:"user"|"vendor"|"admin"
+    role:"user"|"vendor"|"admin"|"sub_vendor"
 }

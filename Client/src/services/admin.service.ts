@@ -20,7 +20,7 @@ export const adminLogin = async (data: AdminLoginData) => {
 };
 
 
-const toVendorDTO = (raw: Record<string, unknown>): VendorDTO => ({
+const toVendorDTO = (raw: Record<string, unknown>): VendorDTO => ({//an object called raw where the keys are string and teh values are unknown:-so these can be passed to vendor DTO
   id: raw._id as string ?? raw.id as string,
   ownerName: raw.ownerName as string ?? "",
   ownerEmail: raw.ownerEmail as string ?? "",

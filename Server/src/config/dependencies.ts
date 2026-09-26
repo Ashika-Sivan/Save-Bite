@@ -46,8 +46,8 @@ const otpRepository = new OtpRepository(redisClient.getClient());
 const emailService = new EmailService();
 const otpService = new OtpService(otpRepository, emailService);
 const vendorRepository = new VendorRepository();
-const hotelRepository=new HotelRepository()
-const dailyMenuRepository=new DailyMenuRepository()
+const hotelRepository = new HotelRepository();
+const dailyMenuRepository = new DailyMenuRepository();
 const passwordHasher = new BcryptPasswordHasher();
 const resetTokenService = new RedisPasswordResetTokenService();
 const orderRepository = new OrderRepository();
@@ -63,48 +63,102 @@ const authService = new AuthService(
   tokenService,
   passwordHasher,
   resetTokenService,
-  emailService
+  emailService,
 );
-const vendorService = new VendorService(vendorRepository)
-const dailyMenuService=new DailyMenuService(dailyMenuRepository,hotelRepository,vendorRepository,userRepository,notificationRepository)
-const adminService = new AdminService(vendorRepository, userRepository, orderRepository);
-const adminNotificationService = new AdminNotificationService(notificationScheduleRepository, notificationRepository);
-const reviewService = new ReviewService(reviewRepository, orderRepository, userRepository);
-const adminReviewService = new AdminReviewService(reviewRepository, hotelRepository);
-const adminTransactionService = new AdminTransactionService(orderRepository, hotelRepository, walletTransactionRepository);
+const vendorService = new VendorService(vendorRepository);
+const dailyMenuService = new DailyMenuService(
+  dailyMenuRepository,
+  hotelRepository,
+  vendorRepository,
+  userRepository,
+  notificationRepository,
+);
+const adminService = new AdminService(
+  vendorRepository,
+  userRepository,
+  orderRepository,
+);
+const adminNotificationService = new AdminNotificationService(
+  notificationScheduleRepository,
+  notificationRepository,
+);
+const reviewService = new ReviewService(
+  reviewRepository,
+  orderRepository,
+  userRepository,
+);
+const adminReviewService = new AdminReviewService(
+  reviewRepository,
+  hotelRepository,
+);
+const adminTransactionService = new AdminTransactionService(
+  orderRepository,
+  hotelRepository,
+  walletTransactionRepository,
+);
 
 export const authController = new AuthController(authService);
 export const vendorController = new VendorController(vendorService);
 export const adminController = new AdminController(adminService);
-export const adminNotificationController = new AdminNotificationController(adminNotificationService);
+export const adminNotificationController = new AdminNotificationController(
+  adminNotificationService,
+);
 export const reviewController = new ReviewController(reviewService);
-export const adminReviewController = new AdminReviewController(adminReviewService);
-export const adminTransactionController = new AdminTransactionController(adminTransactionService);
-export const authMiddleware = new AuthMiddleware(tokenService);
+export const adminReviewController = new AdminReviewController(
+  adminReviewService,
+);
+export const adminTransactionController = new AdminTransactionController(
+  adminTransactionService,
+);
+export const authMiddleware = new AuthMiddleware(tokenService, userRepository);
 
 import { WalletService } from "../services/vendor/wallet.service";
 import { WalletController } from "../controllers/wallet.controller";
 
 //daily menu
-export const dailyMenuController=new DailyMenuController(dailyMenuService)
-
+export const dailyMenuController = new DailyMenuController(dailyMenuService);
 
 import { UserWalletService } from "../services/wallet/userWallet.service";
 const userWalletService = new UserWalletService();
 
 //order & wallet
-const walletService=new WalletService(walletRepository,vendorRepository)
-const orderService=new OrderService(orderRepository,dailyMenuRepository,vendorRepository,walletRepository, userWalletService)
+const walletService = new WalletService(walletRepository, vendorRepository);
+const orderService = new OrderService(
+  orderRepository,
+  dailyMenuRepository,
+  vendorRepository,
+  walletRepository,
+  userWalletService,
+);
 
 import { ConcernRepository } from "../repositories/concern/concern.repository";
 import { ConcernService } from "../services/concern/concern.service";
 import { ConcernController } from "../controllers/concern.controller";
 
 const concernRepository = new ConcernRepository();
-const concernService = new ConcernService(concernRepository, orderRepository);
-const customerNotificationService = new CustomerNotificationService(notificationRepository);
+const concernService = new ConcernService(
+  concernRepository,
+  orderRepository,
+  userWalletService,
+);
+const customerNotificationService = new CustomerNotificationService(
+  notificationRepository,
+);
 
 export const orderController = new OrderController(orderService);
 export const walletController = new WalletController(walletService);
 export const concernController = new ConcernController(concernService);
-export const customerNotificationController = new CustomerNotificationController(customerNotificationService);
+export const customerNotificationController =
+  new CustomerNotificationController(customerNotificationService);
+
+import { SubVendorService } from "../services/vendor/subVendor.service";
+import { SubVendorController } from "../controllers/subVendor.controller";
+
+const subVendorService = new SubVendorService(
+  userRepository,
+  hotelRepository,
+  vendorRepository,
+  passwordHasher
+);
+export const subVendorController = new SubVendorController(subVendorService);
+

@@ -37,6 +37,7 @@ export const APP_ROUTES = {
     ORDERS: "/vendor/orders",
     WALLET: "/vendor/wallet",
     PROFILE: "/vendor/profile",
+    SUB_VENDORS: "/vendor/manage-access",
   },
 
   ADMIN: {

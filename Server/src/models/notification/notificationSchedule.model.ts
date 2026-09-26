@@ -15,17 +15,53 @@ export interface INotificationSchedule extends Document {
 }
 
 const NotificationScheduleSchema: Schema = new Schema(
-  {
-    name: { type: String, required: true },
-    title: { type: String, required: true },
-    body: { type: String, required: true },
-    targetRole: { type: String, enum: ["all", "customer", "vendor"], default: "all" },
-    time24: { type: String, required: true }, //  24hr format
-    link: { type: String, default: "/home" },
-    isActive: { type: Boolean, default: true },
-    type: { type: String, enum: ["MEAL_REMINDER", "PROMOTIONAL", "SYSTEM"], default: "MEAL_REMINDER" },
-    lastTriggeredDate: { type: String, default: "" },
-  },
+    {
+          name: { 
+            type: String, 
+            required: true
+        },
+
+          title: { 
+            type: String, 
+            required: true 
+          },
+
+          body: {
+            type: String, 
+            required: true 
+          },
+
+          targetRole: { 
+            type: String, 
+            enum: ["all", "customer", "vendor"], 
+            default: "all" 
+          },
+
+          time24: { 
+            type: String, 
+            required: true 
+          }, //  24hr format
+
+          link: { type: String,
+            default: "/home" 
+            },
+
+          isActive: { 
+            type: Boolean, 
+            default: true 
+          },
+
+          type: { 
+            type: String, 
+            enum: ["MEAL_REMINDER", "PROMOTIONAL", "SYSTEM"], 
+            default: "MEAL_REMINDER"
+          },
+
+          lastTriggeredDate: { 
+            type: String, 
+            default: "" 
+          },
+    },
   { timestamps: true }
 );
 

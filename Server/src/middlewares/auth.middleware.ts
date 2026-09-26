@@ -6,12 +6,15 @@ import { AUTH_MESSAGES } from "../constants/messages";
 import { Logger } from "../utils/logger";
 
 
+import { IUserRepository } from "../interfaces/repository/IUserRepository";
+
 export class AuthMiddleware {
     constructor(
-        private _tokenService: TokenService
+        private _tokenService: TokenService,
+        private _userRepository: IUserRepository
     ) { }
 
-    authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
             const authHeader = req.headers.authorization;
 
@@ -35,10 +38,29 @@ export class AuthMiddleware {
             //when the token come we have to verify it and placed it to payload
             const payload = this._tokenService.verifyAccessToken(token);//verify
 
+            // Check if user is blocked
+            const user = await this._userRepository.findById(payload.userId);
+            if (!user) {
+                res.status(StatusCode.UNAUTHORIZED).json({
+                    success: false,
+                    message: "User not found",
+                });
+                return;
+            }
+
+            if (user.isActive === false) {
+                res.status(StatusCode.FORBIDDEN).json({
+                    success: false,
+                    message: AUTH_MESSAGES.ACCESS_DENIED,
+                    isBlocked: true
+                });
+                return;
+            }
+            
             req.user = payload;
             next()
 
-        } catch {
+        } catch (error) {
             res.status(StatusCode.UNAUTHORIZED).json({
                 success: false,
                 message: AUTH_MESSAGES.INVALID_OR_EXPIRED_TOKEN,
@@ -46,7 +68,7 @@ export class AuthMiddleware {
         }
     }
 
-    authorize = (...allowedRoles: Array<"user" | "vendor" | "admin">) => {
+    authorize = (...allowedRoles: Array<"user" | "vendor" | "admin" | "sub_vendor">) => {
         return (req: AuthRequest, res: Response, next: NextFunction): void => {
             const role = req.user?.role;
             Logger.info("Authorization Check", {

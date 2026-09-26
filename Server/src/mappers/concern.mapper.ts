@@ -2,17 +2,12 @@ import { IConcern } from "../interfaces/models/IConcern.model";
 import { IConcernResponseDTO } from "../dtos/concern.dto";
 
 export const toConcernResponseDTO = (concern: IConcern): IConcernResponseDTO => {
-    const getIdStr = (field: any): string => {
-        if (!field) return "";
-        if (field._id) return field._id.toString();
-        return field.toString();
-    };
-
     return {
+        _id: concern._id.toString(),
         id: concern._id.toString(),
-        orderId: getIdStr(concern.orderId),
-        customerId: getIdStr(concern.customerId),
-        vendorId: getIdStr(concern.vendorId),
+        orderId: concern.orderId,
+        customerId: concern.customerId,
+        vendorId: concern.vendorId,
         reason: concern.reason,
         photoUrl: concern.photoUrl,
         photoCapturedAt: concern.photoCapturedAt ? concern.photoCapturedAt.toISOString() : null,

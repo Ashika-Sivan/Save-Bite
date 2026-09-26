@@ -19,14 +19,7 @@ export class ReviewService implements IReviewService {
     ) { }
 
     async createReview(userId: string, data: ICreateReviewRequestDTO): Promise<IReviewResponseDTO> {
-        if (!data.hotelId || !data.rating || !data.comment) {
-            throw new AppError(REVIEW_MESSAGES.REQUIRED_FIELDS, StatusCode.BAD_REQUEST);
-        }
-
         const numRating = Number(data.rating);
-        if (isNaN(numRating) || numRating < 1 || numRating > 5) {
-            throw new AppError(REVIEW_MESSAGES.INVALID_RATING, StatusCode.BAD_REQUEST);
-        }
 
         let validOrderId = data.orderId;
 

@@ -19,6 +19,7 @@ export const ROUTES = {
   AUTH: {
     REGISTER: "/register",
     LOGIN: "/login",
+    HOTEL_LOGIN: "/hotel/login",
     GOOGLE: "/google",
     LOGOUT: "/logout",
     VERIFY_OTP: "/verify-otp",
@@ -48,6 +49,10 @@ export const ROUTES = {
     UPDATE_DAILY_MENU_ITEM: "/daily-menus/:menuId/items/:itemId",
     USE_PREVIOUS_MENU: "/daily-menus/:menuId/use-previous-menu",
     WALLET: "/wallet",
+    GET_SUB_VENDOR: "/hotels/:hotelId/sub-vendor",
+    SUB_VENDOR_CREDENTIALS: "/hotels/:hotelId/credentials",
+    SUB_VENDOR_PERMISSIONS: "/hotels/:hotelId/permissions",
+    SUB_VENDOR_PASSWORD: "/hotels/:hotelId/password",
   },
 
   HOTEL: {

@@ -62,8 +62,12 @@ export class AdminReviewService implements IAdminReviewService {
 
         return {
             items: reviews,
-            total,
-            totalPages: Math.ceil(total / limit),
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
             stats: {
                 totalPlatformReviews,
                 platformAvgRating,

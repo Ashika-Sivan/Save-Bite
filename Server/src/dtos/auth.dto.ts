@@ -15,6 +15,11 @@ export interface ILoginRequestDTO {
   password: string;
 }
 
+export interface IHotelLoginRequestDTO {
+  username: string;
+  password: string;
+}
+
 export interface IVerifyOtpRequestDTO {
   email: string;
   otp: string;
@@ -46,7 +51,9 @@ export interface IUserResponseDTO {
   email: string;
   role: string;
   phone?: string;
-  isAuthenticated: boolean
+  isAuthenticated: boolean;
+  hotelId?: string;
+  permissions?: string[];
 }
 export interface ILoginResponseDTO {
   user: IUserResponseDTO;

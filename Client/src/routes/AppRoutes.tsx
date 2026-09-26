@@ -36,6 +36,8 @@ import VendorDetails from "../pages/admin/VendorDetails";
 import AdminRoute from "./AdminRoutes";
 import AdminPublicRoute from "./AdminPublicRoutes";
 import AdminLayout from "../components/admin/AdminLayout";
+import AdminForgotPassword from "../pages/admin/AdminForgotPassword";
+import AdminResetPassword from "../pages/admin/AdminResetPassword";
 
 import LiveHotelMenuPage from "../pages/customer/LiveHotelMenu";
 import FoodDetails from "../pages/customer/FoodDetails";
@@ -171,20 +173,12 @@ export default function AppRoutes() {
 
                 <Route
                     path={APP_ROUTES.PUBLIC.FORGOT_PASSWORD}
-                    element={
-                        <PublicRoute>
-                            <ForgotPassword />
-                        </PublicRoute>
-                    }
+                    element={<ForgotPassword />}
                 />
 
                 <Route
                     path={APP_ROUTES.PUBLIC.RESET_PASSWORD}
-                    element={
-                        <PublicRoute>
-                            <ResetPassword />
-                        </PublicRoute>
-                    }
+                    element={<ResetPassword />}
                 />
 
                 {/* VENDOR REGISTRATION */}
@@ -235,12 +229,15 @@ export default function AppRoutes() {
                         <Route path={APP_ROUTES.VENDOR.ORDERS} element={<VendorOrders />} />
                         <Route path={APP_ROUTES.VENDOR.WALLET} element={<VendorWalletPage />} />
                         <Route path={APP_ROUTES.VENDOR.PROFILE} element={<VendorProfile />} />
+                        <Route path={APP_ROUTES.VENDOR.SUB_VENDORS} element={<VendorSubVendorManagement />} />
                     </Route>
                 </Route>
 
                 {/* ADMIN PUBLIC ROUTES */}
                 <Route element={<AdminPublicRoute />}>
                     <Route path={APP_ROUTES.ADMIN.LOGIN} element={<AdminLogin />} />
+                    <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+                    <Route path="/admin/reset-password" element={<AdminResetPassword />} />
                 </Route>
 
                 {/* ADMIN PROTECTED ROUTES */}
@@ -265,4 +262,4 @@ export default function AppRoutes() {
             </Routes>
         </BrowserRouter>
     );
-}
+}import { VendorSubVendorManagement } from "../pages/vendor/VendorSubVendorManagement";

@@ -31,7 +31,7 @@ export interface ILiveHotelRepositoryResult{
         endTime:Date;
     }
     availableItemCount:number;
-    distanceInMeter:number
+    distanceInMeters?:number;
 
 }
 export interface  ILiveHotelPaginatedResult{
@@ -79,8 +79,9 @@ export interface ILiveHotelMenuRepositoryResult {
 export interface IHotelRepository{
     createHotel(data:IHotelCreateData):Promise<IHotel>;
     findByVendorId(vendorId:string):Promise<IHotel[]>;
-    findByIdAndVendorId(hotelId:string, vendorId:string):Promise<IHotel|null>
-    findLiveHotels(query:ILiveHotelQuery):Promise<ILiveHotelPaginatedResult>
+    findById(hotelId:string):Promise<IHotel|null>;
+    findByIdAndVendorId(hotelId:string, vendorId:string):Promise<IHotel|null>;
+    findLiveHotels(query:ILiveHotelQuery):Promise<ILiveHotelPaginatedResult>;
     findLiveHotelMenu(query:ILiveHotelMenuQuery):Promise<ILiveHotelMenuRepositoryResult|null>;
     findAll(): Promise<IHotel[]>;
 }

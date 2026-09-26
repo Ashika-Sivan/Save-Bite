@@ -5,36 +5,47 @@ import {
   Wallet,
   User,
   LogOut,
-  X
+  X,
+  Shield
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { logout } from "../../services/auth.service";
 import { clearCredentials } from "../../redux/authSlice";
 import { clearCart } from "../../redux/cartSlice";
-import type { AppDispatch } from "../../redux/store";
+import type { AppDispatch, RootState } from "../../redux/store";
 
 const menuItems = [
   {
     label: "Dashboard",
     path: "/vendor/dashboard",
     icon: LayoutDashboard,
+    permission: "VIEW_ANALYTICS"
   },
   {
     label: "Hotel List",
     path: "/vendor/hotels",
     icon: Utensils,
+    vendorOnly: true
   },
   {
     label: "Orders",
     path: "/vendor/orders",
     icon: ShoppingBag,
+    permission: "VIEW_ORDERS"
   },
   {
     label: "Wallet",
     path: "/vendor/wallet",
     icon: Wallet,
+    vendorOnly: true
+  },
+  {
+    label: "Manage Access",
+    path: "/vendor/manage-access",
+    icon: Shield,
+    vendorOnly: true
   },
   {
     label: "Profile",
@@ -50,6 +61,27 @@ interface VendorSidebarProps {
 const VendorSidebar = ({ onClose }: VendorSidebarProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (user?.role === "vendor") return true;
+    if (user?.role === "sub_vendor") {
+        if (item.vendorOnly) return false;
+        if (item.permission && !user.permissions?.includes(item.permission)) return false;
+        return true;
+    }
+    return false;
+  });
+
+  // For sub_vendors with menu access, we should inject a Menu link directly to their hotel
+  const finalMenuItems = [...filteredMenuItems];
+  if (user?.role === "sub_vendor" && (user.permissions?.includes("CREATE_MENU") || user.permissions?.includes("UPDATE_MENU"))) {
+      finalMenuItems.splice(1, 0, {
+          label: "Menu",
+          path: `/vendor/hotels/${user.hotelId}/menu`,
+          icon: Utensils
+      });
+  }
 
   const handleLogout = () => {
     toast((t) => (
@@ -106,7 +138,7 @@ const VendorSidebar = ({ onClose }: VendorSidebarProps) => {
       </div>
 
       <nav className="space-y-2 p-4 flex-1 overflow-y-auto">
-        {menuItems.map((item) => {
+        {finalMenuItems.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink

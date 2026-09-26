@@ -59,8 +59,8 @@ export const toLiveHotelResponseDTO = async (hotel: ILiveHotelRepositoryResult):
         availableItemCount: hotel.availableItemCount,
     };
 
-    if (hotel.distanceInMeter !== undefined) {
-        response.distanceInMeters = Math.round(hotel.distanceInMeter);
+    if (hotel.distanceInMeters !== undefined) {
+        response.distanceInMeters = Math.round(hotel.distanceInMeters);
     }
 
     return response;

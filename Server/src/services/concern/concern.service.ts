@@ -13,11 +13,13 @@ import { getPresignedImageUrl } from "../../utils/getSignedUrl";
 import stripe from "../../config/stripe";
 import { toConcernResponseDTO } from "../../mappers/concern.mapper";
 import { IConcernResponseDTO } from "../../dtos/concern.dto";
+import { IUserWalletService } from "../../interfaces/service/wallet/IUserWalletService";
 
 export class ConcernService implements IConcernService {
   constructor(
     private _concernRepository: IConcernRepository,
-    private _orderRepository: IOrderRepository
+    private _orderRepository: IOrderRepository,
+    private _userWalletService?: IUserWalletService
   ) {}
 
   async raiseConcern(data: RaiseConcernDTO, file: Express.Multer.File): Promise<IConcernResponseDTO> {
@@ -162,6 +164,43 @@ export class ConcernService implements IConcernService {
       throw new AppError(`Concern is already ${concern.status}`, StatusCode.BAD_REQUEST);
     }
 
+    const orderIdStr = concern.orderId._id ? concern.orderId._id.toString() : concern.orderId.toString();
+    const order = await this._orderRepository.findById(orderIdStr);
+
+    if (!order) {
+      throw new AppError("Associated order not found", StatusCode.NOT_FOUND);
+    }
+
+    // 70% refund for rejected concern (treated as no-show)
+    if (order.stripePaymentIntentId) {
+      const refundRatio = 0.70;
+      const refundAmount = Number((order.totalAmount * refundRatio).toFixed(2));
+      const refundAmountInPaise = Math.round(refundAmount * 100);
+
+      try {
+        await stripe.refunds.create({
+          payment_intent: order.stripePaymentIntentId,
+          amount: refundAmountInPaise,
+          reason: "requested_by_customer"
+        });
+
+        if (this._userWalletService) {
+          try {
+            await this._userWalletService.logCredit(
+              order.customerId.toString(),
+              refundAmount,
+              `Concern Rejected - 70% Penalty Refund for Order #${orderIdStr.substring(19).toUpperCase()}`,
+              orderIdStr
+            );
+          } catch (err) {
+            console.error("Failed to log concern rejection refund transaction:", err);
+          }
+        }
+      } catch (error: unknown) {
+        throw new AppError(`Stripe refund failed: ${error instanceof Error ? error.message : "Unknown error"}`, StatusCode.INTERNAL_SERVER_ERROR);
+      }
+    }
+
     const updatedConcern = await this._concernRepository.updateConcernStatus(
       concernId,
       ConcernStatus.REJECTED,
@@ -173,8 +212,7 @@ export class ConcernService implements IConcernService {
       throw new AppError("Failed to update concern status", StatusCode.INTERNAL_SERVER_ERROR);
     }
 
-    const orderIdStr = concern.orderId._id ? concern.orderId._id.toString() : concern.orderId.toString();
-    await this._orderRepository.updateOrderStatus(orderIdStr, OrderStatus.PLACED);
+    await this._orderRepository.updateOrderStatus(orderIdStr, OrderStatus.AUTO_REFUNDED);
 
     return toConcernResponseDTO(updatedConcern);
   }

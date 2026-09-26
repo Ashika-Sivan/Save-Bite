@@ -8,10 +8,12 @@ export const toUserResponseDTO = (
   return {
     id: user._id.toString(),
     name: user.name,
-    email: user.email,
+    email: user.email || "",
     phone: user.phone,
     role: user.role,
     isAuthenticated: user.isAuthenticated,
+    ...(user.hotelId ? { hotelId: user.hotelId.toString() } : {}),
+    ...(user.permissions ? { permissions: user.permissions } : {}),
   };
 };
 
@@ -21,7 +23,7 @@ export const toAdminUserListDTO = (
   return {
     id: user._id.toString(),
     name: user.name,
-    email: user.email,
+    email: user.email || "",
     role: user.role,
     isActive: user.isActive,
     createdAt: user.createdAt,
