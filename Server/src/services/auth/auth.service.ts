@@ -326,7 +326,8 @@ export class AuthService implements IAuthService {
       user._id.toString()
     );
 
-    await this._emailService.sendResetPasswordEmail(user.email || "", resetToken, user.role);
+    const actualRole = user.isAdmin ? "admin" : user.role;
+    await this._emailService.sendResetPasswordEmail(user.email || "", resetToken, actualRole);
 
     return {
       message: AUTH_MESSAGES.RESET_LINK_SENT,
