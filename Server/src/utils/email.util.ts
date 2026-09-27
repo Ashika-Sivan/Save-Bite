@@ -5,8 +5,9 @@ export const sendResetPasswordEmail = async (
   email: string,
   token: string
 ): Promise<void> => {
-  // Keep the original working link unchanged
-  const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+  // Use CLIENT_URL from environment or default to live site
+  const clientUrl = (process.env.CLIENT_URL?.split(",")[0] || "https://savebite.store").trim();
+  const resetLink = `${clientUrl}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,

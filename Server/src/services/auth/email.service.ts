@@ -22,9 +22,9 @@ export class EmailService implements IEmailService {
   }
 
   async sendResetPasswordEmail(email: string, token: string, role?: string): Promise<void> {
-    const clientUrl = (env.CLIENT_URL.split(",")[0] || "").trim();
+    const clientUrl = (env.CLIENT_URL?.split(",")[0] || "https://savebite.store").trim();
     const resetPath = role === "admin" ? "/admin/reset-password" : "/reset-password";
-    const resetLink = `http://localhost:3000${resetPath}?token=${token}`;
+    const resetLink = `${clientUrl}${resetPath}?token=${token}`;
 
     try {
       await transporter.sendMail({
