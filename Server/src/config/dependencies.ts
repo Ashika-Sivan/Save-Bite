@@ -119,7 +119,12 @@ import { WalletController } from "../controllers/wallet.controller";
 export const dailyMenuController = new DailyMenuController(dailyMenuService);
 
 import { UserWalletService } from "../services/wallet/userWallet.service";
-const userWalletService = new UserWalletService();
+import { UserWalletRepository } from "../repositories/wallet/userWallet.repository";
+import { UserWalletController } from "../controllers/userWallet.controller";
+
+const userWalletRepository = new UserWalletRepository();
+const userWalletService = new UserWalletService(userWalletRepository);
+export const userWalletController = new UserWalletController(userWalletService);
 
 //order & wallet
 const walletService = new WalletService(walletRepository, vendorRepository);

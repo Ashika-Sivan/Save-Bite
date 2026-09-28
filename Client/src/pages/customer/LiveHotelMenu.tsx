@@ -71,6 +71,7 @@ const LiveHotelMenuPage = () => {
             (state: RootState) =>
                 state.cart.hotelId
         )
+    const cartItems = useSelector((state: RootState) => state.cart.items);
 
     const { hotelId } = useParams<{
         hotelId: string
@@ -405,6 +406,20 @@ const LiveHotelMenuPage = () => {
             )
 
             return
+        }
+
+        const existingCartItem = cartItems.find((cItem) => cItem.itemId === item.itemId);
+        const requestedQuantity = getQuantity(item.itemId);
+
+        if (existingCartItem) {
+            if (existingCartItem.quantity >= item.stockQuantity) {
+                toast.error("Maximum quantity reached in cart");
+                return;
+            }
+            if (existingCartItem.quantity + requestedQuantity > item.stockQuantity) {
+                toast.error(`Cannot add that many. Only ${item.stockQuantity - existingCartItem.quantity} more available.`);
+                return;
+            }
         }
 
         dispatch(addToCart(payload))

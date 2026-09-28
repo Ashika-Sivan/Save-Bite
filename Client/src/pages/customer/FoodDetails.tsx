@@ -30,6 +30,7 @@ const FoodDetails = () => {
     const { hotelId, itemId } = useParams<{ hotelId: string; itemId: string }>();
 
     const cartHotelId = useSelector((state: RootState) => state.cart.hotelId);
+    const cartItems = useSelector((state: RootState) => state.cart.items);
 
     const [menu, setMenu] = useState<LiveHotelMenu | null>(null);
     const [foodItem, setFoodItem] = useState<LiveMenuItem | null>(null);
@@ -173,6 +174,18 @@ const FoodDetails = () => {
                 { duration: Infinity, position: "top-center" }
             );
             return;
+        }
+
+        const existingCartItem = cartItems.find((cItem) => cItem.itemId === foodItem.itemId);
+        if (existingCartItem) {
+            if (existingCartItem.quantity >= foodItem.stockQuantity) {
+                toast.error("Maximum quantity reached in cart");
+                return;
+            }
+            if (existingCartItem.quantity + quantity > foodItem.stockQuantity) {
+                toast.error(`Cannot add that many. Only ${foodItem.stockQuantity - existingCartItem.quantity} more available.`);
+                return;
+            }
         }
 
         dispatch(addToCart(payload));

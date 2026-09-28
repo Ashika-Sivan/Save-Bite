@@ -222,7 +222,7 @@ const MyOrdersPage = () => {
                             try {
                                 setIsLoading(true);
                                 await cancelOrder(orderId);
-                                toast.success("Order cancelled successfully");
+                                toast.success("order canceled success");
                                 setActiveTab("previous");
                                 await fetchOrders();
                             } catch (err: any) {

@@ -6,7 +6,6 @@ const router = Router();
 
 
 
-// Customer raises concern for an order
 router.post(
   "/orders/:orderId/concern",
   authMiddleware.authenticate,
@@ -15,7 +14,7 @@ router.post(
   concernController.raiseConcern
 );
 
-// Admin list all concerns
+
 router.get(
   "/admin/concerns",
   authMiddleware.authenticate,
@@ -23,7 +22,7 @@ router.get(
   concernController.getAllConcerns
 );
 
-// Admin get concern details by ID
+
 router.get(
   "/admin/concerns/:concernId",
   authMiddleware.authenticate,
@@ -31,7 +30,7 @@ router.get(
   concernController.getConcernById
 );
 
-// Admin approve concern
+
 router.post(
   "/admin/concerns/:concernId/approve",
   authMiddleware.authenticate,
@@ -39,7 +38,7 @@ router.post(
   concernController.approveConcern
 );
 
-// Admin reject concern
+
 router.post(
   "/admin/concerns/:concernId/reject",
   authMiddleware.authenticate,

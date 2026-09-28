@@ -35,6 +35,21 @@ export default function CustomerProfile() {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!passwordForm.currentPassword) {
+        toast.error("Current password is required.");
+        return;
+    }
+
+    if (!passwordForm.newPassword) {
+        toast.error("New password is required.");
+        return;
+    }
+
+    if (!passwordForm.confirmPassword) {
+        toast.error("Please confirm your new password.");
+        return;
+    }
+
     if (passwordForm.newPassword.length < 8) {
         toast.error("Password must be at least 8 characters long.");
         return;
@@ -221,7 +236,6 @@ export default function CustomerProfile() {
                                         name="currentPassword"
                                         value={passwordForm.currentPassword}
                                         onChange={handlePasswordChange}
-                                        required
                                         className="w-full rounded-2xl border border-white/50 bg-white/50 py-3.5 pl-11 pr-12 text-sm font-bold text-brand-dark outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10"
                                         placeholder="••••••••"
                                     />
@@ -241,8 +255,6 @@ export default function CustomerProfile() {
                                         name="newPassword"
                                         value={passwordForm.newPassword}
                                         onChange={handlePasswordChange}
-                                        required
-                                        minLength={8}
                                         className="w-full rounded-2xl border border-white/50 bg-white/50 py-3.5 pl-11 pr-12 text-sm font-bold text-brand-dark outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10"
                                         placeholder="••••••••"
                                     />
@@ -269,8 +281,6 @@ export default function CustomerProfile() {
                                         name="confirmPassword"
                                         value={passwordForm.confirmPassword}
                                         onChange={handlePasswordChange}
-                                        required
-                                        minLength={8}
                                         className="w-full rounded-2xl border border-white/50 bg-white/50 py-3.5 pl-11 pr-12 text-sm font-bold text-brand-dark outline-none transition-all focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10"
                                         placeholder="••••••••"
                                     />

@@ -1,15 +1,15 @@
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "../types/authRequest";
-import { UserWalletService } from "../services/wallet/userWallet.service";
+import { IUserWalletService } from "../interfaces/service/wallet/IUserWalletService";
 import { StatusCode } from "../constants/statusCode";
 import { WALLET_MESSAGES } from "../constants/messages";
 import { ResponseHelper } from "../utils/ResponseHelper";
 
 export class UserWalletController {
-    private _userWalletService: UserWalletService;
+    private _userWalletService: IUserWalletService;
 
-    constructor() {
-        this._userWalletService = new UserWalletService();
+    constructor(userWalletService: IUserWalletService) {
+        this._userWalletService = userWalletService;
     }
 
     getWallet = async (req: AuthRequest, res: Response, next: NextFunction) => {

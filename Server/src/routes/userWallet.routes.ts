@@ -1,10 +1,8 @@
 import { Router } from "express";
-import { UserWalletController } from "../controllers/userWallet.controller";
-import { authMiddleware } from "../config/dependencies";
+import { authMiddleware, userWalletController } from "../config/dependencies";
 import { ROUTES } from "../constants/routes";
 
 const router = Router();
-const userWalletController = new UserWalletController();
 
 router.use(authMiddleware.authenticate, authMiddleware.authorize("user"));
 

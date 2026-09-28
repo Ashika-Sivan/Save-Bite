@@ -1,5 +1,8 @@
 import express from "express";
-import { customerNotificationController, authMiddleware } from "../config/dependencies";
+import {
+  customerNotificationController,
+  authMiddleware,
+} from "../config/dependencies";
 
 const router = express.Router();
 

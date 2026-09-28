@@ -7,13 +7,13 @@ import { IUserWalletTransaction, UserWalletTransactionType } from "../../interfa
 export class UserWalletService implements IUserWalletService {
     private _walletRepository: IUserWalletRepository;
 
-    constructor() {
-        this._walletRepository = new UserWalletRepository();
+    constructor(walletRepository: IUserWalletRepository) {
+        this._walletRepository = walletRepository;
     }
 
-    async getTransactionHistory(customerId: string, page: number = 1, limit: number = 10,  search: string = "",  type: string = ""): Promise<{ transactions: IUserWalletTransaction[], totalItems: number, totalPages: number, currentPage: number }> {
+    async getTransactionHistory(customerId: string, page: number = 1, limit: number = 10, search: string = "", type: string = ""): Promise<{ transactions: IUserWalletTransaction[], totalItems: number, totalPages: number, currentPage: number }> {
         let wallet = await this._walletRepository.getWalletByCustomerId(customerId);
-        
+
         if (!wallet) {
             wallet = await this._walletRepository.createWallet(customerId);
         }
@@ -23,13 +23,13 @@ export class UserWalletService implements IUserWalletService {
 
     async logCredit(customerId: string, amount: number, description: string, orderId?: string, session?: ClientSession): Promise<void> {
         if (amount <= 0) return;
-        
+
         let wallet = await this._walletRepository.getWalletByCustomerId(customerId);
         if (!wallet) {
             wallet = await this._walletRepository.createWallet(customerId);
         }
 
-       
+
         await this._walletRepository.createTransaction(
             String(wallet._id),
             amount,
@@ -51,7 +51,7 @@ export class UserWalletService implements IUserWalletService {
             wallet = await this._walletRepository.createWallet(customerId);
         }
 
-       
+
         await this._walletRepository.createTransaction(
             String(wallet._id),
             amount,

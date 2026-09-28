@@ -10,10 +10,7 @@ import { AppError } from "../../errors/AppError";
 import { StatusCode } from "../../constants/statusCode";
 import { VENDOR_MESSAGES, ADMIN_MESSAGES } from "../../constants/messages";
 import { getSignedS3Url } from "../../utils/getSignedS3Url";
-import {
-    toAdminVendorDetailsDTO,
-    toAdminVendorListDTO,
-} from "../../mappers/vendor.mapper";
+import {toAdminVendorDetailsDTO, toAdminVendorListDTO,} from "../../mappers/vendor.mapper";
 import { IAdminUserListDTO } from "../../dtos/user.dto";
 import { toAdminUserListDTO } from "../../mappers/user.mapper";
 import { IPaginatedResult, IPaginationOptions } from "../../types/pagination.types";
