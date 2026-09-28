@@ -16,6 +16,7 @@ import {
   XCircle,
   ZoomIn,
   ZoomOut,
+  User,
 } from "lucide-react";
 
 import {
@@ -56,7 +57,7 @@ const Section = ({
   title: string;
   children: ReactNode;
 }) => (
-  <section className="flex flex-col justify-between h-full rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+  <section className="flex flex-col rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
     <div className="mb-5 flex items-center gap-2">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
         {icon}
@@ -401,6 +402,18 @@ useEffect(() => {
               </div>
             </div>
           </Section>
+
+          {vendor.owner && (
+            <Section icon={<User size={16} />} title="Vendor Information">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Field label="Name" value={vendor.owner.name} />
+                <Field label="Email" value={vendor.owner.email} />
+                {vendor.owner.phone && (
+                  <Field label="Phone" value={vendor.owner.phone} />
+                )}
+              </div>
+            </Section>
+          )}
 
           <Section icon={<ShieldCheck size={16} />} title="Verification Details">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

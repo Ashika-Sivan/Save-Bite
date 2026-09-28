@@ -1,5 +1,11 @@
 export interface VendorDetailsType {
   _id: string;
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
 
   businessInfo: {
     businessName: string;
