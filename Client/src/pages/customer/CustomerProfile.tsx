@@ -65,7 +65,7 @@ export default function CustomerProfile() {
         return;
     }
 
-    if (!/(?=.*\\d)/.test(passwordForm.newPassword)) {
+    if (!/(?=.*\d)/.test(passwordForm.newPassword)) {
         toast.error("Password must contain at least one number.");
         return;
     }

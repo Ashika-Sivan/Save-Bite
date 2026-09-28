@@ -50,6 +50,7 @@ const CartPage = () => {
     const [currentTime, setCurrentTime] =
         useState(new Date())
     const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+    const [isLiveMenuAvailable, setIsLiveMenuAvailable] = useState<boolean | null>(null);
 
     useEffect(() => {
         const intervalId =
@@ -70,11 +71,15 @@ const CartPage = () => {
         if (cart.hotelId) {
             getLiveHotelMenu(cart.hotelId)
                 .then((response) => {
+                    setIsLiveMenuAvailable(true);
                     if (response.data && response.data.items) {
                         dispatch(syncCart({ items: response.data.items }));
                     }
                 })
                 .catch((err) => {
+                    if (err.response && err.response.status === 404) {
+                        setIsLiveMenuAvailable(false);
+                    }
                     console.error("Failed to sync cart with live menu:", err);
                 });
         }
@@ -288,6 +293,37 @@ const CartPage = () => {
                         className="mt-6 rounded-full bg-green-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-800"
                     >
                         Browse restaurants
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    if (isLiveMenuAvailable === false) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#faf7ef] px-5">
+                <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-9 text-center shadow-sm">
+                    <div className="text-5xl text-red-600">
+                        ⚠️
+                    </div>
+
+                    <h1 className="mt-4 text-2xl font-bold text-gray-900">
+                        Cart Unavailable
+                    </h1>
+
+                    <p className="mt-2 text-sm text-gray-500">
+                        The live menu for this restaurant has ended or is no longer available.
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            dispatch(clearCart());
+                            navigate("/");
+                        }}
+                        className="mt-6 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+                    >
+                        Clear Cart & Browse
                     </button>
                 </div>
             </div>
