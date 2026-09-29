@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import {
   getAdminTransactionOverview,
   getVendorFinancialBreakdown,
+  downloadAdminTransactionsPDF,
   type TransactionOverview,
   type VendorFinancialItem,
 } from "../../services/adminTransaction.service";
-import { downloadTransactionsPDF } from "../../utils/pdfExporter";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
@@ -86,16 +86,36 @@ const AdminTransactions = () => {
 
 
 
-  const handleDownloadPDF = () => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
     if (vendors.length === 0 && overview.totalGrossSales === 0) {
       toast.error("No transaction data available to export");
       return;
     }
+    
     try {
-      downloadTransactionsPDF(overview, vendors);
+      setIsDownloading(true);
+      const blob = await downloadAdminTransactionsPDF({
+        search: debouncedVendorSearch.trim() || undefined,
+        businessType: businessTypeFilter !== "ALL" ? businessTypeFilter : undefined,
+        sortAdminEarned: sortAdminEarned || undefined,
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `SaveBite_Financial_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
       toast.success("Financial Transactions PDF downloaded successfully!");
-    } catch (err) {
-      toast.error("Failed to generate PDF document");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to download PDF document");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -120,10 +140,15 @@ const AdminTransactions = () => {
             <button
               type="button"
               onClick={handleDownloadPDF}
-              className="inline-flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-95"
+              disabled={isDownloading}
+              className="inline-flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download size={16} />
-              Download PDF Report
+              {isDownloading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Download size={16} />
+              )}
+              {isDownloading ? "Generating PDF..." : "Download PDF Report"}
             </button>
           </div>
         </div>

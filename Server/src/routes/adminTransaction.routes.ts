@@ -8,6 +8,10 @@ const router = Router();
 
 router.use(authMiddleware.authenticate, authMiddleware.authorize("admin"));
 router.get(
+  "/download-pdf",
+  adminTransactionController.downloadPdf.bind(adminTransactionController),
+);
+router.get(
   "/overview",
   adminTransactionController.getOverview.bind(adminTransactionController),
 );

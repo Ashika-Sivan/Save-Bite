@@ -78,6 +78,16 @@ export const getAdminTransactionOverview = async (): Promise<TransactionOverview
   return response.data?.data || response.data;
 };
 
+export const downloadAdminTransactionsPDF = async (
+  params?: VendorBreakdownParams
+): Promise<Blob> => {
+  const response = await api.get(API_ROUTES.ADMIN.TRANSACTIONS_DOWNLOAD_PDF, {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
+};
+
 export const getVendorFinancialBreakdown = async (
   params?: VendorBreakdownParams
 ): Promise<VendorFinancialResponse> => {

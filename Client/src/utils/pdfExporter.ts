@@ -2,9 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { TransactionOverview, VendorFinancialItem } from "../services/adminTransaction.service";
 
-/**
- * Export Admin Transactions & Vendor Revenue Report as PDF
- */
+
 export const downloadTransactionsPDF = (
   overview: TransactionOverview,
   vendors: VendorFinancialItem[]
@@ -23,8 +21,8 @@ export const downloadTransactionsPDF = (
     minute: "2-digit",
   });
 
-  // Header Title & Branding
-  doc.setFillColor(22, 101, 52); // SaveBite Green (#166534)
+
+  doc.setFillColor(22, 101, 52);
   doc.rect(0, 0, 210, 24, "F");
 
   doc.setTextColor(255, 255, 255);
@@ -32,19 +30,18 @@ export const downloadTransactionsPDF = (
   doc.setFontSize(16);
   doc.text("SaveBite - Financial Transactions & Vendor Report", 14, 15);
 
-  // Report Date & Subtitle
+
   doc.setTextColor(100, 116, 139);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(`Generated on: ${currentDate}`, 14, 31);
   doc.text("Official Platform Financial Statement", 145, 31);
 
-  // Draw Horizontal Separator Line
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.5);
   doc.line(14, 34, 196, 34);
 
-  // Financial Summary Cards Box
+
   doc.setFillColor(248, 250, 252);
   doc.roundedRect(14, 38, 182, 32, 3, 3, "F");
 
@@ -57,7 +54,7 @@ export const downloadTransactionsPDF = (
   doc.setFont("helvetica", "normal");
   doc.setTextColor(71, 85, 105);
 
-  // Column 1: Gross Sales & Admin Earned
+
   doc.text(`Total Gross Sales:`, 20, 54);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(15, 23, 42);
@@ -67,15 +64,15 @@ export const downloadTransactionsPDF = (
   doc.setTextColor(71, 85, 105);
   doc.text(`Admin Commission:`, 20, 62);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(22, 101, 52); // Highlighted Admin Green
+  doc.setTextColor(22, 101, 52);
   doc.text(`Rs. ${overview.totalAdminCommission.toLocaleString("en-IN")}`, 58, 62);
 
-  // Column 2: Vendor Earnings & Transactions
+
   doc.setFont("helvetica", "normal");
   doc.setTextColor(71, 85, 105);
   doc.text(`Vendor Net Earnings:`, 110, 54);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(29, 78, 216); // Vendor Blue
+  doc.setTextColor(29, 78, 216);
   doc.text(`Rs. ${overview.totalVendorEarnings.toLocaleString("en-IN")}`, 150, 54);
 
   doc.setFont("helvetica", "normal");
@@ -85,13 +82,12 @@ export const downloadTransactionsPDF = (
   doc.setTextColor(15, 23, 42);
   doc.text(`${overview.totalTransactions}`, 150, 62);
 
-  // Section Header: Amount Received Per Vendor
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(15, 23, 42);
   doc.text("Amount Received Per Vendor", 14, 78);
 
-  // Table Data Preparation
   const tableRows = vendors.map((v) => [
     v.hotelName || "N/A",
     v.place || "N/A",
@@ -152,7 +148,7 @@ export const downloadTransactionsPDF = (
     },
   });
 
-  // Footer Signature & Page Number
+
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -162,12 +158,11 @@ export const downloadTransactionsPDF = (
     doc.text(`SaveBite Admin Audit Report • Page ${i} of ${pageCount}`, 14, 287);
   }
 
-  doc.save(`SaveBite_Financial_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(`SaveBite_Financial_Report_${new Date().toISOString().slice(0, 10)}.pdf`);//trigger browner native donwload behaviour
+  
 };
 
-/**
- * Export Admin Orders List as PDF
- */
+
 export const downloadOrdersPDF = (orders: any[], currentTabLabel: string = "All Orders") => {
   const doc = new jsPDF({
     orientation: "landscape",
@@ -183,8 +178,8 @@ export const downloadOrdersPDF = (orders: any[], currentTabLabel: string = "All 
     minute: "2-digit",
   });
 
-  // Header Title & Branding
-  doc.setFillColor(22, 101, 52); // SaveBite Green (#166534)
+
+  doc.setFillColor(22, 101, 52);
   doc.rect(0, 0, 297, 24, "F");
 
   doc.setTextColor(255, 255, 255);
@@ -192,19 +187,19 @@ export const downloadOrdersPDF = (orders: any[], currentTabLabel: string = "All 
   doc.setFontSize(16);
   doc.text(`SaveBite - Orders & Escrow Audit Report (${currentTabLabel})`, 14, 15);
 
-  // Subtitle
+
   doc.setTextColor(100, 116, 139);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(`Generated on: ${currentDate}`, 14, 31);
   doc.text(`Total Records Exported: ${orders.length}`, 230, 31);
 
-  // Draw Horizontal Line
+
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.5);
   doc.line(14, 34, 283, 34);
 
-  // Table Data Preparation
+
   const tableRows = orders.map((order) => [
     order.pickupCode ? `#${order.pickupCode}` : order._id?.slice(-6) || "N/A",
     order.customerId?.name || "Customer",

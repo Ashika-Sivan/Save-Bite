@@ -61,6 +61,7 @@ export const API_ROUTES = {
     NOTIFICATIONS_BROADCAST: "/admin/notifications/broadcast",
     NOTIFICATIONS_HISTORY: "/admin/notifications/history",
     TRANSACTIONS_OVERVIEW: "/admin/transactions/overview",
+    TRANSACTIONS_DOWNLOAD_PDF: "/admin/transactions/download-pdf",
     TRANSACTIONS_VENDORS: "/admin/transactions/vendors",
     TRANSACTIONS_RECENT: "/admin/transactions/recent",
     TRANSACTIONS_REFUNDS: "/admin/transactions/refunds",

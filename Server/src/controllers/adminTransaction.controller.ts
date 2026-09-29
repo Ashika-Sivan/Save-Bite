@@ -58,7 +58,19 @@ export class AdminTransactionController {
             search,
             status
         );
-        // Note: Reusing RECENT_TRANSACTIONS_FETCHED message or define a new one. I'll use a direct string or generic message if a specific one isn't available.
         ResponseHelper.success(res, StatusCode.OK, "Refund reports fetched successfully", refunds);
+    });
+
+    downloadPdf = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+        const search = (req.query.search as string || "").trim();
+        const businessTypeFilter = (req.query.businessType as string || "").trim();
+        const sortAdminEarned = req.query.sortAdminEarned as "asc" | "desc" | undefined;
+        
+        const overview = await this._adminTransactionService.getOverview();
+        // Fetch vendors without pagination (or a very large limit) to include all in PDF, but apply filters
+        const breakdown = await this._adminTransactionService.getVendorBreakdown(1, 10000, search, businessTypeFilter, sortAdminEarned);
+        
+        const { generateTransactionsPDF } = await import("../utils/pdfService");
+        generateTransactionsPDF(res, overview, breakdown.items);
     });
 }
