@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import cartReducer, { CART_STORAGE_KEY } from './cartSlice'
-import notificationReducer, { NOTIFICATION_STORAGE_KEY } from './notificationSlice';
+import notificationReducer from './notificationSlice';
 
 export const store = configureStore({//global store
     reducer: {
@@ -12,35 +12,25 @@ export const store = configureStore({//global store
 })
 
 let previousCartState = store.getState().cart
-let previousNotificationState = store.getState().notification
-
 store.subscribe(() => {
-    const state = store.getState()
-    const currentCartState = state.cart
-    const currentNotificationState = state.notification
+    const currentCartState = store.getState().cart//run whenever a redux action changes the store.
 
-    if (currentCartState !== previousCartState) {
-        previousCartState = currentCartState
-        try {
-            if (currentCartState.items.length === 0) {
-                localStorage.removeItem(CART_STORAGE_KEY)
-            } else {
-                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(currentCartState))
-            }
-        } catch (error) {
-            console.error("Failed to update cart storage:", error);
-        }
+    if (currentCartState === previousCartState) {
+        return
     }
-
-    if (currentNotificationState !== previousNotificationState) {
-        previousNotificationState = currentNotificationState
-        try {
-            localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(currentNotificationState))
-        } catch (error) {
-            console.error("Failed to update notification storage:", error);
+    previousCartState = currentCartState
+    try {
+        if (currentCartState.items.length === 0) {
+            localStorage.removeItem(CART_STORAGE_KEY)
+            return
         }
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(currentCartState))
+
+    } catch (error) {
+        console.error("Failed to update cart storage:", error);
     }
 })
 
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+export type RootState = ReturnType<typeof store.getState>//crerate a type for entire redux store.
+export type AppDispatch = typeof store.dispatch//which give oroper typescript support
+//actually working here

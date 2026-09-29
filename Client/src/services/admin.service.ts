@@ -132,7 +132,7 @@ export const getAdminLiveMetrics = async (): Promise<{ customers: number; vendor
   return response.data?.data ?? response.data;
 };
 
-export const getAdminAdvancedCharts = async (): Promise<{ orderStatusDistribution: any[], topVendors: any[] }> => {
+export const getAdminAdvancedCharts = async (): Promise<{ orderStatusDistribution: { name: string, value: number }[], topVendors: { name: string, revenue: number }[] }> => {
   const response = await api.get("/admin/dashboard/advanced-charts");
   return response.data?.data ?? response.data;
 };

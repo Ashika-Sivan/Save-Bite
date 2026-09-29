@@ -15,9 +15,9 @@ export interface IAdminService {
     toggleUserStatus(userId: string): Promise<IAdminUserListDTO>;
     toggleVendorStatus(vendorId: string): Promise<IAdminVendorListDTO>;
     getVendorById(vendorId: string): Promise<IAdminVendorDocumentListDTO>;
-    getDashboardOverview(): Promise<any>;
-    getRevenueChartData(): Promise<any>;
-    getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<any>>;
+    getDashboardOverview(): Promise<{ totalUsers: number, blockedUsers: number, totalVendors: number, pendingApplications: number, totalOrders: number, totalRevenue: number, recentUsers: IAdminUserListDTO[], recentVendors: IAdminVendorListDTO[] }>;
+    getRevenueChartData(): Promise<{ date: string; revenue: number; orders: number }[]>;
+    getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<unknown>>;
     getLiveMetrics(): Promise<{ customers: number; vendors: number; admins: number }>;
-    getAdvancedChartsData(): Promise<{ orderStatusDistribution: any[], topVendors: any[] }>;
+    getAdvancedChartsData(): Promise<{ orderStatusDistribution: { name: string, value: number }[], topVendors: { name: string, revenue: number }[] }>;
 }

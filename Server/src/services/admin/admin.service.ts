@@ -246,7 +246,7 @@ export class AdminService implements IAdminService {
         };
     }
 
-    async getDashboardOverview(): Promise<any> {
+    async getDashboardOverview(): Promise<{ totalUsers: number, blockedUsers: number, totalVendors: number, pendingApplications: number, totalOrders: number, totalRevenue: number, recentUsers: IAdminUserListDTO[], recentVendors: IAdminVendorListDTO[] }> {
         const totalUsers = await this._userRepository.countUsers();
         const blockedUsers = await this._userRepository.countBlockedUsers();
         const totalVendors = await this._vendorRepository.countVendors();
@@ -269,12 +269,12 @@ export class AdminService implements IAdminService {
         };
     }
 
-    async getRevenueChartData(): Promise<any> {
+    async getRevenueChartData(): Promise<{ date: string; revenue: number; orders: number }[]> {
         const revenueData = await this._orderRespository.getRevenueLast7Days();
         return revenueData;
     }
 
-    async getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<any>> {
+    async getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<unknown>> {
         const { orders, total } = await this._orderRespository.findAllOrders({
             page: options?.page,
             limit: options?.limit,
@@ -306,8 +306,7 @@ export class AdminService implements IAdminService {
         };
     }
 
-    async getAdvancedChartsData(): Promise<{ orderStatusDistribution: any[], topVendors: any[] }> {
-        // 1. Order Status Distribution (Pie Chart)
+    async getAdvancedChartsData(): Promise<{ orderStatusDistribution: { name: string, value: number }[], topVendors: { name: string, revenue: number }[] }> {
         const orderStatusData = await this._orderRespository.aggregateOrders([
             {
                 $group: {
@@ -324,7 +323,6 @@ export class AdminService implements IAdminService {
             }
         ]);
 
-        // 2. Top 5 Vendors by Revenue (Bar Chart)
         const topVendorsData = await this._orderRespository.aggregateOrders([
             { $match: { paymentStatus: PaymentStatus.PAID } },
             { $group: { _id: "$vendorId", revenue: { $sum: "$totalAmount" } } },
@@ -349,7 +347,7 @@ export class AdminService implements IAdminService {
         ]);
 
         if (topVendorsData.length < 5) {
-            const existingNames = topVendorsData.map((v: any) => v.name);
+            const existingNames = topVendorsData.map(v => v.name);
             const { vendors } = await this._vendorRepository.findAllWithOwner({ limit: 10 });
             for (const v of vendors) {
                 // @ts-expect-error type missing businessInfo
