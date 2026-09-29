@@ -687,7 +687,12 @@ export default function Home() {
                   <div className="mt-6 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-brand-dark/40 line-through">₹{item.originalPrice}</p>
-                      <p className="text-2xl font-display font-bold text-brand-primary">₹{item.discountedPrice}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-2xl font-display font-bold text-brand-primary">₹{item.discountedPrice}</p>
+                        <div className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5">
+                          <span className="text-[10px] font-semibold text-green-700">📦 {item.stockQuantity} left</span>
+                        </div>
+                      </div>
                     </div>
                     <button
                       type="button"

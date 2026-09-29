@@ -244,7 +244,7 @@ const FoodDetails = () => {
                                     🍽️
                                 </div>
                             )}
-                            
+
                             <div className="p-6 md:p-8">
                                 <div className="flex justify-between items-start gap-4">
                                     <div>
@@ -266,6 +266,9 @@ const FoodDetails = () => {
                                     </span>
                                     <span className="text-xl text-gray-400 line-through decoration-1">
                                         ₹{foodItem.originalPrice}
+                                    </span>
+                                    <span className="ml-auto flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-700">
+                                        <span className="text-green-500">📦</span> {foodItem.stockQuantity} available
                                     </span>
                                 </div>
 
@@ -311,7 +314,7 @@ const FoodDetails = () => {
                     <div className="flex flex-col gap-6">
                         <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-brand-primary/5 md:p-8">
                             <h2 className="font-display text-xl font-bold text-brand-dark mb-6">Prepared By</h2>
-                            
+
                             <div className="flex items-center gap-4">
                                 <img
                                     src={getImageUrl(menu.hotelImageKey)}
@@ -348,7 +351,7 @@ const FoodDetails = () => {
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => navigate(`/customer/restaurants/${menu.hotelId}/menu`)}
                                 className="mt-6 w-full rounded-full border-2 border-brand-primary/10 py-3 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/5"
                             >
