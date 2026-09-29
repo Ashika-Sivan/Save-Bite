@@ -299,36 +299,7 @@ const CartPage = () => {
         )
     }
 
-    if (isLiveMenuAvailable === false) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-[#faf7ef] px-5">
-                <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-9 text-center shadow-sm">
-                    <div className="text-5xl text-red-600">
-                        ⚠️
-                    </div>
 
-                    <h1 className="mt-4 text-2xl font-bold text-gray-900">
-                        Cart Unavailable
-                    </h1>
-
-                    <p className="mt-2 text-sm text-gray-500">
-                        The live menu for this restaurant has ended or is no longer available.
-                    </p>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            dispatch(clearCart());
-                            navigate("/");
-                        }}
-                        className="mt-6 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
-                    >
-                        Clear Cart & Browse
-                    </button>
-                </div>
-            </div>
-        )
-    }
 
     return (
         <div className="min-h-screen bg-[#faf7ef] px-4 py-6 text-gray-900">
@@ -377,7 +348,7 @@ const CartPage = () => {
                                     key={
                                         item.itemId
                                     }
-                                    className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                                    className={`flex gap-4 rounded-2xl border bg-white p-5 shadow-sm ${isLiveMenuAvailable === false ? 'border-red-200 opacity-70' : 'border-gray-200'}`}
                                 >
                                     {/* Image Section */}
                                     <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
@@ -403,10 +374,15 @@ const CartPage = () => {
                                     </div>
                                     <div className="flex flex-1 flex-col justify-between gap-5 sm:flex-row sm:items-center">
                                         <div>
-                                            <h2 className="font-semibold">
+                                            <h2 className="font-semibold flex items-center gap-2">
                                                 {
                                                     item.itemName
                                                 }
+                                                {isLiveMenuAvailable === false && (
+                                                    <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                                                        Unavailable
+                                                    </span>
+                                                )}
                                             </h2>
 
                                             <p className="mt-1 text-sm capitalize text-gray-500">
@@ -460,7 +436,7 @@ const CartPage = () => {
                                                     }
                                                     disabled={
                                                         item.quantity <=
-                                                        1
+                                                        1 || isLiveMenuAvailable === false
                                                     }
                                                     aria-label={`Decrease ${item.itemName} quantity`}
                                                     className="px-4 py-2 text-lg hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
@@ -492,7 +468,7 @@ const CartPage = () => {
                                                     }
                                                     disabled={
                                                         item.quantity >=
-                                                        item.availableStock
+                                                        item.availableStock || isLiveMenuAvailable === false
                                                     }
                                                     aria-label={`Increase ${item.itemName} quantity`}
                                                     className="px-4 py-2 text-lg hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
@@ -612,14 +588,16 @@ const CartPage = () => {
                         <button
                             type="button"
                             onClick={handleCheckout}
-                            disabled={isOrderingClosed || isCreatingCheckout}
+                            disabled={isOrderingClosed || isCreatingCheckout || isLiveMenuAvailable === false}
                             className="mt-6 w-full rounded-full bg-green-700 py-3 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-gray-400"
                         >
-                            {isOrderingClosed
-                                ? "Ordering closed"
-                                : isCreatingCheckout
-                                    ? "Creating checkout..."
-                                    : "Proceed to checkout"}
+                            {isLiveMenuAvailable === false 
+                                ? "Menu unavailable" 
+                                : isOrderingClosed
+                                    ? "Ordering closed"
+                                    : isCreatingCheckout
+                                        ? "Creating checkout..."
+                                        : "Proceed to checkout"}
                         </button>
 
                         <p

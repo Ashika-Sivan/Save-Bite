@@ -8,4 +8,7 @@ declare global {
   }
 }
 
-export {};
+export { };
+
+//modfy express request to use the user as globally
+//so in the authRequest we use the usr
