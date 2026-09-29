@@ -390,4 +390,12 @@ export class AuthService implements IAuthService {
       message: "Password updated successfully"
     };
   }
+
+  async updateProfile(userId: string, data: { name: string }): Promise<IUser> {
+    const user = await this._userRepository.updateById(userId, { name: data.name });
+    if (!user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_FOUND, StatusCode.NOT_FOUND);
+    }
+    return user;
+  }
 }

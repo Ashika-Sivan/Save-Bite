@@ -1,6 +1,5 @@
 import { ClientSession } from "mongoose";
 import { IUserWalletService } from "../../interfaces/service/wallet/IUserWalletService";
-import { UserWalletRepository } from "../../repositories/wallet/userWallet.repository";
 import { IUserWalletRepository } from "../../interfaces/repository/IUserWalletRepository";
 import { IUserWalletTransaction, UserWalletTransactionType } from "../../interfaces/models/IUserWalletTransaction.model";
 
@@ -39,9 +38,6 @@ export class UserWalletService implements IUserWalletService {
             session
         );
     }
-    /*
-    we are actually lock the process 
-    */
 
     async logDebit(customerId: string, amount: number, description: string, orderId?: string, session?: ClientSession): Promise<void> {
         if (amount <= 0) return;

@@ -45,5 +45,10 @@ router.post(
   authMiddleware.authenticate,
   authController.updatePassword.bind(authController),
 );
+router.patch(
+  "/update-profile",
+  authMiddleware.authenticate,
+  authController.updateProfile.bind(authController),
+);
 
 export default router;

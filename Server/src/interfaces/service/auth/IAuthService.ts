@@ -36,5 +36,7 @@ export interface IAuthService {
   resetPassword(data: IResetPasswordRequestDTO): Promise<{ message: string }>;
   
   updatePassword(data: IUpdatePasswordRequestDTO): Promise<{ message: string }>;
+  
+  updateProfile(userId: string, data: { name: string }): Promise<IUser>;
 
 }

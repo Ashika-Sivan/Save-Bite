@@ -172,4 +172,18 @@ export class AuthController {
     const result = await this._authService.updatePassword(data);
     ResponseHelper.success(res, StatusCode.OK, result.message);
   });
+
+  updateProfile = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.user) {
+      throw new AppError(AUTH_MESSAGES.USER_NOT_AUTHENTICATED, StatusCode.UNAUTHORIZED);
+    }
+    const { name } = req.body;
+    if (!name) {
+      throw new AppError("Name is required", StatusCode.BAD_REQUEST);
+    }
+    const user = await this._authService.updateProfile(req.user.userId, { name });
+    ResponseHelper.success(res, StatusCode.OK, "Profile updated successfully", {
+      name: user.name,
+    });
+  });
 }

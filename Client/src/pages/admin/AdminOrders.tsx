@@ -50,7 +50,6 @@ const AdminOrders = () => {
     }
   }, [page, tab, debouncedSearch]);
 
-  // Search Debouncing
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
@@ -86,7 +85,7 @@ const AdminOrders = () => {
         search: debouncedSearch.trim() || undefined,
         tabLabel: currentTabObj?.label || "All Orders",
       });
-      
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -222,11 +221,10 @@ const AdminOrders = () => {
                 key={t.key}
                 type="button"
                 onClick={() => handleTabChange(t.key)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  tab === t.key
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${tab === t.key
                     ? "bg-green-700 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {t.label}
               </button>
