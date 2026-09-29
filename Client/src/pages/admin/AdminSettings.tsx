@@ -14,6 +14,14 @@ const AdminSettings = () => {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [name, setName] = useState(user?.name || '');
+  
+  // Password Change State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<{ currentPassword?: string; newPassword?: string; confirmPassword?: string }>({});
 
   const validatePassword = (password: string) => {
     if (password.length < 8) return "Password must be at least 8 characters.";
