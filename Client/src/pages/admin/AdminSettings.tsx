@@ -10,11 +10,11 @@ import api from '../../services/api';
 const AdminSettings = () => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-  
+
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [name, setName] = useState(user?.name || '');
-  
+
   // Password Change State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -24,7 +24,7 @@ const AdminSettings = () => {
   const [errors, setErrors] = useState<{ currentPassword?: string; newPassword?: string; confirmPassword?: string }>({});
 
   const validatePassword = (password: string) => {
-    if (password.length < 8) return "Password must be at least 8 characters.";
+    if (password.trim().length < 8) return "Password must be at least 8 characters.";
     if (!/[A-Z]/.test(password)) return "Must contain an uppercase letter.";
     if (!/[a-z]/.test(password)) return "Must contain a lowercase letter.";
     if (!/[0-9]/.test(password)) return "Must contain a number.";
@@ -38,7 +38,7 @@ const AdminSettings = () => {
       toast.error('Name cannot be empty');
       return;
     }
-    
+
     setIsUpdatingProfile(true);
     try {
       // Assuming a generic update profile endpoint exists or will be created
@@ -203,8 +203,8 @@ const AdminSettings = () => {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <KeyRound size={16} />
                 </div>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={currentPassword}
                   onChange={(e) => {
                     setCurrentPassword(e.target.value);
@@ -224,8 +224,8 @@ const AdminSettings = () => {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Lock size={16} />
                 </div>
-                <input 
-                  type={showNewPassword ? "text" : "password"} 
+                <input
+                  type={showNewPassword ? "text" : "password"}
                   placeholder="At least 8 characters"
                   value={newPassword}
                   onChange={(e) => {
@@ -253,8 +253,8 @@ const AdminSettings = () => {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Lock size={16} />
                 </div>
-                <input 
-                  type={showConfirmPassword ? "text" : "password"} 
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
@@ -274,7 +274,7 @@ const AdminSettings = () => {
             </div>
 
             <div className="pt-2">
-              <button 
+              <button
                 type="submit"
                 className="px-6 py-2.5 bg-green-700 text-white font-medium rounded-lg hover:bg-green-800 transition-colors shadow-sm"
               >
