@@ -61,3 +61,61 @@ export const generateTransactionsPDF = (
 
   doc.end();
 };
+
+export const generateOrdersPDF = (
+  res: Response,
+  orders: any[],
+  currentTabLabel: string
+) => {
+  const doc = new PDFDocument({ margin: 30, size: "A4", layout: "landscape" });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=SaveBite_Orders_Report_${new Date().toISOString().slice(0, 10)}.pdf`
+  );
+
+  doc.pipe(res);
+
+  // Title
+  doc.fontSize(20).text(`SaveBite - Orders & Escrow Audit Report (${currentTabLabel})`, { align: "center" });
+  doc.moveDown();
+  doc.fontSize(12).text(`Total Records Exported: ${orders.length}`, { align: "right" });
+  doc.moveDown(2);
+
+  // Orders Table
+  const tableRows = orders.map((order) => [
+    order.pickupCode ? `#${order.pickupCode}` : order._id?.slice(-6) || "N/A",
+    order.customerId?.name || "Customer",
+    order.hotelId?.hotelName || "Unknown",
+    `Rs. ${(order.totalAmount || 0).toFixed(2)}`,
+    `Rs. ${(order.platformCommissionAmount || 0).toFixed(2)}`,
+    `Rs. ${(order.vendorAmount || 0).toFixed(2)}`,
+    order.orderStatus ? order.orderStatus.replace("_", " ") : "",
+    order.settlementStatus || "",
+    new Date(order.createdAt).toLocaleDateString(),
+  ]);
+
+  const table = {
+    title: "Orders List",
+    headers: [
+      "Order/Pickup",
+      "Customer",
+      "Hotel",
+      "Amount",
+      "Revenue (Platform)",
+      "Escrow (Vendor)",
+      "Order Status",
+      "Settlement",
+      "Date",
+    ],
+    rows: tableRows,
+  };
+
+  doc.table(table, {
+    prepareHeader: () => doc.font("Helvetica-Bold").fontSize(9),
+    prepareRow: () => doc.font("Helvetica").fontSize(8),
+  });
+
+  doc.end();
+};

@@ -220,6 +220,24 @@ export class AdminController {
     },
   );
 
+  downloadOrdersPdf = catchAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const status = req.query.status as string | undefined;
+      const search = req.query.search as string | undefined;
+      const tabLabel = (req.query.tabLabel as string) || "All Orders";
+      
+      const result = await this._adminService.getAllOrders({
+        page: 1,
+        limit: 100000,
+        status,
+        search,
+      });
+      
+      const { generateOrdersPDF } = await import("../utils/pdfService");
+      generateOrdersPDF(res, result.items, tabLabel);
+    },
+  );
+
 
   getLiveMetrics = catchAsync(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {

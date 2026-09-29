@@ -76,6 +76,12 @@ router.get(
   adminController.getAllOrders.bind(adminController),
 );
 router.get(
+  "/orders/download-pdf",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("admin"),
+  adminController.downloadOrdersPdf.bind(adminController),
+);
+router.get(
   "/dashboard/live-metrics",
   authMiddleware.authenticate,
   authMiddleware.authorize("admin"),

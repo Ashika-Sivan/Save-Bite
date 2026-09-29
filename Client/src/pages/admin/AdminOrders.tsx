@@ -2,8 +2,7 @@ import Pagination from "../../components/common/Pagination";
 import { useEffect, useState, useCallback } from "react";
 import DataTable, { type TableColumn } from "../../components/common/DataTable";
 import StatusBadge from "../../components/common/StatusBadge";
-import { getAdminOrders } from "../../services/admin.service";
-import { downloadOrdersPDF } from "../../utils/pdfExporter";
+import { getAdminOrders, downloadAdminOrdersPDF } from "../../services/admin.service";
 import toast from "react-hot-toast";
 import { Download, Search } from "lucide-react";
 
@@ -72,17 +71,36 @@ const AdminOrders = () => {
     setPage(1);
   };
 
-  const handleDownloadPDF = () => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
     if (orders.length === 0) {
       toast.error("No order records available to export");
       return;
     }
     const currentTabObj = TABS.find((t) => t.key === tab);
     try {
-      downloadOrdersPDF(orders, currentTabObj?.label || "All Orders");
+      setIsDownloading(true);
+      const blob = await downloadAdminOrdersPDF({
+        status: tab === "all" ? undefined : tab,
+        search: debouncedSearch.trim() || undefined,
+        tabLabel: currentTabObj?.label || "All Orders",
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `SaveBite_Orders_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
       toast.success("Orders PDF downloaded successfully!");
-    } catch (err) {
-      toast.error("Failed to generate PDF document");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to generate PDF document");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -183,10 +201,15 @@ const AdminOrders = () => {
         <button
           type="button"
           onClick={handleDownloadPDF}
-          className="inline-flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-95"
+          disabled={isDownloading}
+          className="inline-flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download size={16} />
-          Download Orders PDF
+          {isDownloading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <Download size={16} />
+          )}
+          {isDownloading ? "Generating PDF..." : "Download Orders PDF"}
         </button>
       </div>
 

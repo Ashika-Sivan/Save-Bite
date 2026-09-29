@@ -57,6 +57,7 @@ export const API_ROUTES = {
     DASHBOARD_OVERVIEW: "/admin/dashboard/overview",
     DASHBOARD_REVENUE: "/admin/dashboard/revenue",
     ORDERS: "/admin/orders",
+    ORDERS_DOWNLOAD_PDF: "/admin/orders/download-pdf",
     NOTIFICATIONS_SCHEDULES: "/admin/notifications/schedules",
     NOTIFICATIONS_BROADCAST: "/admin/notifications/broadcast",
     NOTIFICATIONS_HISTORY: "/admin/notifications/history",
