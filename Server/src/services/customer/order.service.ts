@@ -15,6 +15,7 @@ import stripe from "../../config/stripe";
 import mongoose from "mongoose";
 import { toOrderResponseDTO } from "../../mappers/order.mapper";
 import { getIO, getUserSocketId } from "../../config/socket";
+import { getSignedS3Url } from "../../utils/getSignedS3Url";
 
 import { IUserWalletService } from "../../interfaces/service/wallet/IUserWalletService";
 
@@ -200,7 +201,21 @@ export class OrderService implements IOrderService {
         if(!order){
             throw new AppError(ORDER_MESSAGES.ORDER_NOT_FOUND,StatusCode.NOT_FOUND)
         }
-        return toOrderResponseDTO(order)
+        
+        const dto = toOrderResponseDTO(order);
+        
+        // Fetch menu to attach image URLs
+        const menu = await this._dailyMenuRepository.findById(order.menuId.toString());
+        if (menu && menu.items) {
+            for (const dtoItem of dto.items) {
+                const menuItem = menu.items.find((mi: any) => mi._id.toString() === dtoItem.itemId);
+                if (menuItem && menuItem.itemImageKey) {
+                    dtoItem.itemImageUrl = await getSignedS3Url(menuItem.itemImageKey);
+                }
+            }
+        }
+        
+        return dto;
     }
 
     async verifyPayment(customerId: string, orderId: string): Promise<IOrderResponseDTO> {
@@ -618,7 +633,12 @@ export class OrderService implements IOrderService {
 
         const now = Date.now();
         const orderTime = order.createdAt.getTime();
+
         const diffMinutes = (now - orderTime) / (1000 * 60);//calcul of time 5
+
+        
+
+       
 
         if (diffMinutes > 5) {
             throw new AppError(ORDER_MESSAGES.CANCEL_GRACE_EXPIRED, StatusCode.BAD_REQUEST);

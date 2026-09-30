@@ -189,15 +189,13 @@ export class AdminService implements IAdminService {
             );
         }
 
-        // We also need to block/unblock the user account so they can't login if suspended
         if (existingVendor.ownerId && existingVendor.ownerId._id) {
             await this._userRepository.updateUserStatus(
                 existingVendor.ownerId._id.toString(),
                 newStatus === VendorStatus.APPROVED
             );
         }
-
-        // Also block/unblock all sub-vendors
+            //if we block the vendor also the sub venor should block
         await this._userRepository.updateStatusByVendorId(
             vendorId,
             newStatus === VendorStatus.APPROVED
@@ -290,19 +288,6 @@ export class AdminService implements IAdminService {
             page: options?.page || 1,
             limit: options?.limit || 10,
             totalPages
-        };
-    }
-
-    async getLiveMetrics(): Promise<{ customers: number; vendors: number; admins: number }> {
-        const client = redisClient.getClient();
-        const customers = await client.sCard("online:customers");
-        const vendors = await client.sCard("online:vendors");
-        const admins = await client.sCard("online:admins");
-        
-        return {
-            customers,
-            vendors,
-            admins
         };
     }
 

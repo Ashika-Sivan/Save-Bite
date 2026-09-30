@@ -82,12 +82,6 @@ router.get(
   adminController.downloadOrdersPdf.bind(adminController),
 );
 router.get(
-  "/dashboard/live-metrics",
-  authMiddleware.authenticate,
-  authMiddleware.authorize("admin"),
-  adminController.getLiveMetrics.bind(adminController),
-);
-router.get(
   "/dashboard/advanced-charts",
   authMiddleware.authenticate,
   authMiddleware.authorize("admin"),

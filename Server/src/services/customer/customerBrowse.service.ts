@@ -4,7 +4,6 @@ import { ILiveHotelListResponseDTO, ILiveHotelMenuResponseDTO, ILiveHotelRespons
 import { AppError } from "../../errors/AppError";
 import { IHotelRepository } from "../../interfaces/repository/IHotelRepository";
 import { ICustomerBrowseService, ILiveHotelBrowseQuery } from "../../interfaces/service/customer/ICustomerBrowseService";
-import { getSignedS3Url } from "../../utils/getSignedS3Url";
 import { toLiveHotelListResponseDTO, toLiveHotelMenuResponseDTO } from "../../mappers/liveHotels.mapper";
 
 export class CustomerBrowseService implements ICustomerBrowseService{

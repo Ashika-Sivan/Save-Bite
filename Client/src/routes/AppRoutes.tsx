@@ -45,6 +45,7 @@ import CartPage from "../pages/customer/Cart";
 import CheckoutPage from "../pages/customer/CheckoutPage";
 import PaymentSuccessPage from "../pages/customer/PaymentSuccessPage";
 import MyOrdersPage from "../pages/customer/MyOrdersPage";
+import OrderDetailsPage from "../pages/customer/OrderDetailsPage";
 import CustomerProfile from "../pages/customer/CustomerProfile";
 import TransactionHistoryPage from "../pages/customer/TransactionHistoryPage";
 import CustomerLayout from "../components/layouts/CustomerLayout";
@@ -119,6 +120,15 @@ export default function AppRoutes() {
                         element={
                             <ProtectedRoute>
                                 <MyOrdersPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/orders/:orderId"
+                        element={
+                            <ProtectedRoute>
+                                <OrderDetailsPage />
                             </ProtectedRoute>
                         }
                     />

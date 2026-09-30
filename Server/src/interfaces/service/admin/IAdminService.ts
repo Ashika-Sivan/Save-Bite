@@ -18,6 +18,6 @@ export interface IAdminService {
     getDashboardOverview(): Promise<{ totalUsers: number, blockedUsers: number, totalVendors: number, pendingApplications: number, totalOrders: number, totalRevenue: number, recentUsers: IAdminUserListDTO[], recentVendors: IAdminVendorListDTO[] }>;
     getRevenueChartData(): Promise<{ date: string; revenue: number; orders: number }[]>;
     getAllOrders(options?: IPaginationOptions): Promise<IPaginatedResult<unknown>>;
-    getLiveMetrics(): Promise<{ customers: number; vendors: number; admins: number }>;
+
     getAdvancedChartsData(): Promise<{ orderStatusDistribution: { name: string, value: number }[], topVendors: { name: string, revenue: number }[] }>;
 }

@@ -87,11 +87,6 @@ export const useSocket = () => {
 
     socket.on("connect", () => {
       console.log("Connected to WebSockets for live alerts!");
-      
-      // Request permission for native browser push notifications
-      if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
-      }
     });
 
     // Listen for the "new_order" push notification (Vendor Side)

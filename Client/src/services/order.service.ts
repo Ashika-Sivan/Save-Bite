@@ -18,6 +18,7 @@ export interface CheckoutData{
 export interface OrderItem{
     itemId:string;
     itemName:string;
+    itemImageUrl?:string;
     unitType:string;
     price:number;
     quantity:number

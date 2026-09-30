@@ -127,10 +127,7 @@ export const downloadAdminOrdersPDF = async (params?: { status?: string; search?
   return response.data;
 };
 
-export const getAdminLiveMetrics = async (): Promise<{ customers: number; vendors: number; admins: number }> => {
-  const response = await api.get("/admin/dashboard/live-metrics"); // Assuming API_ROUTES.ADMIN.LIVE_METRICS doesn't exist yet, I'll use raw string or we can add it to API_ROUTES. Let's use string to be safe.
-  return response.data?.data ?? response.data;
-};
+
 
 export const getAdminAdvancedCharts = async (): Promise<{ orderStatusDistribution: { name: string, value: number }[], topVendors: { name: string, revenue: number }[] }> => {
   const response = await api.get("/admin/dashboard/advanced-charts");

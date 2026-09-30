@@ -3,7 +3,7 @@ import { IOrder, OrderStatus, PaymentStatus, SettlementStatus } from "../../inte
 import { IMarkOrderPaidData, IOrderCreateData, IOrderRepository } from "../../interfaces/repository/IOrderRepository";
 import { Order } from "../../models/order/order.model";
 import { BaseRepository } from "../base.repository";
-import { User } from "../../models/user/user.model";
+
 
 export class OrderRepository extends BaseRepository<IOrder> implements IOrderRepository {
     constructor() {
@@ -33,6 +33,7 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         )
 
     }
+    
 
     async findByIdAndCustomerId(orderId: string, customerId: Types.ObjectId): Promise<IOrder | null> {
         return await Order.findOne({
@@ -286,4 +287,6 @@ export class OrderRepository extends BaseRepository<IOrder> implements IOrderRep
         return await this._model.aggregate(pipeline);
     }
 
+
 }
+

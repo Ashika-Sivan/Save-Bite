@@ -31,11 +31,18 @@ const BellNotification = () => {
     navigate(link);
   };
 
+  const handleDropdownToggle = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleDropdownToggle}
         className="relative flex items-center justify-center p-2 text-gray-600 transition hover:text-green-700"
       >
         <svg

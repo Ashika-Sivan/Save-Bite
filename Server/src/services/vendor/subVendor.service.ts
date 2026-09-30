@@ -70,6 +70,7 @@ export class SubVendorService implements ISubVendorService {
     }
 
     async updatePermissions(vendorOwnerId: string, hotelId: string, data: IUpdateSubVendorPermissionsDTO): Promise<IUser> {
+        
         const vendor = await this._vendorRepository.findByOwnerId(vendorOwnerId);
         if (!vendor) throw new AppError("Vendor not found", StatusCode.NOT_FOUND);
 

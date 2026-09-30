@@ -239,17 +239,7 @@ export class AdminController {
   );
 
 
-  getLiveMetrics = catchAsync(
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      const result = await this._adminService.getLiveMetrics();
-      ResponseHelper.success(
-        res,
-        StatusCode.OK,
-        "Live metrics fetched successfully",
-        result,
-      );
-    },
-  );
+
   
   getAdvancedCharts = catchAsync(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {

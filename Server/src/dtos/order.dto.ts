@@ -17,6 +17,7 @@ export interface ICreateCheckoutDTO{
 export interface IOrderItemResponseDTO{
     itemId:string;
     itemName:string;
+    itemImageUrl?:string;
     unitType:MenuUnitType;
     price:number;
     quantity:number;

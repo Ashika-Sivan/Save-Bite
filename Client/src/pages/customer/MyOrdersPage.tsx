@@ -8,6 +8,7 @@ import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ShoppingBag, Store, Clock, MapPin, AlertTriangle, Star, X, XCircle, CheckCircle, Info, Ticket } from "lucide-react";
 import Pagination from "../../components/common/Pagination";
+import { useNavigate } from "react-router-dom";
 
 interface ErrorResponse {
     message?: string;
@@ -16,6 +17,7 @@ interface ErrorResponse {
 type TabType = "active" | "previous";
 
 const MyOrdersPage = () => {
+    const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
@@ -434,6 +436,13 @@ const MyOrdersPage = () => {
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => navigate(`/orders/${order.id}`)}
+                                                            className="flex items-center gap-1.5 rounded-full bg-gray-100 border border-gray-200 px-4 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-gray-200"
+                                                        >
+                                                            <Info size={14} /> View Details
+                                                        </button>
                                                         {order.vendorLocation && (
                                                             <a
                                                                 href={`https://www.google.com/maps/search/?api=1&query=${order.vendorLocation.lat},${order.vendorLocation.lng}`}

@@ -15,7 +15,7 @@ export const requirePermission = (requiredPermission: string) => {
             return;
         }
 
-        // Master Vendor Bypass - Vendor role has full access
+    
         if (user.role === "vendor") {
             return next();
         }

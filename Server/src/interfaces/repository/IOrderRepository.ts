@@ -79,4 +79,5 @@ export interface IOrderRepository {
     findAllOrders(filters?: { page?: number; limit?: number; status?: string; search?: string }): Promise<{ orders: IOrder[], total: number }>;
     aggregateOrders(pipeline: any[]): Promise<any[]>;
     findAll(): Promise<IOrder[]>;
+   
 }

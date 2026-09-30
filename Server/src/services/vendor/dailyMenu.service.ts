@@ -244,6 +244,7 @@ export class DailyMenuService implements IDailyMenuService {
             );
         }
 
+        //here it come the time window
         const currentTime = new Date();
 
         if (
@@ -266,7 +267,7 @@ export class DailyMenuService implements IDailyMenuService {
                 StatusCode.BAD_REQUEST
             );
         }
-
+        //update 
         const updatedMenu =
             await this._dailyMenuRepository
                 .updateLiveStatus(
@@ -314,10 +315,35 @@ export class DailyMenuService implements IDailyMenuService {
                         title: notificationTitle,
                         body: notificationBody,
                         link: notificationLink,
-                        hotelId: hotel._id,
-                        vendorId: vendor._id
+                        hotelId: hotel._id.toString(),
+                        vendorId: vendor._id.toString()
                     });
                 }
+            }
+
+            // Also emit a live notification to the vendor themselves
+            const vendorSocketId = await getUserSocketId(vendor.ownerId.toString());
+            if (vendorSocketId) {
+                const vendorNotificationTitle = "Store is Live! 🟢";
+                const vendorNotificationBody = `Your hotel ${hotel.hotelName} is now live and visible to customers.`;
+                
+                await this._notificationRepository.create({
+                    userId: vendor.ownerId,
+                    targetRole: "vendor",
+                    title: vendorNotificationTitle,
+                    body: vendorNotificationBody,
+                    type: "SYSTEM",
+                    link: "/vendor/daily-menu",
+                    read: false
+                });
+
+                io.to(vendorSocketId).emit("business_live", {
+                    title: vendorNotificationTitle,
+                    body: vendorNotificationBody,
+                    link: "/vendor/daily-menu",
+                    hotelId: hotel._id.toString(),
+                    vendorId: vendor._id.toString()
+                });
             }
         } catch (err) {
             console.error("Failed to send live notifications:", err);
