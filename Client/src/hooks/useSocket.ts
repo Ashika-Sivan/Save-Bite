@@ -81,12 +81,19 @@ export const useSocket = () => {
         latitude: location?.latitude,
         longitude: location?.longitude
       },
+      transports: ["websocket"],
+      withCredentials: true
     });
 
     socketRef.current = socket;
 
     socket.on("connect", () => {
       console.log("Connected to WebSockets for live alerts!");
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+      console.error("Please check if VITE_SOCKET_URL is configured correctly in your hosted environment.");
     });
 
     // Listen for the "new_order" push notification (Vendor Side)
