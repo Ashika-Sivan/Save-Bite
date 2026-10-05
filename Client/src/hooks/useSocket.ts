@@ -70,7 +70,7 @@ export const useSocket = () => {
 
     // Connect to the Socket.io server
     // We use the full URL to ensure it hits the backend correctly during dev and prod
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://127.0.0.1:5000";
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
     const savedLocation = localStorage.getItem("customerLocation");
     const location = savedLocation ? JSON.parse(savedLocation) : null;
@@ -81,18 +81,19 @@ export const useSocket = () => {
         latitude: location?.latitude,
         longitude: location?.longitude
       },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Allow polling fallback
       withCredentials: true
     });
 
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("Connected to WebSockets for live alerts!");
+      console.log(`Connected to WebSockets for live alerts! Socket ID: ${socket.id}`);
     });
 
     socket.on("connect_error", (err) => {
       console.error("Socket connection error:", err.message);
+      console.error("Socket error details:", err);
       console.error("Please check if VITE_SOCKET_URL is configured correctly in your hosted environment.");
     });
 

@@ -15,7 +15,7 @@ const TABS: { key: StatusTab; label: string }[] = [
   { key: "blocked", label: "Blocked" },
 ];
 
-const LIMIT = 2;
+const LIMIT = 10;
 
 const UserList = () => {
   const [users, setUsers] = useState<UserDTO[]>([]);
