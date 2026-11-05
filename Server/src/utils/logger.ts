@@ -69,13 +69,12 @@ export class WinstonLogger implements ILogger {
             })
         );
 
-        if (process.env.NODE_ENV !== "production") {
-            transports.push(
-                new winston.transports.Console({
-                    format: consoleFormat,
-                })
-            );
-        }
+        // Always enable Console output so cloud logs (Render, Docker) show server status
+        transports.push(
+            new winston.transports.Console({
+                format: consoleFormat,
+            })
+        );
 
         this.logger = winston.createLogger({
             level: "info",
