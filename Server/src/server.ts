@@ -28,8 +28,9 @@ class ServerApp {
         await this._db.connect()
         await redisClient.connect()
 
-        this._server.listen(5000, () => {
-            Logger.info(`Server running at http://localhost:5000`);
+        const port = Number(process.env.PORT) || 5000;
+        this._server.listen(port, "0.0.0.0", () => {
+            Logger.info(`Server running at http://0.0.0.0:${port}`);
 
             initSchedulers();
             initNotificationScheduler();

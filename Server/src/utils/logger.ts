@@ -31,17 +31,23 @@ export class WinstonLogger implements ILogger {
             })
         );
 
-        const transports: winston.transport[] = [
-            //transpot tell winston to send logs to loki container/server
-            // When Docker runs, 'http://loki:3100' points directly to the Loki database container.
-            new LokiTransport({
-                host: process.env.LOKI_URL || "http://loki:3100", // Address of our Loki server
-                labels: { app: "save-bite-backend" }, // Tags all logs with our app name so Grafana can filter them
-                json: true,//send as json
-                format: winston.format.json(),
-                replaceTimestamp: true,
-                onConnectionError: (err) => console.error("Loki connection error:", err) // it will not crshn if loki down
-            }),
+        const transports: winston.transport[] = [];
+
+        // Only enable Loki if an explicit LOKI_URL is configured
+        if (process.env.LOKI_URL) {
+            transports.push(
+                new LokiTransport({
+                    host: process.env.LOKI_URL,
+                    labels: { app: "save-bite-backend" },
+                    json: true,
+                    format: winston.format.json(),
+                    replaceTimestamp: true,
+                    onConnectionError: (err) => console.error("Loki connection error:", err)
+                })
+            );
+        }
+
+        transports.push(
             //save data to local text file
             new winston.transports.DailyRotateFile({
                 dirname: logDirectory,
@@ -60,8 +66,8 @@ export class WinstonLogger implements ILogger {
                 maxSize: "20m",
                 maxFiles: "30d",
                 zippedArchive: false,
-            }),
-        ];
+            })
+        );
 
         if (process.env.NODE_ENV !== "production") {
             transports.push(
