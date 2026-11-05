@@ -12,9 +12,8 @@ export default class connectDB {
             Logger.info("Connected DB:", mongoose.connection.name);
 
         } catch (error) {
-            Logger.error("MongoDB connection failed", error)
-            process.exit(1)
-
+            Logger.error("MongoDB connection failed", error);
+            // Do not process.exit(1) so the HTTP server stays online to report health and logs
         }
     }
 }
