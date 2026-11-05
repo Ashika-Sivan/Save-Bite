@@ -1,20 +1,19 @@
+import { Logger } from "./logger";
 
+/**
+ * Resolves an image key or URL for display.
+ * Since Cloudinary returns full HTTPS URLs (e.g. https://res.cloudinary.com/...),
+ * if the key is already a full URL, we return it directly!
+ * If it's an old S3 key, we return a fallback or the key itself gracefully.
+ */
+export const getSignedS3Url = async (keyOrUrl: string): Promise<string> => {
+    if (!keyOrUrl) return "";
 
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import s3Client from "../config/s3";
-
-
-// //aws give an option to the vendor to temporarly see the file from partucular buckt
-
-export const getSignedS3Url=async(key:string):Promise<string>=>{
-    const bucketName=process.env.AWS_S3_BUCKET_NAME;
-    if(!bucketName){
-        throw new Error(`s3 bucket name is missing`);
+    // If it's already a full URL (from Cloudinary or external), return directly
+    if (keyOrUrl.startsWith("http://") || keyOrUrl.startsWith("https://")) {
+        return keyOrUrl;
     }
-    const command=new GetObjectCommand({
-        Bucket:bucketName,
-        Key:key,
-    })
-    return await getSignedUrl(s3Client,command,{expiresIn:60*10})
-}
+
+    // Return the key as is (prevents AWS S3 crashes for missing buckets)
+    return keyOrUrl;
+};
